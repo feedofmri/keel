@@ -1,0 +1,5 @@
+{
+ "responses": [
+  "Here are adversarial tests:\n\n```python\nimport pytest\nfrom shopcart.pricing import apply_discount, line_total, cart_total\n\n\ndef test_attack_1():\n    assert apply_discount(19.99, 10) == 17.99\n\n\ndef test_attack_2():\n    assert apply_discount(80.0, 100) == 0.0\n\n\ndef test_attack_3():\n    assert apply_discount(33.33, 33) == 22.33\n\n\ndef test_attack_4():\n    assert line_total(2.5, 4, 20) == 8.0\n\n\ndef test_attack_5():\n    assert cart_total([(9.99, 3, 15), (1.0, 1, 0)]) == 26.47\n\n\ndef test_attack_6():\n    with pytest.raises(ValueError):\n        apply_discount(10.0, -5)\n```\n"
+ ]
+}

@@ -18,7 +18,7 @@ This list is updated as components land (with commit references):
 
 ## What we did not build (third-party)
 Used only as declared dependencies or downloaded at run time, under their own licenses:
-- Python libraries listed in `pyproject.toml` (numpy, httpx, PyJWT, fastapi, uvicorn, pyflakes, pytest).
+- Python libraries listed in `pyproject.toml` (numpy, httpx, pyflakes, pytest).
 - Benchmarks, downloaded at run time and not redistributed: SWE-bench / SWE-bench Lite
   (MIT, Princeton NLP) and QuixBugs (MIT, Lin et al.).
 - Meta models used through their APIs: Muse Spark (Meta Model API), Muse Spark Open and
