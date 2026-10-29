@@ -37,42 +37,86 @@ the user stays in control and it's easy to demo.
 
 ---
 
-## 2. Architecture (zero-cost now, portable later)
+## 2. Architecture: Node.js + PostgreSQL
 
 ```
- ┌──────────────── Browser (GitHub Pages: feedofmri.github.io/keel) ─────────────────┐
- │  Landing · /app (sign-in, repo list, setup wizard, repo dashboard) · /dashboard    │
- └───────────────▲───────────────────────────────────────────────┬───────────────────┘
-                 │ JSON API (session cookie)                     │ OAuth redirect
- ┌───────────────┴──────────────── Keel API (Cloudflare Worker, free tier) ───────────┐
- │  /auth/*      GitHub App user OAuth → session                                      │
- │  /repos       list installations + repos the user can admin                        │
- │  /setup       detect config, write secrets, open setup PR                          │
- │  /runs        receive run reports from the Action, serve history                   │
- │  /webhook     GitHub App webhooks (installation, workflow_run, pull_request)       │
- │  /fix         dispatch a Keel run on demand (workflow_dispatch)                     │
- │  Storage: Cloudflare D1 (SQLite)  ·  secrets: Worker secrets                       │
- └───────────────▲──────────────────────────────────────────────▲─────────────────────┘
-                 │ GitHub REST/GraphQL (installation token)      │ run report (signed)
- ┌───────────────┴──────────── User's GitHub repo ──────────────┴─────────────────────┐
- │  .github/workflows/keel.yml  →  feedofmri/keel@v1 (the existing Action)            │
- │  runs on the USER'S free GitHub runners · tests run in their sandbox · opens PRs   │
- │  model calls → Meta Model API / Baseten, using either the user's keys or a          │
- │  short-lived Keel token for the Keel-hosted quota                                  │
- └────────────────────────────────────────────────────────────────────────────────────┘
+ Marketing site (GitHub Pages)              Keel App (one Node.js service, one origin)
+ feedofmri.github.io/keel                   e.g. app.keel.dev / keel-app.onrender.com
+  landing · /dashboard (benchmarks)  ──►    ┌──────────────────────────────────────────────┐
+  "Sign in" button links to the app         │  Web UI  /app  (sign-in, repos, wizard,      │
+                                            │          repo dashboard)  served by the same │
+                                            │          server → first-party cookies        │
+                                            │  API     /api/*   JSON                        │
+                                            │  Auth    /auth/github/{login,callback,logout}│
+                                            │  Hooks   /webhooks/github  (GitHub App)      │
+                                            │  Runs    /api/runs  (reports from the Action)│
+                                            │  Jobs    background worker (same codebase):  │
+                                            │          outcome tracking, cleanup           │
+                                            └──────────────┬───────────────────────────────┘
+                                                           │ SQL (TLS)
+                                            ┌──────────────▼───────────────────────────────┐
+                                            │  PostgreSQL 16                               │
+                                            │  users, sessions, installations, repos,      │
+                                            │  runs, outcomes, audit_log                   │
+                                            └──────────────────────────────────────────────┘
+                     GitHub REST/GraphQL (installation tokens)  ▲   run reports (GitHub OIDC)
+ ┌───────────────────────────────── User's GitHub repo ─────────┴───────────────────────────┐
+ │  .github/workflows/keel.yml → feedofmri/keel@v1 (existing Action) on the USER'S runners    │
+ │  model calls → Meta Model API / Baseten with the user's keys (repo secrets)                │
+ └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Stack
+| Layer | Choice | Why |
+|---|---|---|
+| Runtime | **Node.js 22 LTS + TypeScript** | Your choice; one language for server and UI |
+| Web framework | **Fastify** | Fast, schema validation built in, first-class TypeScript |
+| GitHub | **Octokit** (`@octokit/app`, `@octokit/webhooks`) | Official: App auth, installation tokens, webhook signature verification |
+| Database | **PostgreSQL 16** | Your choice; JSONB for run reports, row-level ownership checks |
+| DB access | **Drizzle ORM** + `node-postgres` + SQL migrations in the repo | Typed queries, plain SQL migrations, no heavy runtime |
+| UI | Server-rendered pages + small vanilla-JS islands, reusing the website's design system (`site/assets/style.css`) | Matches the brand, no SPA build pipeline to maintain in 6 days |
+| Sessions | Opaque session id in an HTTP-only, Secure, SameSite=Lax cookie; session row in Postgres | First-party (same origin), revocable |
+| Secrets crypto | `libsodium-wrappers` (sealed boxes for GitHub repo secrets); AES-256-GCM for stored GitHub user tokens | Matches GitHub's secrets API; nothing stored in plaintext |
+| Validation | `zod` | Request and env validation |
+| Tests | `vitest` + a Postgres service container in CI | Same CI as the Python engine |
+| Container | `Dockerfile` (multi-stage, distroless) | Runs on any host |
+
+### Hosting (free now, portable later)
+| Need | Recommended free option | Alternatives |
+|---|---|---|
+| Node service | **Render** free web service (it sleeps when idle; the first hit takes about 30 s, so warm it before demos) | Fly.io, Railway trial, Koyeb, or Modal web endpoints when credits arrive |
+| PostgreSQL | **Neon** free tier (serverless Postgres, branching, doesn't expire) | Supabase Postgres, Render Postgres (free tier expires after 30 days) |
+| Domain | `*.onrender.com` now; optional custom domain later | any |
 
 Why this shape:
-- **Compute costs us nothing.** Repairs run on the user's GitHub Actions minutes, which are free for public
-  repos and included in every GitHub plan.
-- **The engine doesn't change.** The platform is a control plane around the Action we've already built.
-- **Code privacy.** Source never leaves GitHub. The API only stores metadata: run status, scores,
+- **Compute costs us nothing.** Repairs run on the user's GitHub Actions minutes. The Node service only
+  coordinates, so a free instance is enough.
+- **The engine doesn't change.** The platform is a control plane around the existing Action.
+- **Code privacy.** Source never leaves GitHub. Postgres stores only metadata: run status, scores,
   decisions, cost.
-- **Portability.** The Worker is plain TypeScript with an SQLite schema, so moving to Fly, Render or Modal
-  later is a lift-and-shift.
+- **Portability.** A standard Docker image plus standard Postgres can be moved to Modal, Fly, or a VM
+  later without code changes.
 
-Alternative if Cloudflare is blocked: **Supabase** (GitHub auth, Postgres, edge functions, free tier).
-The design stays the same.
+### Repository layout (new code, same repo)
+```
+platform/
+  package.json, tsconfig.json, Dockerfile, drizzle.config.ts
+  src/
+    server.ts            Fastify app, plugins, error handling
+    env.ts               zod-validated configuration
+    db/schema.ts         Drizzle schema   db/migrations/*.sql
+    auth/github.ts       OAuth login/callback/logout, sessions
+    github/app.ts        Octokit App, installation tokens
+    github/webhooks.ts   installation, workflow_run, pull_request, issue_comment
+    setup/detect.ts      detect test command, CI workflow, language
+    setup/pr.ts          build + open the setup PR (keel.yml, .keel.toml)
+    setup/secrets.ts     sealed-box encryption → repo secrets
+    runs/report.ts       verify GitHub OIDC token, store run reports
+    runs/outcomes.ts     mark reverted / later-failed auto-merges
+    ui/pages/*.ts        server-rendered pages (sign-in, repos, wizard, repo dashboard)
+    ui/static/*          JS islands (α slider, live runs)
+  test/*.test.ts
+```
 
 ---
 
@@ -97,9 +141,12 @@ Registered once, by you.
 one step.
 
 ### 3.2 Auth
-- GitHub App user-to-server OAuth: redirect → `code` → token exchange in the Worker.
-- Session: an HTTP-only, Secure, SameSite=Lax cookie holding an opaque session id. GitHub tokens are
-  stored server-side, encrypted (AES-GCM, key in Worker secrets), and never sent to the browser.
+- GitHub App user-to-server OAuth: `/auth/github/login` redirects to GitHub with a `state` nonce; the
+  callback exchanges the `code` on the Node server.
+- Session: a random 256-bit id in an HTTP-only, Secure, SameSite=Lax cookie (first-party, because the
+  UI and API share one origin), backed by a `sessions` row in Postgres. GitHub user tokens are stored
+  encrypted with AES-256-GCM (the key is in server env), refreshed when they expire, and never sent to
+  the browser.
 - Authorisation on every request: the user must have **admin or maintain** permission on the repo,
   checked live against GitHub.
 - CSRF: a SameSite cookie plus a per-session token header on state-changing calls.
@@ -112,7 +159,7 @@ one step.
    - (a) **Keel-hosted quota**: N free repairs a month, paid from our credits, with a hard per-repo
      cap. The Action exchanges a short-lived run token with the API, and the API proxies model calls,
      so our keys never reach user runners.
-   - (b) **Bring your own keys**: the user pastes Meta Model API / Baseten keys. The Worker encrypts
+   - (b) **Bring your own keys**: the user pastes Meta Model API / Baseten keys. The server encrypts
      them with the repo's public key (libsodium sealed box) and writes them as repo secrets. Keel never
      stores the plaintext.
 3. **Policy.** A risk-level slider (the same component as the website), CRC or LTT, label-only or
@@ -137,24 +184,52 @@ one step.
 
 ### 3.5 Run reporting (Action → API)
 - After each run, the Action posts a compact report (scores, decision, cost, PR number) to
-  `/runs`. It is signed with an HMAC run secret issued at setup, or with a GitHub OIDC token, which
-  needs no stored secret at all.
+  `/runs`. It is authenticated with a **GitHub Actions OIDC token** (`id-token: write`). The server verifies
+  the token against GitHub's JWKS and checks that its `repository` claim matches the repo. No shared
+  secret is needed.
 - **Ground truth for "wrong merge":** the API listens to `pull_request` and push webhooks. A merged
   AUTO-MERGE PR that is reverted, or followed by a CI failure on the same files within 7 days, is counted
   as a likely wrong merge. That feeds the risk-budget gauge and future recalibration.
 
-### 3.6 Data model (D1 / SQLite)
+### 3.6 Data model (PostgreSQL)
+```sql
+create table users (
+  id bigserial primary key, github_id bigint unique not null, login text not null,
+  avatar_url text, created_at timestamptz not null default now());
+create table sessions (
+  id text primary key, user_id bigint not null references users on delete cascade,
+  enc_github_token bytea not null, token_expires_at timestamptz, expires_at timestamptz not null,
+  created_at timestamptz not null default now());
+create table installations (
+  id bigserial primary key, github_installation_id bigint unique not null,
+  account_login text not null, account_type text not null, suspended boolean not null default false,
+  created_at timestamptz not null default now());
+create table repos (
+  id bigserial primary key, installation_id bigint not null references installations on delete cascade,
+  github_repo_id bigint unique not null, full_name text not null,
+  status text not null default 'new' check (status in ('new','setup_pr_open','active','paused','error')),
+  alpha numeric(4,3) not null default 0.100, method text not null default 'crc',
+  auto_merge boolean not null default false, models text[] not null default '{muse-spark,muse-spark-open}',
+  test_command text, ci_workflow text, setup_pr_number int, calibration_ref text not null default 'shared-v1',
+  created_by bigint references users, created_at timestamptz not null default now(), activated_at timestamptz);
+create table runs (
+  id bigserial primary key, repo_id bigint not null references repos on delete cascade,
+  github_run_id bigint, trigger text not null, commit_sha text not null,
+  started_at timestamptz, finished_at timestamptz,
+  n_candidates int, selected_score double precision, threshold double precision,
+  decision text check (decision in ('AUTO-MERGE','NEEDS REVIEW')), pr_number int,
+  cost_usd numeric(10,4), report jsonb not null default '{}',
+  unique (repo_id, github_run_id));
+create table outcomes (
+  run_id bigint primary key references runs on delete cascade,
+  merged_at timestamptz, reverted_at timestamptz, followup_ci_failed boolean, labelled_wrong boolean);
+create table audit_log (
+  id bigserial primary key, user_id bigint references users, repo_id bigint references repos,
+  action text not null, detail jsonb, at timestamptz not null default now());
+create index on runs (repo_id, started_at desc);
 ```
-users(id, github_id, login, avatar_url, created_at)
-sessions(id, user_id, enc_token, expires_at)
-installations(id, github_installation_id, account_login, created_at)
-repos(id, installation_id, full_name, status, alpha, method, auto_merge, models, calibration_ref,
-      quota_used, quota_limit, created_at, activated_at)
-runs(id, repo_id, trigger, commit_sha, started_at, finished_at, n_candidates, selected_score,
-     threshold, decision, pr_number, cost_usd, report_json)
-outcomes(id, run_id, merged_at, reverted_at, followup_ci_failed, labelled_wrong)
-audit_log(id, user_id, repo_id, action, at)
-```
+Every query that touches a repo first checks the signed-in user's live GitHub permission on it
+(admin or maintain to change settings, read to view). The server never trusts a client-supplied repo id.
 
 ---
 
@@ -177,11 +252,11 @@ audit_log(id, user_id, repo_id, action, at)
 
 | Day | Date | Platform work | Exit check |
 |-----|------|---------------|-----------|
-| 1 | Thu Oct 30 | Register the GitHub App; Cloudflare Worker skeleton; D1 schema; GitHub OAuth sign-in/out; `/app` shell on Pages | Sign in with GitHub works |
-| 2 | Fri Oct 31 | Repo list (installations); wizard steps Detect + Policy; setup PR creation | Setup PR opens on `keel-demo` |
-| 3 | Sat Nov 1 | BYO-keys step (sealed-box secrets); Action posts run reports (OIDC); runs timeline | A real run appears in the dashboard |
-| 4 | Sun Nov 2 | Repo dashboard: decisions, risk-budget gauge, cost; "Fix now" dispatch; pause/resume | Full journey end to end |
-| 5 | Mon Nov 3 | Hosted-quota proxy (only if credits arrived); polish; record the video around the journey | Demo video recorded |
+| 1 | Thu Oct 30 | `platform/` scaffold (Fastify + TS + Drizzle); Postgres schema and migrations; Neon + Render deploy; GitHub App registered; OAuth sign-in/out with sessions | Sign in with GitHub on the live app |
+| 2 | Fri Oct 31 | Installations and repo list; wizard steps Detect + Policy; setup PR creation | Setup PR opens on `keel-demo` |
+| 3 | Sat Nov 1 | BYO-keys step (sealed-box repo secrets); Action posts run reports (OIDC); webhooks; runs timeline | A real run appears in the dashboard |
+| 4 | Sun Nov 2 | Repo dashboard: decisions, risk-budget gauge, cost; "Fix now" (workflow_dispatch); pause/resume; outcome tracking | Full journey end to end |
+| 5 | Mon Nov 3 | Polish, tests (vitest + Postgres in CI), security review; record the video around the journey | Demo video recorded |
 | 6 | Tue Nov 4 | Hardening, docs, submit by 6 PM ET | Submitted |
 
 **In for the hackathon:** GitHub sign-in, install, wizard, setup PR, BYO keys, run reports, repo dashboard,
@@ -210,17 +285,18 @@ end to end in under 60 seconds.
 
 | # | What | Why |
 |---|------|-----|
-| P1 | A **Cloudflare account** (free). Create an API token with *Workers Scripts: Edit* and *D1: Edit*, and add it as the `CLOUDFLARE_API_TOKEN` repo secret. Also send the account id. Or tell me if you prefer Supabase. | Hosts the API and database for free |
-| P2 | **Register the GitHub App** "Keel" with the permissions in §3.1. I'll give you a click-by-click checklist and the manifest. Then send the App ID, client id, client secret and private key as **secrets** (never in chat or the repo). | Sign-in, repo access, setup PRs |
-| P3 | Decide on **models for users**: BYO keys only for the hackathon (recommended), or a hosted quota from your credits | Cost exposure |
-| P4 | Enable **GitHub Pages** (Settings → Pages → Source: GitHub Actions) | The `/app` frontend lives on Pages |
-| P5 | Optional: a custom domain (e.g. `keel.dev`); otherwise `feedofmri.github.io/keel` | Polish |
+| P1 | A **Neon** account (free) and a project named `keel`. Add its connection string as the `DATABASE_URL` secret, in the hosting provider and as a GitHub secret for migrations. Or another Postgres you prefer. | The database |
+| P2 | A **Render** account (free), connected to the GitHub repo, so I can give you a `render.yaml` blueprint for one-click deploy. Or tell me Fly or Railway instead. | Hosts the Node service |
+| P3 | **Register the GitHub App** "Keel" with the permissions in §3.1. I'll give you a click-by-click checklist and the manifest. Its App ID, client id, client secret, webhook secret and private key go in as host **secrets** (never in chat or the repo). | Sign-in, repo access, setup PRs |
+| P4 | Decide on **models for users**: BYO keys only for the hackathon (recommended), or a hosted quota from your credits | Cost exposure |
+| P5 | Enable **GitHub Pages** (Settings → Pages → Source: GitHub Actions) | The marketing site |
+| P6 | Optional: a custom domain (e.g. `app.keel.dev`) | Polish |
 
 ## 8. Risks
 | Risk | Mitigation |
 |------|-----------|
 | GitHub App review or webhook setup takes time | It doesn't need Marketplace approval; it works immediately for installs by anyone |
-| Cloudflare unavailable or blocked | Supabase fallback with the same schema |
+| Free Render instance sleeps when idle | Warm it before demos, or switch to a paid or credit-backed host; Neon autosuspend wakes in under a second |
 | Too much scope for 6 days | The table in §5 is ordered so every day ends with something demoable; the hosted quota is the first thing to cut |
 | Secrets handling mistakes | Sealed-box encryption to GitHub, no plaintext stored, a reviewed threat model before launch |
 | Rule "identify contributions" | The platform is new code in this repo, listed in `HACKATHON.md` |
