@@ -52,6 +52,8 @@ export function registerRunReports(app: FastifyInstance, db: Db, env: Env, keys 
     const parsed = ReportSchema.safeParse(req.body);
     if (!parsed.success) return reply.code(400).send({ error: "invalid report", issues: parsed.error.issues.slice(0, 5) });
     const r = parsed.data;
+    // Store only what the run page shows: the 10 lowest-risk candidates, the selected one always kept.
+    const candidates = r.candidates && [...r.candidates].sort((a, b) => Number(b.selected) - Number(a.selected) || a.score - b.score).slice(0, 10);
     const repo = await one<{ id: string }>(db, "select id from repos where github_repo_id = $1", [Number(claims.repository_id)]);
     if (!repo) return reply.code(404).send({ error: "repository is not connected to Keel" });
     const run = await one<{ id: string }>(db,
@@ -64,7 +66,7 @@ export function registerRunReports(app: FastifyInstance, db: Db, env: Env, keys 
       [repo.id, Number(claims.run_id), r.trigger, r.commit_sha, r.started_at ?? null, r.finished_at ?? new Date().toISOString(),
        r.n_candidates, r.selected_score, r.threshold, r.decision, r.pr_number, r.cost_usd,
        JSON.stringify({ failing_tests: r.failing_tests, reasons: r.reasons, alpha: r.alpha, method: r.method,
-                       guarantee: r.guarantee, n_calibration: r.n_calibration, candidates: r.candidates })]);
+                       guarantee: r.guarantee, n_calibration: r.n_calibration, candidates })]);
     await db.query("update repos set status = 'active', activated_at = coalesce(activated_at, now()) where id = $1 and status in ('new', 'setup_pr_open')", [repo.id]);
     return reply.code(201).send({ id: Number(run!.id) });
   });

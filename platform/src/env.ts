@@ -19,9 +19,16 @@ const schema = z.object({
   GITHUB_API_URL: z.string().url().default("https://api.github.com"),
   GITHUB_WEB_URL: z.string().url().default("https://github.com"),
   RATE_LIMIT: z.enum(["on", "off"]).default("on"),
+  // Data retention (see db/retention.ts). Kept short to keep a free service's database small.
+  RETENTION_RUN_DETAIL_DAYS: z.coerce.number().int().min(7).default(90),
+  RETENTION_RUN_DAYS: z.coerce.number().int().min(30).default(365),
+  RETENTION_ACTIVITY_DAYS: z.coerce.number().int().min(7).default(90),
 });
 
 export type Env = z.infer<typeof schema>;
+
+export const retentionOf = (env: Env) =>
+  ({ runDetailDays: env.RETENTION_RUN_DETAIL_DAYS, runDays: env.RETENTION_RUN_DAYS, auditDays: env.RETENTION_ACTIVITY_DAYS });
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const env = schema.parse(source);

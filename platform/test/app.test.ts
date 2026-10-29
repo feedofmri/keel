@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../src/app.js";
 import { createSession } from "../src/auth/sessions.js";
 import { createDb, one, type Db } from "../src/db/index.js";
+import { prune } from "../src/db/retention.js";
 import { loadEnv } from "../src/env.js";
 import { migrate } from "../src/migrate.js";
 
@@ -203,5 +204,23 @@ d("platform app (needs TEST_DATABASE_URL)", () => {
   it("requires sign-in for repository data", async () => {
     expect((await app.inject("/api/repos")).statusCode).toBe(401);
     expect((await app.inject("/api/repos/acme/shop")).statusCode).toBe(401);
+  });
+
+  it("prunes old data: candidate tables after 90 days, runs after a year, activity after 90 days", async () => {
+    const inst = await one<{ id: string }>(db, "insert into installations (github_installation_id, account_login) values (990, 'prune') returning id");
+    const repo = await one<{ id: string }>(db, "insert into repos (installation_id, github_repo_id, full_name) values ($1, 990, 'prune/r') returning id", [inst!.id]);
+    const run = (days: number, gh: number) => one<{ id: string }>(db,
+      `insert into runs (repo_id, github_run_id, trigger, commit_sha, report, created_at)
+       values ($1, $2, 'ci', 'abc', '{"candidates": [{"id": "c"}], "reasons": ["r"]}', now() - make_interval(days => $3::int)) returning id`,
+      [repo!.id, gh, days]);
+    const fresh = await run(1, 1), old = await run(120, 2), ancient = await run(400, 3);
+    await db.query("insert into audit_log (repo_id, action, at) values ($1, 'fix_now', now() - interval '100 days'), ($1, 'fix_now', now())", [repo!.id]);
+    const c = await prune(db, { runDetailDays: 90, runDays: 365, auditDays: 90 });
+    expect(c).toMatchObject({ runs: 1, details: 1, activity: 1 });
+    const report = async (id: string) => (await one<{ report: any }>(db, "select report from runs where id = $1", [id]))?.report;
+    expect((await report(fresh!.id)).candidates).toHaveLength(1);
+    expect(await report(old!.id)).toEqual({ reasons: ["r"], archived: true });
+    expect(await report(ancient!.id)).toBeUndefined();
+    expect((await prune(db, { runDetailDays: 90, runDays: 365, auditDays: 90 })).details).toBe(0);  // idempotent
   });
 });

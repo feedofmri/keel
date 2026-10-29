@@ -39,7 +39,7 @@ export default function RunDetail() {
       <div className="kpis k5">
         <div><div className="k">Risk score</div><div className="v">{fmt(r.selected_score)}</div><div className="s">selected candidate</div></div>
         <div><div className="k">Threshold λ̂</div><div className="v">{fmt(r.threshold)}</div><div className="s">α {rep.alpha != null ? Math.round(rep.alpha * 100) + "%" : "–"} · {(rep.method || "crc").toUpperCase()}</div></div>
-        <div><div className="k">Candidates</div><div className="v">{r.n_candidates ?? "–"}</div><div className="s">{cands.filter(c => !c.gates.length).length} passed the gates</div></div>
+        <div><div className="k">Candidates</div><div className="v">{r.n_candidates ?? "–"}</div><div className="s">{cands.length ? `${cands.filter(c => !c.gates.length).length} passed the gates` : "details not stored"}</div></div>
         <div><div className="k">Model cost</div><div className="v">${fmt(r.cost_usd, 3)}</div><div className="s">this run</div></div>
         <div><div className="k">Duration</div><div className="v">{secs == null ? "–" : secs < 90 ? `${Math.round(secs)}s` : `${Math.round(secs / 60)}m`}</div><div className="s">on your runner</div></div>
       </div>
@@ -56,7 +56,7 @@ export default function RunDetail() {
         </div>
       </div>
 
-      <div className="section-h"><h2>Candidates</h2><span className="muted" style={{ fontSize: 13 }}>lowest risk first</span></div>
+      <div className="section-h"><h2>Candidates</h2><span className="muted" style={{ fontSize: 13 }}>{(r.n_candidates ?? 0) > cands.length && cands.length ? `the ${cands.length} lowest-risk of ${r.n_candidates}` : "lowest risk first"}</span></div>
       {cands.length ? (
         <div className="table-scroll"><table className="data cand-table">
           <thead><tr><th>Candidate</th><th>Model</th><th className="num">Risk</th><th className="num">Failing tests</th><th className="num">Kept passing</th><th className="num">Adversarial</th><th className="num">Lines</th><th>Gates / top factors</th></tr></thead>
@@ -73,7 +73,7 @@ export default function RunDetail() {
                 : c.top_factors.map(([k, v]) => <span key={k} className={`factor ${v < 0 ? "neg" : "pos"}`} title={v < 0 ? "lowers risk" : "raises risk"}>{k.replace(/_/g, " ")}</span>)}</td>
             </tr>))}</tbody>
         </table></div>
-      ) : <p className="muted">Candidate details were not reported for this run. They are reported by the current version of the Keel Action.</p>}
+      ) : <p className="muted">{rep.archived ? "Candidate details are kept for 90 days, and this run is older. Its summary, reasons and failing tests remain." : "Candidate details were not reported for this run. They are reported by the current version of the Keel Action."}</p>}
 
       <div className="section-h"><h2>Failing tests</h2></div>
       <ul className="bullets">{(rep.failing_tests || []).map(t => <li key={t}><code>{t}</code></li>)}</ul>

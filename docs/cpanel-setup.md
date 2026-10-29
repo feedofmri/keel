@@ -100,8 +100,19 @@ Every push to `main` that touches `platform/` or `web/` builds the app and uploa
 Passenger. You can also run it by hand: Actions → **Deploy to cPanel** → *Run workflow*. The job ends by
 calling `https://keel.boraqs.com/healthz`. Database migrations run automatically when the app starts.
 
-## 6. Maintenance cron (optional)
-cPanel → **Cron Jobs** → every 30 minutes:
+## 6. Data retention and the optional cron
+The app deletes old data by itself each time it starts (Passenger starts it on the first request after
+it has been idle) and once a day while it runs:
+
+| Data | Kept for | Variable to change it |
+|---|---|---|
+| Candidate table of each run | 90 days | `RETENTION_RUN_DETAIL_DAYS` |
+| Run summaries and outcomes | 365 days | `RETENTION_RUN_DAYS` |
+| Activity log | 90 days | `RETENTION_ACTIVITY_DAYS` |
+| Expired sessions | removed | – |
+
+Each run also stores at most its 10 lowest-risk candidates, so a run is a few KB. Optionally, run the
+same clean-up from cPanel → **Cron Jobs** once a day:
 ```
 cd ~/keel-app && /home/<cpanel-user>/nodevenv/keel-app/<node-version>/bin/node dist/jobs/maintenance.js
 ```

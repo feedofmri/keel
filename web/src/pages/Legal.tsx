@@ -29,6 +29,8 @@ export function Privacy() {
         <p>One session cookie keeps you signed in, and two short-lived cookies protect the GitHub sign-in flow. Your theme choice is kept in your browser's local storage.</p>
         <h2>Sharing</h2>
         <p>Data is not sold or shared with third parties. GitHub processes sign-in and repository actions; your model provider processes the prompts your workflow sends under your keys.</p>
+        <h2>Retention</h2>
+        <p>Candidate details for each run are kept for 90 days, run summaries for one year and the activity log for 90 days. Older records are deleted automatically.</p>
         <h2>Removing your data</h2>
         <p>Disconnect a repository from its settings page, or delete your account from <Link to="/app/settings/danger">Settings → Danger zone</Link>. Uninstalling the GitHub App stops all access.</p>
         <h2>Contact</h2>

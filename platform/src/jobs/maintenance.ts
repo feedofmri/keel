@@ -1,9 +1,10 @@
-// Run from cPanel cron, e.g. every 10 minutes:  cd ~/keel-app && node dist/jobs/maintenance.js
+// Optional: prune from a cPanel cron job instead of waiting for the server's daily run.
+//   cd ~/keel-app && node dist/jobs/maintenance.js
 import { createDb } from "../db/index.js";
-import { loadEnv } from "../env.js";
+import { prune } from "../db/retention.js";
+import { loadEnv, retentionOf } from "../env.js";
 
 const env = loadEnv();
 const db = createDb(env.DATABASE_URL);
-const s = await db.query("delete from sessions where expires_at < now()");
-console.log(`removed ${s.rowCount} expired sessions`);
+console.log("pruned", await prune(db, retentionOf(env)));
 await db.end();

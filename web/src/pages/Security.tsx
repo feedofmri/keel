@@ -33,11 +33,11 @@ export default function Security() {
       <Section title="What Keel stores">
         <RefTable mono={false} head={["Data", "Stored", "Notes"]} rows={[
           ["GitHub profile", "Login, avatar URL, user id", "From GitHub sign-in."],
-          ["Session", "Your GitHub user token, encrypted (AES-256-GCM)", "Expires after 30 days; refreshed tokens are re-encrypted. Signing out deletes it."],
+          ["Session", "Your GitHub user token, encrypted (AES-256-GCM)", "Expires after 14 days; refreshed tokens are re-encrypted. Signing out deletes it, and expired sessions are removed daily."],
           ["Repository settings", "Risk level, method, models, CI workflow name", "The values written to .keel.toml by the setup pull request."],
-          ["Run summaries", "Decision, scores, threshold, cost, failing test names, candidate summaries", "Diffs, source code and model output do not leave the runner."],
+          ["Run summaries", "Decision, scores, threshold, cost, failing test names, candidate summaries", "Diffs, source code and model output do not leave the runner. Candidate summaries are kept for 90 days and run summaries for one year."],
           ["Model keys", "Not stored", "Sent over HTTPS once during setup, sealed with the repository's public key (libsodium) and saved as GitHub repository secrets. Never written to Keel's database or logs."],
-          ["Activity", "Changes made by each user, with timestamps", "Setup pull requests, pause and resume, Fix now, and feedback on runs."],
+          ["Activity", "Changes made by each user, with timestamps", "Setup pull requests, pause and resume, Fix now, and feedback on runs. Kept for 90 days."],
         ]} />
       </Section>
 

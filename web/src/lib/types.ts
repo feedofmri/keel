@@ -31,7 +31,7 @@ export interface CandidateSummary {
 }
 export interface RunDetail extends RunRow {
   can_manage: boolean;
-  report: { failing_tests?: string[]; reasons?: string[]; alpha?: number; method?: string; guarantee?: string; n_calibration?: number; candidates?: CandidateSummary[] };
+  report: { failing_tests?: string[]; reasons?: string[]; alpha?: number; method?: string; guarantee?: string; n_calibration?: number; candidates?: CandidateSummary[]; archived?: boolean };
 }
 export interface RunFilter { repo?: string; decision?: "auto" | "review"; outcome?: "wrong" | "merged" | "open"; before?: number }
 export interface Overview {
