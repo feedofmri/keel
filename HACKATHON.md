@@ -22,11 +22,12 @@ This list is updated as components land (with commit references):
 | GitHub Action (CI failure, `/keel fix`, issue label) that opens labelled PRs | `action.yml`, `keel/github/` | Oct 29 |
 | QuixBugs and SWE-bench Lite adapters, split runner, baselines, ablations | `keel/eval/` | Oct 29 |
 | Benchmark workflows on GitHub Actions | `.github/workflows/benchmark-*.yml` | Oct 29 |
-| Website: waterline hero, story, comparison, install; risk dashboard | `site/` | Oct 29 |
-| Logo SVG (from the team's logo PNG), favicon | `site/assets/` | Oct 29 |
+| Website: waterline hero, story, comparison, install; risk dashboard | `web/src/pages/` | Oct 29 |
+| Logo SVG (from the team's logo PNG), favicon | `web/public/` | Oct 29 |
 | Demo repo template, video motion graphics, docs | `examples/`, `docs/` | Oct 29 |
 | Keel platform backend: GitHub sign-in, sessions, repo setup PRs, sealed-box secrets, OIDC run reports, webhooks (Node.js + PostgreSQL) | `platform/` | Oct 29 |
-| Keel app screens: sign-in, repositories, setup wizard, repo dashboard (with a demo mode for GitHub Pages) | `site/app/` | Oct 29 |
+| Keel app screens: sign-in, repositories, setup wizard, repo dashboard (with a demo mode for GitHub Pages) | `web/src/pages/app/` | Oct 29 |
+| Frontend rebuilt in React: one header per zone, layouts, route guard, shared components | `web/` | Oct 29 |
 | cPanel deploy pipeline and platform CI (PostgreSQL 12 and 16) | `.github/workflows/deploy-cpanel.yml`, `platform-ci.yml` | Oct 29 |
 
 Exact dates and diffs: `git log --stat`.

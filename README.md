@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="site/assets/logo.svg" width="72" alt="Keel logo">
+  <img src="web/public/logo.svg" width="72" alt="Keel logo">
 </p>
 
 <h1 align="center">Keel</h1>
@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://keel.boraqs.com">keel.boraqs.com</a> ·
   <a href="https://feedofmri.github.io/keel/">Preview (GitHub Pages)</a> ·
-  <a href="https://feedofmri.github.io/keel/results.html">Results</a> ·
+  <a href="https://feedofmri.github.io/keel/results">Results</a> ·
   <a href="#install-as-a-github-action">Install</a> ·
   <a href="HACKATHON.md">What we built at the hackathon</a>
 </p>
@@ -65,8 +65,8 @@ At [keel.boraqs.com/app](https://keel.boraqs.com/app/), sign in with GitHub, pic
 set a risk level. Keel stores your Meta model keys as encrypted repository secrets and opens one setup
 pull request. After you merge it, every run shows up on the repository's dashboard. The code is in
 [`platform/`](platform/) (Node.js, Fastify, PostgreSQL), and deployment is described in
-[`docs/cpanel-setup.md`](docs/cpanel-setup.md). The GitHub Pages copy of the site runs the app screens
-in a demo mode with sample data.
+[`docs/cpanel-setup.md`](docs/cpanel-setup.md). The web app is React in [`web/`](web/); the GitHub Pages
+copy is the same build in demo mode with sample data.
 
 ## Quick start (local)
 
@@ -97,12 +97,12 @@ hard-blocked.
 ```bash
 keel eval quixbugs  --models muse-spark,muse-spark-open --k 5    # 40 programs, visible/hidden split
 keel eval swebench  --n 100 --stage all                          # SWE-bench Lite, official harness
-keel eval analyze   results/quixbugs/records.jsonl --out site/data/results.json
+keel eval analyze   results/quixbugs/records.jsonl --out web/public/data/results.json
 keel calibrate      results/quixbugs/records.jsonl --out calibration.json
 ```
 
 Both benchmarks also run from the Actions tab (`Benchmark – QuixBugs`, `Benchmark – SWE-bench Lite`).
-Results feed the [results page](https://feedofmri.github.io/keel/results.html). It compares Keel with
+Results feed the [results page](https://feedofmri.github.io/keel/results). It compares Keel with
 merging whenever tests pass, with model self-confidence ≥ 1−α, and with Keel's own score without
 calibration. It also shows per-model cost and feature ablations.
 
@@ -122,7 +122,8 @@ all 40 programs. Bugs are split into fit / calibration / test sets, repeated ove
 | `keel/conformal.py`, `keel/calibration.py` | CRC and Learn-then-Test, calibration artefact |
 | `keel/github/` | The GitHub Action entry point |
 | `keel/eval/` | QuixBugs and SWE-bench adapters, split runner, simulation |
-| `site/` | Landing page and risk dashboard (GitHub Pages) |
+| `web/` | The web app (React): public pages, sign-in, and the app screens |
+| `platform/` | The Keel platform API (Node.js, Fastify, PostgreSQL), which also serves `web/` |
 | `examples/` | Demo repo, canned responses, workflow, live-demo template |
 
 ## License

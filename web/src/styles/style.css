@@ -187,3 +187,34 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
 }
 
 [hidden] { display: none !important; }
+
+.ctas { display: flex; gap: 8px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+.ctas.start { justify-content: flex-start; }
+
+/* Header: one component for every public page; dark over [data-dark-zone] sections. */
+.top .nav .btn.cta { height: 32px; margin-left: 8px; padding: 0 14px; }
+.skip { position: absolute; left: -9999px; top: 8px; z-index: 100; }
+.skip:focus { left: 16px; }
+
+/* Footer (shared by public pages) */
+.foot { padding: 144px 0 40px; position: relative; overflow: hidden; }
+.foot::before { content: ""; position: absolute; left: 50%; top: 0; width: 900px; max-width: 100vw; height: 640px; transform: translateX(-50%);
+  background: radial-gradient(50% 60% at 50% 40%, var(--glow), transparent); mix-blend-mode: plus-lighter; pointer-events: none; }
+.foot-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: center; position: relative; }
+@media (max-width: 900px) { .foot-grid { grid-template-columns: minmax(0, 1fr); } }
+.foot h2 { max-width: 520px; color: var(--ink); }
+.foot .logo-field { width: 100%; height: 420px; display: block; }
+@media (max-width: 720px) { .foot { padding-top: 96px; } .foot .logo-field { height: 300px; } }
+.foot-bottom { margin-top: 96px; padding-top: 24px; border-top: 1px solid var(--b2); display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: space-between; position: relative; }
+.foot-bottom nav { display: flex; gap: 24px; flex-wrap: wrap; }
+.foot-bottom a { text-decoration: none; color: var(--ink-2); font-size: 14px; }
+.foot-bottom a:hover { color: var(--ink); }
+
+/* Simple centred message page (404, errors) */
+.msg-page { min-height: calc(100vh - 64px); display: grid; place-items: center; text-align: center; padding: 96px 24px; }
+.msg-page .code { font: 400 13px var(--mono); color: var(--muted); }
+.msg-page h1 { margin-top: 14px; }
+.msg-page p { margin: 14px auto 0; max-width: 420px; }
+.boot { min-height: 60vh; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
+.nav a.btn.primary, .nav a.btn.primary[aria-current="page"] { color: var(--page); background: var(--ink); }
+.nav a.btn.primary:hover { background: color-mix(in srgb, var(--ink) 88%, var(--sig)); }

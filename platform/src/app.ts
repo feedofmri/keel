@@ -33,12 +33,13 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
     reply.header("X-Frame-Options", "DENY");
   });
 
-  // Two zones: public pages, and the app (/app/*) which needs a session.
+  // Two zones: public pages, and the app (/app/*) which needs a session. The React app guards the
+  // same routes on the client; doing it here too means a signed-out visitor never sees an app shell.
   app.addHook("onRequest", async (req, reply) => {
     const path = req.url.split("?")[0];
     if ((path === "/app" || path.startsWith("/app/")) && !req.user)
-      return reply.redirect(`/login.html?next=${encodeURIComponent(req.url)}`);
-    if (path === "/login.html" && req.user) return reply.redirect("/app/");
+      return reply.redirect(`/login?next=${encodeURIComponent(req.url)}`);
+    if ((path === "/login" || path === "/login.html") && req.user) return reply.redirect("/app");
   });
 
   app.get("/healthz", async () => { await db.query("select 1"); return { ok: true }; });
@@ -47,11 +48,19 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
   registerRunReports(app, db, env, opts.jwks);
   registerApi(app, db, env);
 
-  // The marketing site and the app UI are static files (the same files GitHub Pages serves).
-  const pub = opts.publicDir || [join(here, "public"), join(here, "..", "..", "site")].find(existsSync);
+  // The web app (web/, React) is a static build; the same build in demo mode is the GitHub Pages preview.
+  const pub = opts.publicDir || [join(here, "public"), join(here, "..", "..", "web", "dist")].find(p => existsSync(join(p, "index.html")));
   if (pub) {
-    await app.register(fstatic, { root: pub, index: ["index.html"], redirect: true });
+    await app.register(fstatic, { root: pub, index: ["index.html"], wildcard: true, cacheControl: false,
+      // Built assets have content hashes in their names, so they never change; everything else revalidates.
+      setHeaders: (res, file) => res.setHeader("Cache-Control", /[\\/]assets[\\/]/.test(file) ? "public, max-age=31536000, immutable" : "no-cache") });
   }
-  app.setNotFoundHandler((req, reply) => reply.code(404).send(req.url.startsWith("/api/") ? { error: "not found" } : "Not found"));
+  // Client-side routes (/results, /login, /app/repos/...) all load index.html; API-like paths get JSON 404s.
+  const serverOnly = /^\/(api|auth|webhooks|healthz)(\/|$)/;
+  app.setNotFoundHandler((req, reply) => {
+    if (pub && req.method === "GET" && !serverOnly.test(req.url) && !/\.\w+$/.test(req.url.split("?")[0]))
+      return reply.type("text/html").header("Cache-Control", "no-cache").sendFile("index.html");
+    return reply.code(404).send(serverOnly.test(req.url) ? { error: "not found" } : "Not found");
+  });
   return app;
 }

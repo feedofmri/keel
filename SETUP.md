@@ -32,7 +32,7 @@ Check locally with `keel doctor` (it never prints keys).
 Actions → **Benchmark – QuixBugs** → *Run workflow*. It takes about 1 hour and costs roughly
 40 bugs × 2 models × 5 samples = 400 generations plus 40 adversarial test files.
 It commits `results/quixbugs/records.jsonl`, `results/quixbugs/calibration.json` and
-`site/data/results.json`. The dashboard switches from *preview* to real data automatically.
+`web/public/data/results.json`. The dashboard switches from *preview* to real data automatically.
 
 Then Actions → **Benchmark – SWE-bench Lite** → *Run workflow* (default 100 instances).
 Generation uses the model APIs; the official harness then runs in up to 10 parallel jobs on free runners.

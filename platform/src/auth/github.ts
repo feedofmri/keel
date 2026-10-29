@@ -9,7 +9,7 @@ const STATE_COOKIE = "keel_oauth_state";
 const NEXT_COOKIE = "keel_next";
 
 /** Only ever redirect back into the app (no open redirects). */
-export const safeNext = (n: unknown) => typeof n === "string" && /^\/app(\/|$)[\w\-./?=&%]*$/.test(n) && !n.includes("//") ? n : "/app/";
+export const safeNext = (n: unknown) => typeof n === "string" && /^\/app(\/|$)[\w\-./?=&%]*$/.test(n) && !n.includes("//") ? n : "/app";
 
 /** Exchange a refresh token for a new GitHub App user token. */
 export function githubRefresher(env: Env) {
@@ -44,7 +44,7 @@ export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
     const expected = req.cookies[STATE_COOKIE], next = safeNext(req.cookies[NEXT_COOKIE]);
     reply.clearCookie(STATE_COOKIE, { path: "/auth" }); reply.clearCookie(NEXT_COOKIE, { path: "/auth" });
     // Installing the App can also land here without a sign-in code.
-    if (!code) return reply.redirect(req.user ? "/app/" : "/login.html");
+    if (!code) return reply.redirect(req.user ? "/app" : "/login");
     if (!state || !expected || state !== expected) return reply.code(400).send("Invalid sign-in state. Please try again.");
 
     const r = await fetch("https://github.com/login/oauth/access_token", {

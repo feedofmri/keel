@@ -1,0 +1,18 @@
+.page-login .login { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: calc(100vh - 64px); }
+@media (max-width: 900px) {
+  .page-login .login { grid-template-columns: minmax(0, 1fr); }
+  .page-login .login .side { display: none; }
+}
+.page-login .login .main { display: flex; align-items: center; justify-content: center; padding: 64px 24px; }
+.page-login .card-login { width: 100%; max-width: 400px; }
+.page-login .card-login h1 { font-size: 38px; line-height: 1.1; letter-spacing: -0.01em; margin-top: 18px; }
+.page-login .card-login p { margin: 14px 0 0; }
+.page-login .gh { width: 100%; justify-content: center; height: 46px; font-size: 16px; margin-top: 32px; }
+.page-login .gh svg { width: 18px; height: 18px; }
+.page-login .fine { font-size: 13px; color: var(--muted); margin-top: 18px; }
+.page-login .side { position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 56px; }
+.page-login .side .cols { z-index: 1; }
+.page-login .side::before { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 50% at 50% 70%, var(--glow), transparent); }
+.page-login .side .cols { position: relative; grid-template-columns: minmax(0, 1fr); gap: 28px; max-width: 420px; }
+.page-login .side h4 { font-size: 15px; }
+.page-login .field { position: absolute; left: 0; right: 0; top: 6%; height: 62%; width: 100%; }

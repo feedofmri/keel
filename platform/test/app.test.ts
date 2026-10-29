@@ -1,4 +1,7 @@
 import { createHmac } from "node:crypto";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from "jose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../src/app.js";
@@ -22,7 +25,9 @@ d("platform app (needs TEST_DATABASE_URL)", () => {
     const { publicKey, privateKey } = await generateKeyPair("RS256");
     const jwk = { ...(await exportJWK(publicKey)), kid: "k1", alg: "RS256" };
     signer = privateKey;
-    app = await buildApp(db, env, { jwks: createLocalJWKSet({ keys: [jwk] }), publicDir: "/nonexistent" });
+    const pub = mkdtempSync(join(tmpdir(), "keel-web-"));
+    mkdirSync(join(pub, "assets")); writeFileSync(join(pub, "index.html"), "<div id=root></div>"); writeFileSync(join(pub, "assets", "a.js"), "1");
+    app = await buildApp(db, env, { jwks: createLocalJWKSet({ keys: [jwk] }), publicDir: pub });
   });
   afterAll(async () => { await app.close(); await db.end(); });
 
@@ -103,14 +108,27 @@ d("platform app (needs TEST_DATABASE_URL)", () => {
   });
 
   it("keeps the app behind sign-in and never redirects outside it", async () => {
-    const r = await app.inject("/app/repo.html?repo=acme/shop");
+    const r = await app.inject("/app/repos/acme/shop/settings");
     expect(r.statusCode).toBe(302);
-    expect(r.headers.location).toBe("/login.html?next=%2Fapp%2Frepo.html%3Frepo%3Dacme%2Fshop");
+    expect(r.headers.location).toBe("/login?next=%2Fapp%2Frepos%2Facme%2Fshop%2Fsettings");
     const { safeNext } = await import("../src/auth/github.js");
-    expect(safeNext("/app/repo.html?repo=a/b")).toBe("/app/repo.html?repo=a/b");
-    expect(safeNext("https://evil.example")).toBe("/app/");
-    expect(safeNext("//evil.example/app")).toBe("/app/");
-    expect(safeNext("/app//evil")).toBe("/app/");
+    expect(safeNext("/app/repos/a/b")).toBe("/app/repos/a/b");
+    expect(safeNext("https://evil.example")).toBe("/app");
+    expect(safeNext("//evil.example/app")).toBe("/app");
+    expect(safeNext("/app//evil")).toBe("/app");
+  });
+
+  it("serves the web app for client-side routes and JSON 404s for server paths", async () => {
+    for (const path of ["/", "/results", "/login", "/login?next=%2Fapp"]) {
+      const r = await app.inject(path);
+      expect(r.statusCode, path).toBe(200);
+      expect(r.body).toContain("id=root");
+    }
+    const asset = await app.inject("/assets/a.js");
+    expect(asset.headers["cache-control"]).toContain("immutable");
+    expect((await app.inject("/assets/missing.js")).statusCode).toBe(404);
+    const api = await app.inject("/api/nope");
+    expect(api.statusCode).toBe(404); expect(api.json()).toEqual({ error: "not found" });
   });
 
   it("requires sign-in for repository data", async () => {

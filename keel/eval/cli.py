@@ -163,7 +163,7 @@ def add_eval_commands(sub) -> None:
 
     an = es.add_parser("analyze", help="repeated-split analysis -> dashboard JSON")
     an.add_argument("records", nargs="+")
-    an.add_argument("--out", default="site/data/results.json")
+    an.add_argument("--out", default="web/public/data/results.json")
     an.add_argument("--splits", type=int, default=200)
     an.add_argument("--delta", type=float, default=0.1)
     an.add_argument("--seed", type=int, default=0)

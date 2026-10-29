@@ -93,11 +93,11 @@ jobs:
         run: |
           keel eval swebench --stage records --n "${{ inputs.n }}"
           keel eval analyze $(ls results/quixbugs/records.jsonl results/swebench/records.jsonl 2>/dev/null) \
-            --out site/data/results.json --splits 200
+            --out web/public/data/results.json --splits 200
       - name: Commit results
         run: |
           git config user.name "keel-benchmark[bot]"
           git config user.email "keel-benchmark@users.noreply.github.com"
-          git add results/swebench/records.jsonl results/swebench/candidates.jsonl site/data
+          git add results/swebench/records.jsonl results/swebench/candidates.jsonl web/public/data
           git commit -m "Benchmark: SWE-bench Lite results (n=${{ inputs.n }}, ${{ inputs.models }}, k=${{ inputs.k }})" || exit 0
           git pull --rebase && git push

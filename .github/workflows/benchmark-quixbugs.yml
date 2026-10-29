@@ -53,13 +53,13 @@ jobs:
           ATTACK=""; if [ "${{ inputs.attacker }}" = "none" ]; then ATTACK="--no-attack"; fi
           # Real records only (never mix in the simulated preview data).
           keel eval analyze $(ls results/quixbugs/records.jsonl results/swebench/records.jsonl 2>/dev/null) \
-            --out site/data/results.json --splits 200
+            --out web/public/data/results.json --splits 200
           keel calibrate results/quixbugs/records.jsonl --out results/quixbugs/calibration.json \
             --models "${{ inputs.models }}" --k "${{ inputs.k }}" $ATTACK
       - name: Commit results
         run: |
           git config user.name "keel-benchmark[bot]"
           git config user.email "keel-benchmark@users.noreply.github.com"
-          git add results/quixbugs site/data
+          git add results/quixbugs web/public/data
           git commit -m "Benchmark: QuixBugs results (${{ inputs.models }}, k=${{ inputs.k }})" || exit 0
           git push

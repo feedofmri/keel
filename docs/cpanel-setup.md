@@ -96,7 +96,7 @@ Repository **Settings → Secrets and variables → Actions → New repository s
 Optional **variables**: `CPANEL_APP_DIR` (default `keel-app`), and `CPANEL_FTP_VERIFY_TLS=no` only if
 your host's FTP certificate doesn't match its hostname.
 
-Every push to `main` that touches `platform/` or `site/` builds the app and uploads it, then restarts
+Every push to `main` that touches `platform/` or `web/` builds the app and uploads it, then restarts
 Passenger. You can also run it by hand: Actions → **Deploy to cPanel** → *Run workflow*. The job ends by
 calling `https://keel.boraqs.com/healthz`. Database migrations run automatically when the app starts.
 
@@ -110,7 +110,7 @@ cPanel shows the exact `node` path at the top of the Node.js app page ("Enter to
 ## 7. Check it
 - `https://keel.boraqs.com/healthz` → `{"ok":true}`
 - `https://keel.boraqs.com/` → landing page
-- `https://keel.boraqs.com/app/` → redirects to `/login.html` → *Continue with GitHub* → Repositories → set up `keel-demo`
+- `https://keel.boraqs.com/app` → redirects to `/login` → *Continue with GitHub* → Repositories → set up `keel-demo`
 
 ## Troubleshooting
 - **503 or "Incomplete response":** open `keel-app/stderr.log`. A `ZodError` means an environment

@@ -151,7 +151,7 @@
       const last = pts[pts.length - 1];
       labels.push({ y: Y(last[1]) + 10, x: X(last[0]) + 20, color, label, delay });
     };
-    fetch("../../site/data/results.json").then(r => r.json()).then(d => {
+    fetch("../../web/public/data/results.json").then(r => r.json()).then(d => {
       const m = d.evaluation.methods, pts = k => m[k].map(r => [r.alpha, r.risk]);
       const al = d.evaluation.alphas;
       line(al.map(a => [a, a]), "#b9b8b0", 3, "12 10", 1.0, "guaranteed bound", -10);

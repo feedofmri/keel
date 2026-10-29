@@ -2,7 +2,7 @@ name: Deploy to cPanel (keel.boraqs.com)
 on:
   push:
     branches: [main]
-    paths: ["platform/**", "site/**", ".github/workflows/deploy-cpanel.yml"]
+    paths: ["platform/**", "web/**", ".github/workflows/deploy-cpanel.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,11 +26,12 @@ jobs:
         if: steps.creds.outputs.skip != '1'
       - uses: actions/setup-node@v4
         if: steps.creds.outputs.skip != '1'
-        with: { node-version: "22", cache: npm, cache-dependency-path: platform/package-lock.json }
+        with: { node-version: "22", cache: npm, cache-dependency-path: "platform/package-lock.json\nweb/package-lock.json" }
       - name: Build
         if: steps.creds.outputs.skip != '1'
         working-directory: platform
         run: |
+          (cd ../web && npm ci && npm run build)   # live mode, served from /
           npm ci
           npm run build
           rm -rf ../deploy && mkdir -p ../deploy/tmp
@@ -54,7 +55,10 @@ jobs:
       - name: Smoke test
         if: steps.creds.outputs.skip != '1'
         run: |
+          ok=""
           for i in 1 2 3 4 5 6; do
-            if curl -fsS https://keel.boraqs.com/healthz; then exit 0; fi; sleep 10
+            if curl -fsS https://keel.boraqs.com/healthz; then ok=1; break; fi; sleep 10
           done
-          echo "health check failed" && exit 1
+          [ -n "$ok" ] || { echo "health check failed"; exit 1; }
+          # the React app answers its own client-side routes
+          curl -fsS https://keel.boraqs.com/results | grep -q 'id="root"' || { echo "web app not served"; exit 1; }
