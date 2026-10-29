@@ -92,7 +92,7 @@ def cmd_doctor(a: argparse.Namespace) -> int:
         if not p.configured:
             continue
         body = {"model": p.model, "messages": [{"role": "user", "content": "Reply with the word OK."}],
-                "max_tokens": 16, "logprobs": True, **p.extra_body}
+                "max_tokens": 1024, "logprobs": True, **p.extra_body}
         try:
             post = lambda b, p=p: httpx.post(f"{p.base_url}/chat/completions", json=b, timeout=60,  # noqa: E731
                                         headers={"Authorization": f"Bearer {p.api_key}"})
@@ -107,7 +107,12 @@ def cmd_doctor(a: argparse.Namespace) -> int:
             choice = (r.json().get("choices") or [{}])[0]
             text = ((choice.get("message") or {}).get("content") or "").strip()
             lp = lp or ("returned" if (choice.get("logprobs") or {}).get("content") else "not returned")
-            print(f"{name:16s} OK    reply={text[:40]!r} logprobs={lp}")
+            usage = r.json().get("usage") or {}
+            reasoning = (usage.get("completion_tokens_details") or {}).get("reasoning_tokens", "?")
+            print(f"{name:16s} {'OK  ' if text else 'EMPTY'}  reply={text[:40]!r} finish={choice.get('finish_reason')} "
+                  f"tokens in/out/reasoning={usage.get('prompt_tokens')}/{usage.get('completion_tokens')}/{reasoning} "
+                  f"logprobs={lp}")
+            failed += 0 if text else 1
         except httpx.HTTPError as e:
             failed += 1
             print(f"{name:16s} FAIL  {type(e).__name__}: {e}")
