@@ -13,7 +13,7 @@ FEATURE_NAMES = [
     "log_diff_size", "n_files", "n_hunks",
     "frac_files_in_traceback", "log_line_distance",
     "static_delta",
-    "exact_agreement", "behavior_agreement", "mean_jaccard", "cross_model_agreement",
+    "exact_agreement", "behavior_agreement", "mean_jaccard", "cross_model_agreement", "consensus_score",
     "has_logprob", "mean_logprob", "min_logprob", "log_reasoning_tokens",
     "self_confidence",
 ]
@@ -72,6 +72,14 @@ def compute_features(task: BugTask, evals: list[CandidateEvaluation]) -> None:
         majority[t] = sum(votes) * 2 >= len(votes)
     useful_tests = [t for t in attack_tests if any(e.attack_results.get(t) for e in applied)]
 
+    # CodeT/Agentless-style consensus: candidates with identical behaviour form a group, scored
+    # |group| x (tests passed)^2, normalised to [0, 1] within the bug.
+    groups: dict[str, int] = {}
+    for e in applied:
+        groups[e.behavior_signature] = groups.get(e.behavior_signature, 0) + 1
+    raw = {sig: n * (sig.count("1") ** 2) for sig, n in groups.items()}
+    top = max(raw.values()) if raw else 0
+
     for e in evals:
         e.gate_failures = gate_failures(e)
         st = diff_stats(e.candidate.diff)
@@ -107,6 +115,7 @@ def compute_features(task: BugTask, evals: list[CandidateEvaluation]) -> None:
             "behavior_agreement": behav,
             "mean_jaccard": jac,
             "cross_model_agreement": cross_agree,
+            "consensus_score": (raw.get(e.behavior_signature, 0) / top) if (e.applied and top) else 0.0,
             "has_logprob": 1.0 if c.mean_logprob is not None else 0.0,
             "mean_logprob": c.mean_logprob if c.mean_logprob is not None else 0.0,
             "min_logprob": max(c.min_logprob, -20.0) if c.min_logprob is not None else 0.0,

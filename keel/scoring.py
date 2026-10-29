@@ -25,6 +25,7 @@ PRIOR_WEIGHTS = {
     "frac_files_in_traceback": 0.4, "log_line_distance": -0.3,
     "static_delta": -0.6,
     "exact_agreement": 0.6, "behavior_agreement": 0.8, "mean_jaccard": 0.4, "cross_model_agreement": 0.6,
+    "consensus_score": 0.6,
     "mean_logprob": 0.3, "min_logprob": 0.2, "log_reasoning_tokens": -0.1,
     "self_confidence": 0.2,
 }
@@ -36,7 +37,7 @@ PRIOR_SCALE = {
     "frac_files_in_traceback": (0.5, 0.5), "log_line_distance": (2.5, 1.5),
     "static_delta": (0.0, 1.0),
     "exact_agreement": (0.2, 0.25), "behavior_agreement": (0.5, 0.3), "mean_jaccard": (0.4, 0.25),
-    "cross_model_agreement": (0.4, 0.3),
+    "cross_model_agreement": (0.4, 0.3), "consensus_score": (0.6, 0.35),
     "mean_logprob": (-0.3, 0.3), "min_logprob": (-6.0, 3.0), "log_reasoning_tokens": (6.0, 1.5),
     "self_confidence": (0.7, 0.2),
 }

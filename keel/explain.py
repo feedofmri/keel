@@ -24,6 +24,8 @@ FEATURE_TEXT = {
                               "the other Meta model does not agree ({v:.0%} matching)"),
     "exact_agreement": ("{v:.0%} of samples produced the same patch",
                         "few samples produced the same patch ({v:.0%})"),
+    "consensus_score": ("belongs to the largest group of candidates that pass the same tests",
+                        "is not in the main consensus group of candidates"),
     "log_diff_size": ("the change is small and targeted", "the change is large"),
     "n_files": ("touches few files", "touches {raw:.0f} files"),
     "frac_files_in_traceback": ("edits the code named in the failing traceback",

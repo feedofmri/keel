@@ -15,7 +15,8 @@ DEFAULT_ALPHAS = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
 
 FEATURE_GROUPS = {
     "adversarial_tests": ["attack_survival", "attack_minority"],
-    "self_consistency": ["exact_agreement", "behavior_agreement", "mean_jaccard", "cross_model_agreement"],
+    "self_consistency": ["exact_agreement", "behavior_agreement", "mean_jaccard", "cross_model_agreement",
+                         "consensus_score"],
     "diff_size_locality": ["log_diff_size", "n_files", "n_hunks", "frac_files_in_traceback", "log_line_distance"],
     "static_analysis": ["static_delta"],
     "open_weights_uncertainty": ["has_logprob", "mean_logprob", "min_logprob", "log_reasoning_tokens"],
