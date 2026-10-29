@@ -36,7 +36,7 @@ jobs:
           npm run build
           rm -rf ../deploy && mkdir -p ../deploy/tmp
           cp -r dist package.json package-lock.json app.cjs ../deploy/
-          (cd ../deploy && npm ci --omit=dev --ignore-scripts)
+          (cd ../deploy && npm ci --omit=dev --ignore-scripts && rm -rf node_modules/.bin)   # .bin holds CLI symlinks the server never runs; FTP cannot create symlinks
           date -u > ../deploy/tmp/restart.txt   # Passenger restarts the app when this file changes
       - name: Upload over SSH (rsync)
         if: steps.creds.outputs.skip != '1' && env.CPANEL_SSH_KEY != ''
@@ -52,7 +52,7 @@ jobs:
         run: |
           sudo apt-get install -y -qq lftp >/dev/null
           lftp -u "$CPANEL_USER","$CPANEL_FTP_PASSWORD" "ftp://$CPANEL_HOST" -e "set ftp:ssl-force true; set ssl:verify-certificate ${{ vars.CPANEL_FTP_VERIFY_TLS || 'yes' }}; \
-            mirror -R --delete --parallel=8 --exclude-glob .env --exclude-glob stderr.log --exclude-glob .htaccess --exclude-glob .well-known --exclude-glob cgi-bin deploy/ $APP_DIR/; bye"
+            mirror -R --delete --no-symlinks --parallel=8 --exclude-glob .env --exclude-glob stderr.log --exclude-glob .htaccess --exclude-glob .well-known --exclude-glob cgi-bin deploy/ $APP_DIR/; bye"
       - name: Smoke test
         if: steps.creds.outputs.skip != '1'
         run: |
