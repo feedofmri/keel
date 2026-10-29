@@ -40,8 +40,8 @@ the user stays in control and it's easy to demo.
 ## 2. Architecture: Node.js + PostgreSQL
 
 ```
- Marketing site (GitHub Pages)              Keel App (one Node.js service, one origin)
- feedofmri.github.io/keel                   e.g. app.keel.dev / keel-app.onrender.com
+ Marketing site (GitHub Pages or cPanel)    Keel App (one Node.js service, one origin)
+ <your-domain> / Pages                      app.<your-domain> (cPanel, Node.js app)
   landing · /dashboard (benchmarks)  ──►    ┌──────────────────────────────────────────────┐
   "Sign in" button links to the app         │  Web UI  /app  (sign-in, repos, wizard,      │
                                             │          repo dashboard)  served by the same │
@@ -50,12 +50,12 @@ the user stays in control and it's easy to demo.
                                             │  Auth    /auth/github/{login,callback,logout}│
                                             │  Hooks   /webhooks/github  (GitHub App)      │
                                             │  Runs    /api/runs  (reports from the Action)│
-                                            │  Jobs    background worker (same codebase):  │
+                                            │  Jobs    cPanel cron → node scripts:         │
                                             │          outcome tracking, cleanup           │
                                             └──────────────┬───────────────────────────────┘
                                                            │ SQL (TLS)
                                             ┌──────────────▼───────────────────────────────┐
-                                            │  PostgreSQL 16                               │
+                                            │  PostgreSQL (cPanel, v12+)                   │
                                             │  users, sessions, installations, repos,      │
                                             │  runs, outcomes, audit_log                   │
                                             └──────────────────────────────────────────────┘
@@ -69,24 +69,38 @@ the user stays in control and it's easy to demo.
 ### Stack
 | Layer | Choice | Why |
 |---|---|---|
-| Runtime | **Node.js 22 LTS + TypeScript** | Your choice; one language for server and UI |
+| Runtime | **Node.js** (the newest version your cPanel offers, 18, 20 or 22) **+ TypeScript**, compiled to plain JS | Your choice; one language for server and UI |
 | Web framework | **Fastify** | Fast, schema validation built in, first-class TypeScript |
 | GitHub | **Octokit** (`@octokit/app`, `@octokit/webhooks`) | Official: App auth, installation tokens, webhook signature verification |
-| Database | **PostgreSQL 16** | Your choice; JSONB for run reports, row-level ownership checks |
+| Database | **PostgreSQL** (cPanel "PostgreSQL Databases"; schema kept compatible with v12+) | Your choice; JSONB for run reports |
 | DB access | **Drizzle ORM** + `node-postgres` + SQL migrations in the repo | Typed queries, plain SQL migrations, no heavy runtime |
 | UI | Server-rendered pages + small vanilla-JS islands, reusing the website's design system (`site/assets/style.css`) | Matches the brand, no SPA build pipeline to maintain in 6 days |
 | Sessions | Opaque session id in an HTTP-only, Secure, SameSite=Lax cookie; session row in Postgres | First-party (same origin), revocable |
 | Secrets crypto | `libsodium-wrappers` (sealed boxes for GitHub repo secrets); AES-256-GCM for stored GitHub user tokens | Matches GitHub's secrets API; nothing stored in plaintext |
 | Validation | `zod` | Request and env validation |
 | Tests | `vitest` + a Postgres service container in CI | Same CI as the Python engine |
-| Container | `Dockerfile` (multi-stage, distroless) | Runs on any host |
+| Process manager | cPanel **Setup Node.js App** (Phusion Passenger), startup file `dist/server.js` | Standard on cPanel; no Docker needed |
 
-### Hosting (free now, portable later)
-| Need | Recommended free option | Alternatives |
+### Hosting on cPanel
+| Need | cPanel feature | Notes |
 |---|---|---|
-| Node service | **Render** free web service (it sleeps when idle; the first hit takes about 30 s, so warm it before demos) | Fly.io, Railway trial, Koyeb, or Modal web endpoints when credits arrive |
-| PostgreSQL | **Neon** free tier (serverless Postgres, branching, doesn't expire) | Supabase Postgres, Render Postgres (free tier expires after 30 days) |
-| Domain | `*.onrender.com` now; optional custom domain later | any |
+| Node service | **Setup Node.js App** (Passenger) on a subdomain, e.g. `app.<domain>` | Application root `~/keel-app`, startup file `dist/server.js`. Env vars are set in the same screen. Passenger provides the port, so the app listens on `process.env.PORT`. |
+| PostgreSQL | **PostgreSQL Databases** + **phpPgAdmin** | Create the database `<cpuser>_keel` and user `<cpuser>_keel`. Connect on `localhost`. Migrations run on the server with `node dist/migrate.js`. |
+| HTTPS | **SSL/TLS Status → AutoSSL** (Let's Encrypt) on the subdomain | GitHub webhooks and OAuth need HTTPS |
+| Scheduled jobs | **Cron Jobs**: `*/10 * * * * cd ~/keel-app && node dist/jobs/outcomes.js` | Passenger may stop an idle app, so background work runs from cron, not in-process |
+| Deploys | **GitHub Actions → SSH (rsync) or FTP** to `~/keel-app`, then `touch tmp/restart.txt` to restart Passenger. Alternative: cPanel **Git Version Control** with a `.cpanel.yml`. | TypeScript is built and `node_modules` is installed with `npm ci --omit=dev` in CI, then uploaded, so the shared server doesn't run out of memory compiling. |
+| Logs | Passenger log in the app root, plus `stderr.log` | Structured JSON logs (pino) |
+| Marketing site | Keep GitHub Pages, **or** upload `site/` to `public_html` on the main domain | Same domain family as the app looks more polished |
+
+cPanel limits we design around:
+- **No WebSockets or SSE**, which Passenger on shared hosts often buffers. The dashboard polls
+  `/api/runs?since=` every 5 s while a run is active.
+- **Memory and process caps.** A single Fastify process with no in-process queues; slow work goes to
+  cron scripts.
+- **Older PostgreSQL.** No features newer than v12: no `MERGE`, no generated columns from newer
+  versions. Migrations are tested in CI against PostgreSQL 12 and 16.
+- **Cold starts.** Passenger starts the app on the first request after it has been idle. Warm it
+  before demos, and set a longer `PassengerPoolIdleTime` if the host allows.
 
 Why this shape:
 - **Compute costs us nothing.** Repairs run on the user's GitHub Actions minutes. The Node service only
@@ -94,15 +108,17 @@ Why this shape:
 - **The engine doesn't change.** The platform is a control plane around the existing Action.
 - **Code privacy.** Source never leaves GitHub. Postgres stores only metadata: run status, scores,
   decisions, cost.
-- **Portability.** A standard Docker image plus standard Postgres can be moved to Modal, Fly, or a VM
-  later without code changes.
+- **Portability.** Plain Node plus standard Postgres can be moved later to a VPS, Fly or Modal
+  without code changes.
 
 ### Repository layout (new code, same repo)
 ```
 platform/
-  package.json, tsconfig.json, Dockerfile, drizzle.config.ts
+  package.json, tsconfig.json, drizzle.config.ts, .cpanel.yml (optional)
   src/
-    server.ts            Fastify app, plugins, error handling
+    server.ts            Fastify app (listens on process.env.PORT for Passenger)
+    migrate.ts           runs SQL migrations on the server
+    jobs/outcomes.ts     cron: mark reverted / later-failed auto-merges
     env.ts               zod-validated configuration
     db/schema.ts         Drizzle schema   db/migrations/*.sql
     auth/github.ts       OAuth login/callback/logout, sessions
@@ -112,7 +128,6 @@ platform/
     setup/pr.ts          build + open the setup PR (keel.yml, .keel.toml)
     setup/secrets.ts     sealed-box encryption → repo secrets
     runs/report.ts       verify GitHub OIDC token, store run reports
-    runs/outcomes.ts     mark reverted / later-failed auto-merges
     ui/pages/*.ts        server-rendered pages (sign-in, repos, wizard, repo dashboard)
     ui/static/*          JS islands (α slider, live runs)
   test/*.test.ts
@@ -252,10 +267,10 @@ Every query that touches a repo first checks the signed-in user's live GitHub pe
 
 | Day | Date | Platform work | Exit check |
 |-----|------|---------------|-----------|
-| 1 | Thu Oct 30 | `platform/` scaffold (Fastify + TS + Drizzle); Postgres schema and migrations; Neon + Render deploy; GitHub App registered; OAuth sign-in/out with sessions | Sign in with GitHub on the live app |
+| 1 | Thu Oct 30 | `platform/` scaffold (Fastify + TS + Drizzle); Postgres schema and migrations; cPanel Node app + Postgres DB + AutoSSL; CI deploy over SSH/FTP; GitHub App registered; OAuth sign-in/out with sessions | Sign in with GitHub on the live cPanel app |
 | 2 | Fri Oct 31 | Installations and repo list; wizard steps Detect + Policy; setup PR creation | Setup PR opens on `keel-demo` |
 | 3 | Sat Nov 1 | BYO-keys step (sealed-box repo secrets); Action posts run reports (OIDC); webhooks; runs timeline | A real run appears in the dashboard |
-| 4 | Sun Nov 2 | Repo dashboard: decisions, risk-budget gauge, cost; "Fix now" (workflow_dispatch); pause/resume; outcome tracking | Full journey end to end |
+| 4 | Sun Nov 2 | Repo dashboard: decisions, risk-budget gauge, cost; "Fix now" (workflow_dispatch); pause/resume; outcome-tracking cron | Full journey end to end |
 | 5 | Mon Nov 3 | Polish, tests (vitest + Postgres in CI), security review; record the video around the journey | Demo video recorded |
 | 6 | Tue Nov 4 | Hardening, docs, submit by 6 PM ET | Submitted |
 
@@ -285,18 +300,21 @@ end to end in under 60 seconds.
 
 | # | What | Why |
 |---|------|-----|
-| P1 | A **Neon** account (free) and a project named `keel`. Add its connection string as the `DATABASE_URL` secret, in the hosting provider and as a GitHub secret for migrations. Or another Postgres you prefer. | The database |
-| P2 | A **Render** account (free), connected to the GitHub repo, so I can give you a `render.yaml` blueprint for one-click deploy. Or tell me Fly or Railway instead. | Hosts the Node service |
-| P3 | **Register the GitHub App** "Keel" with the permissions in §3.1. I'll give you a click-by-click checklist and the manifest. Its App ID, client id, client secret, webhook secret and private key go in as host **secrets** (never in chat or the repo). | Sign-in, repo access, setup PRs |
-| P4 | Decide on **models for users**: BYO keys only for the hackathon (recommended), or a hosted quota from your credits | Cost exposure |
-| P5 | Enable **GitHub Pages** (Settings → Pages → Source: GitHub Actions) | The marketing site |
-| P6 | Optional: a custom domain (e.g. `app.keel.dev`) | Polish |
+| P1 | **Your cPanel host's details:** the Node.js versions offered in "Setup Node.js App"; whether **PostgreSQL** is available (some hosts only offer MySQL); and whether you have **SSH access** | Decides the Node version, the deploy method and whether Postgres is possible on this host |
+| P2 | A **subdomain** for the app (e.g. `app.<your-domain>`) with AutoSSL on | OAuth and webhooks need HTTPS |
+| P3 | In cPanel: create the Postgres database and user, then put `DATABASE_URL` into the Node app's environment variables. I'll give you exact names and clicks. | The database |
+| P4 | **Deploy credentials** as GitHub repo secrets: `CPANEL_HOST`, `CPANEL_USER`, plus `CPANEL_SSH_KEY` (preferred) or `CPANEL_FTP_PASSWORD` | Lets CI upload builds |
+| P5 | **Register the GitHub App** "Keel" with the permissions in §3.1. I'll give you a click-by-click checklist. Its App ID, client id, client secret, webhook secret and private key go into the cPanel Node app's **environment variables** (never in chat or the repo). | Sign-in, repo access, setup PRs |
+| P6 | Decide on **models for users**: BYO keys only for the hackathon (recommended), or a hosted quota from your credits | Cost exposure |
+| P7 | Marketing site: keep it on GitHub Pages (enable Pages), or move it to `public_html` on your domain | Where the landing page lives |
 
 ## 8. Risks
 | Risk | Mitigation |
 |------|-----------|
 | GitHub App review or webhook setup takes time | It doesn't need Marketplace approval; it works immediately for installs by anyone |
-| Free Render instance sleeps when idle | Warm it before demos, or switch to a paid or credit-backed host; Neon autosuspend wakes in under a second |
+| Host has no PostgreSQL | Use an external free Postgres (Neon or Supabase) from the cPanel app; the code is unchanged |
+| Passenger cold starts / idle stop | Warm it before demos; background work runs from cron, not in-process |
+| Shared-host memory or process limits | Build in CI, single light process, no heavy dependencies |
 | Too much scope for 6 days | The table in §5 is ordered so every day ends with something demoable; the hosted quota is the first thing to cut |
 | Secrets handling mistakes | Sealed-box encryption to GitHub, no plaintext stored, a reviewed threat model before launch |
 | Rule "identify contributions" | The platform is new code in this repo, listed in `HACKATHON.md` |
