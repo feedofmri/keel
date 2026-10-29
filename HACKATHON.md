@@ -12,9 +12,21 @@ Meta Global AI Developer Hackathon, building period **Oct 26 – Nov 4, 2026**.
 ## What we built during the event
 This list is updated as components land (with commit references):
 
-| Component | Status | Commits |
-|-----------|--------|---------|
-| _filled in as we build_ | | |
+| Component | Where | Built |
+|-----------|-------|-------|
+| Repair pipeline: sandbox, test runner, SEARCH/REPLACE edits, secret-scrubbed test runs | `keel/pipeline.py`, `keel/sandbox.py`, `keel/testing.py`, `keel/edits.py` | Oct 29 |
+| Meta model clients (Muse Spark, Muse Spark Open, Muse Glimmer) with cost, logprob and cache handling | `keel/generators/` | Oct 29 |
+| Adversarial tests written by Muse Spark | `keel/attack.py` | Oct 29 |
+| Code-aware features, gates, nonconformity score, explanations | `keel/features.py`, `keel/scoring.py`, `keel/explain.py` | Oct 29 |
+| Conformal risk control and Learn-then-Test, calibration artefact with fingerprint | `keel/conformal.py`, `keel/calibration.py` | Oct 29 |
+| GitHub Action (CI failure, `/keel fix`, issue label) that opens labelled PRs | `action.yml`, `keel/github/` | Oct 29 |
+| QuixBugs and SWE-bench Lite adapters, split runner, baselines, ablations | `keel/eval/` | Oct 29 |
+| Benchmark workflows on GitHub Actions | `.github/workflows/benchmark-*.yml` | Oct 29 |
+| Website: waterline hero, story, comparison, install; risk dashboard | `site/` | Oct 29 |
+| Logo SVG (from the team's logo PNG), favicon | `site/assets/` | Oct 29 |
+| Demo repo template, video motion graphics, docs | `examples/`, `docs/` | Oct 29 |
+
+Exact dates and diffs: `git log --stat`.
 
 ## What we did not build (third-party)
 Used only as declared dependencies or downloaded at run time, under their own licenses:

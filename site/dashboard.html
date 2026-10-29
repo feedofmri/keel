@@ -7,6 +7,7 @@
 <meta name="description" content="Drag the risk level and watch Keel's auto-merge threshold, merge rate and empirical error against the guaranteed bound.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css">
+<script src="assets/site.js"></script>
 <style>
   .grid { display: grid; gap: 16px; }
   .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -58,13 +59,14 @@
     <a href="dashboard.html" aria-current="page">Dashboard</a>
     <a href="./#install" class="hide-sm">Install</a>
     <a href="https://github.com/feedofmri/keel">GitHub</a>
-    <button class="theme-btn" id="theme" aria-label="Toggle colour theme">◐</button>
+    <button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button>
   </nav>
 </div></header>
 
-<main class="wrap" style="padding-top:28px">
+<main class="wrap">
+  <section class="band inv" style="padding:48px 0 40px;margin-top:0">
   <div class="eyebrow">Risk dashboard</div>
-  <h1 style="font-size:clamp(28px,4vw,40px);margin:6px 0 8px">How much can Keel safely auto-merge?</h1>
+  <h1 style="font-size:clamp(32px,4.6vw,52px);margin:12px 0 10px;letter-spacing:-0.04em">How much can Keel safely auto-merge?</h1>
   <p class="lead" style="margin:0 0 18px">Pick the risk you're willing to accept. Keel recomputes its threshold from held-out bugs, and the chart shows the error it actually made against the bound it promised.</p>
 
   <div id="banner" class="banner" hidden></div>
@@ -92,6 +94,7 @@
   </section>
   <p class="sentence" id="sentence"></p>
   <p class="muted" style="font-size:13px;margin:4px 0 0">The tiles use one fixed calibration/test split, so a single split can land above α. CRC bounds the error <i>on average</i> over splits; the charts below show that average.</p>
+  </section>
 
   <section class="grid two">
     <div class="card">
@@ -143,15 +146,8 @@
 
 <script>
 (() => {
-  // ---------- theme ----------
   const root = document.documentElement;
-  try { const t = localStorage.getItem("keel-theme"); if (t) root.dataset.theme = t; } catch (e) {}
-  document.getElementById("theme").onclick = () => {
-    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-    root.dataset.theme = dark ? "light" : "dark";
-    try { localStorage.setItem("keel-theme", root.dataset.theme); } catch (e) {}
-    if (window.__redraw) window.__redraw();
-  };
+  addEventListener("keel-theme", () => { if (window.__redraw) window.__redraw(); });
 
   // ---------- conformal maths (mirrors keel/conformal.py) ----------
   const NEVER = -1, GATED = 1;
@@ -371,7 +367,6 @@
       state.method = b.dataset.method; document.querySelectorAll("[data-method]").forEach(x => x.setAttribute("aria-pressed", x === b)); redraw(); });
     document.querySelectorAll("[data-metric]").forEach(b => b.onclick = () => {
       state.metric = b.dataset.metric; document.querySelectorAll("[data-metric]").forEach(x => x.setAttribute("aria-pressed", x === b)); redraw(); });
-    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
     let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(redraw, 120); });
     redraw();
     loadPRs(site.demo_repo);

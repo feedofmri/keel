@@ -5,180 +5,383 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Keel</title>
 <meta name="description" content="Keel is a code-repair agent that knows when it should not be trusted. Meta Muse models propose fixes; conformal risk control decides which are safe to auto-merge.">
-<meta property="og:title" content="Keel: the code-repair agent that knows when it should not be trusted">
+<meta property="og:title" content="Keel: the code-repair agent that knows when it shouldn't be trusted">
 <meta property="og:description" content="Meta Muse models propose fixes. Conformal risk control decides which are safe to auto-merge, with a guarantee on how often it is wrong.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css">
+<script src="assets/site.js"></script>
 <style>
-  .hero { padding: 72px 0 40px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 48px; align-items: center; }
-  @media (max-width: 900px) { .hero { grid-template-columns: minmax(0, 1fr); padding-top: 40px; gap: 32px; } }
-  .hero h1 { font-size: clamp(36px, 5.6vw, 62px); margin: 14px 0 18px; font-weight: 720; letter-spacing: -0.035em; }
-  .hero .lead { font-size: clamp(17px, 2vw, 20px); max-width: 620px; }
-  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-  .mark { width: 52px; color: var(--ink); }
-  .pr { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: 0 10px 40px rgba(0,0,0,.07); }
-  .pr + .pr { margin-top: 14px; }
-  .pr .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .pr .title { font-weight: 650; font-size: 15px; }
-  .pr ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
-  .pr .meta { color: var(--muted); font-size: 12.5px; margin-top: 8px; font-variant-numeric: tabular-nums; }
-  .section { margin-top: 88px; }
-  .section h2 { font-size: clamp(28px, 3.6vw, 40px); margin: 8px 0 14px; }
-  .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
-  .cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
-  @media (max-width: 860px) { .cols3, .cols2 { grid-template-columns: minmax(0, 1fr); } }
-  .big { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; }
-  .steps { counter-reset: s; display: grid; gap: 12px; margin-top: 24px; }
-  .step { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: start; background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
-  .step::before { counter-increment: s; content: counter(s); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font-weight: 700; color: var(--ink-2); }
-  .step h3 { margin: 2px 0 4px; font-size: 17px; }
-  .step p { margin: 0; color: var(--ink-2); font-size: 15px; }
-  .model { font-size: 12px; font-weight: 650; padding: 4px 10px; border-radius: 999px; background: var(--ink); color: var(--page); white-space: nowrap; }
-  .model.alt { background: var(--surface-2); color: var(--ink); border: 1px solid var(--border); }
-  @media (max-width: 600px) { .step { grid-template-columns: 40px minmax(0, 1fr); } .step .model { grid-column: 2; justify-self: start; } }
-  .formula { font-family: var(--mono); background: var(--surface-2); border-radius: 10px; padding: 12px 14px; font-size: 14px; overflow-x: auto; }
-  .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; font-size: 15px; }
-  .kv dt { color: var(--muted); }
-  .kv dd { margin: 0; }
+  /* ---------- hero ---------- */
+  .hero { position: relative; padding: 76px 0 28px; }
+  .hero::before { content: ""; position: absolute; top: -120px; left: 50%; width: 100vw; transform: translateX(-50%); height: 640px; pointer-events: none;
+    background: radial-gradient(60% 60% at 70% 30%, var(--glow), transparent 70%); }
+  .hero-head { position: relative; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 40px; align-items: end; }
+  @media (max-width: 900px) { .hero-head { grid-template-columns: minmax(0, 1fr); gap: 18px; } }
+  .hero h1 { font-size: clamp(40px, 6.4vw, 84px); margin: 16px 0 0; font-weight: 600; letter-spacing: -0.045em; line-height: .98; }
+  .hero h1 .soft { color: var(--muted); }
+  .hero .lead { margin: 0 0 6px; font-size: clamp(16px, 1.7vw, 19px); }
+  .ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+
+  .sea { position: relative; margin-top: 44px; border: 1px solid var(--border); border-radius: 22px; overflow: hidden;
+    background: linear-gradient(180deg, var(--surface-1), color-mix(in srgb, var(--surface-1) 60%, var(--page))); }
+  .sea canvas { display: block; width: 100%; height: 460px; touch-action: none; cursor: ns-resize; }
+  @media (max-width: 640px) { .sea canvas { height: 380px; } }
+  .sea .hud { position: absolute; left: 18px; top: 14px; right: 18px; display: flex; justify-content: space-between; gap: 12px; pointer-events: none; flex-wrap: wrap; }
+  .sea .hud .k { font: 500 11.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .sea .legend { display: flex; gap: 14px; flex-wrap: wrap; font: 500 12px var(--mono); color: var(--ink-2); }
+  .sea .legend i { display: inline-block; width: 14px; height: 8px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+  .controls { display: grid; grid-template-columns: minmax(0, 1.1fr) repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--border); }
+  @media (max-width: 900px) { .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } .controls .slider { grid-column: 1 / -1; } }
+  .controls > div { padding: 16px 18px; border-right: 1px solid var(--border); }
+  .controls > div:last-child { border-right: 0; }
+  @media (max-width: 900px) { .controls > div { border-bottom: 1px solid var(--border); } }
+  .controls .k { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .controls .v { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .controls .s { font-size: 12.5px; color: var(--ink-2); }
+  .slider label { display: flex; justify-content: space-between; align-items: baseline; }
+  .slider input { width: 100%; margin-top: 10px; accent-color: var(--accent); }
+  .datanote { font-size: 12.5px; color: var(--muted); margin: 10px 4px 0; }
+
+  /* ---------- sections ---------- */
+  .section { margin-top: 128px; }
+  .section h2 { font-size: clamp(32px, 4.4vw, 56px); margin: 14px 0 16px; letter-spacing: -0.04em; max-width: 880px; }
+  .section .lead { max-width: 720px; }
+
+  /* problem strip */
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 36px; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+  @media (max-width: 820px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+  .stats > div { padding: 26px 24px; border-right: 1px solid var(--border); background: var(--surface-1); }
+  .stats > div:last-child { border-right: 0; }
+  @media (max-width: 820px) { .stats > div { border-right: 0; border-bottom: 1px solid var(--border); } }
+  .stats .n { font-size: 52px; font-weight: 600; letter-spacing: -0.04em; }
+  .stats .n small { font-size: 22px; color: var(--muted); font-weight: 500; }
+  .stats p { margin: 6px 0 0; color: var(--ink-2); }
+  .stats a { color: var(--muted); font-size: 12px; }
+
+  /* story beats */
+  .beat { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: center; margin-top: 72px; }
+  .beat:nth-child(even) .viz { order: -1; }
+  @media (max-width: 900px) { .beat { grid-template-columns: minmax(0, 1fr); gap: 22px; } .beat:nth-child(even) .viz { order: 0; } }
+  .beat .num { font: 500 12px var(--mono); color: var(--accent); letter-spacing: .08em; }
+  .beat h3 { font-size: clamp(26px, 3vw, 36px); margin: 10px 0 12px; letter-spacing: -0.03em; }
+  .beat p { color: var(--ink-2); margin: 0; font-size: 16.5px; }
+  .beat .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .chip { font: 600 11.5px var(--mono); padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--ink); background: var(--surface-2); }
+  .chip.meta { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  .viz { position: relative; border: 1px solid var(--border); border-radius: 20px; background: var(--surface-1); padding: 22px; min-height: 320px; overflow: hidden; }
+  .viz .bar { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; display: flex; justify-content: space-between; margin-bottom: 14px; }
+
+  /* viz 1: candidate diffs */
+  .diffs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 520px) { .diffs { grid-template-columns: repeat(3, minmax(0, 1fr)); } .diffs > :nth-child(n+7) { display: none; } }
+  .dcard { border: 1px solid var(--border); border-radius: 10px; padding: 9px 9px 10px; background: var(--surface-2); opacity: 0; transform: translateY(10px) scale(.96); }
+  .in .dcard { animation: dIn .55s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes dIn { to { opacity: 1; transform: none; } }
+  .dcard .who { font: 600 9.5px var(--mono); color: var(--muted); margin-bottom: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dcard .ln { height: 5px; border-radius: 3px; margin: 5px 0; background: var(--surface-3); }
+  .dcard .ln.add { background: color-mix(in srgb, var(--merge) 55%, transparent); }
+  .dcard .ln.del { background: color-mix(in srgb, var(--wrong) 55%, transparent); }
+
+  /* viz 2: attack matrix */
+  .matrix { display: grid; grid-template-columns: 92px repeat(10, minmax(0, 1fr)); gap: 6px; align-items: center; }
+  .matrix .rl { font: 500 10.5px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .matrix .cl { font: 500 9.5px var(--mono); color: var(--muted); text-align: center; }
+  .cell { aspect-ratio: 1; border-radius: 6px; background: var(--surface-3); display: grid; place-items: center; font: 700 11px var(--mono); color: transparent; transform: scale(.6); opacity: .4; }
+  .in .cell { animation: cIn .4s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes cIn { to { transform: none; opacity: 1; } }
+  .in .cell.ok { background: color-mix(in srgb, var(--merge) 22%, var(--surface-2)); color: var(--merge); }
+  .in .cell.bad { background: color-mix(in srgb, var(--wrong) 24%, var(--surface-2)); color: var(--wrong); }
+  .col-hl { outline: 1.5px solid var(--review); outline-offset: 2px; }
+
+  /* viz 3: score bars */
+  .bars { position: relative; display: grid; gap: 9px; }
+  .brow { display: grid; grid-template-columns: 120px minmax(0, 1fr) 46px; gap: 10px; align-items: center; font: 500 11px var(--mono); color: var(--ink-2); }
+  .brow .track { height: 12px; border-radius: 6px; background: var(--surface-3); position: relative; overflow: hidden; }
+  .brow .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 6px; background: var(--merge); transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
+  .brow .fill.rev { background: var(--review); }
+  .brow .fill.blk { background: var(--muted); }
+  .brow .val { text-align: right; font-variant-numeric: tabular-nums; }
+  .thr { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 1.5px dashed var(--ink); }
+  .thr span { position: absolute; top: -18px; left: -14px; font: 600 10px var(--mono); color: var(--ink); white-space: nowrap; }
+
+  /* viz 4: PR card */
+  .prc { border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface-2); padding: 16px 18px; position: relative; }
+  .prc + .prc { margin-top: 12px; }
+  .prc .h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .prc .t { font-weight: 600; font-size: 15px; }
+  .prc ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13.5px; }
+  .prc li { opacity: 0; transform: translateX(-6px); }
+  .in .prc li { animation: liIn .4s ease forwards; }
+  @keyframes liIn { to { opacity: 1; transform: none; } }
+  .prc .m { font: 500 11px var(--mono); color: var(--muted); margin-top: 10px; }
+  .stamp { opacity: 0; transform: scale(1.6) rotate(-8deg); }
+  .in .stamp { animation: stamp .5s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes stamp { to { opacity: 1; transform: none; } }
+
+  /* models */
+  .models { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 36px; }
+  @media (max-width: 900px) { .models { grid-template-columns: minmax(0, 1fr); } }
+  .model { border: 1px solid var(--border); border-radius: 20px; background: var(--surface-1); padding: 22px; position: relative; overflow: hidden; }
+  .model .glyph { height: 120px; margin: -4px -4px 14px; border-radius: 12px; background: var(--surface-2); position: relative; overflow: hidden; }
+  .model .glyph svg { width: 100%; height: 100%; }
+  .model h3 { font-size: 22px; margin: 0 0 4px; }
+  .model .via { font: 500 11.5px var(--mono); color: var(--muted); }
+  .model p { color: var(--ink-2); font-size: 14.5px; margin: 10px 0 0; }
+  .wave path { animation: wave 3.2s linear infinite; }
+  @keyframes wave { to { transform: translateX(-160px); } }
+  .orbit { transform-origin: 50% 50%; animation: spin 14s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .needle { transform-origin: 50% 100%; animation: sweep 4s ease-in-out infinite alternate; }
+  @keyframes sweep { from { transform: rotate(-60deg); } to { transform: rotate(40deg); } }
+
+  /* guarantee */
+  .g-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; margin-top: 36px; }
+  @media (max-width: 900px) { .g-grid { grid-template-columns: minmax(0, 1fr); } }
+  .gchart { border: 1px solid var(--border); border-radius: 20px; background: var(--surface-1); padding: 20px 20px 14px; }
+  .gchart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .gline { stroke-dasharray: 1800; stroke-dashoffset: 1800; }
+  .in .gline { animation: draw 2.2s ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .formula { font-family: var(--mono); background: var(--surface-2); border-radius: 10px; padding: 12px 14px; font-size: 13px; overflow-x: auto; margin: 10px 0; border: 1px solid var(--border); }
+  .gcard { border: 1px solid var(--border); border-radius: 20px; background: var(--surface-1); padding: 20px; }
+  .gcard + .gcard { margin-top: 14px; }
+  .gcard h3 { margin: 0 0 6px; font-size: 19px; }
+  .gcard p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+  .fine { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 14px; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+  @media (max-width: 900px) { .fine { grid-template-columns: minmax(0, 1fr); } }
+  .fine > div { padding: 18px 20px; background: var(--surface-1); border-right: 1px solid var(--border); font-size: 14px; color: var(--ink-2); }
+  .fine > div:last-child { border-right: 0; }
+  @media (max-width: 900px) { .fine > div { border-right: 0; border-bottom: 1px solid var(--border); } }
+  .fine b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 4px; font-size: 14.5px; }
+
+  /* compare */
+  .cmp { margin-top: 36px; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; background: var(--surface-1); }
+  .cmp table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+  .cmp th, .cmp td { padding: 14px 16px; border-bottom: 1px solid var(--grid); text-align: center; }
+  .cmp th { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .cmp th:first-child, .cmp td:first-child { text-align: left; }
+  .cmp tr.keel td { background: color-mix(in srgb, var(--accent) 9%, var(--surface-1)); font-weight: 600; }
+  .cmp .y { color: var(--merge); font-weight: 700; }
+  .cmp .p { color: var(--review); font-weight: 700; }
+  .cmp .n { color: var(--muted); }
+  .cmp .who { font-weight: 600; }
+  .cmp .who small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+
+  /* install */
+  .tabs { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; padding: 3px; background: var(--surface-1); margin: 26px 0 12px; }
+  .tabs button { border: 0; background: transparent; color: var(--ink-2); padding: 7px 16px; border-radius: 999px; font: 600 13px var(--font); cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--surface-3); color: var(--ink); }
+  .codewrap { position: relative; }
+  .copy { position: absolute; top: 10px; right: 10px; font: 600 12px var(--font); padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #dfe5ee; cursor: pointer; }
+  .tok-k { color: #8fb8ff; } .tok-s { color: #9ee2b8; } .tok-c { color: #6c7581; }
+
+  /* finale */
+  .finale { margin-top: 140px; text-align: center; position: relative; }
+  .finale svg.big { width: min(280px, 60vw); height: auto; color: var(--ink); }
+  .finale svg.big path { fill: none; stroke: currentColor; stroke-width: 6; stroke-dasharray: 2600; stroke-dashoffset: 2600; }
+  .finale.in svg.big path { animation: draw 2.4s ease forwards; }
+  .finale.in svg.big path.fillin { animation: draw 2.4s ease forwards, fillIn .8s 2.2s ease forwards; }
+  @keyframes fillIn { to { fill: currentColor; } }
+  .finale h2 { font-size: clamp(34px, 5vw, 64px); letter-spacing: -0.045em; margin: 28px auto 14px; max-width: 900px; }
+  .built { margin-top: 64px; border: 1px solid var(--border); border-radius: 20px; padding: 22px 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; text-align: left; background: var(--surface-1); }
 </style>
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="./"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
+  <a class="brand" href="./"><svg fill="currentColor" aria-hidden="true"><use href="#k" width="100%" height="100%"/></svg>Keel</a>
   <nav class="nav">
     <a href="#how" class="hide-sm">How it works</a>
+    <a href="#guarantee" class="hide-sm">Guarantee</a>
+    <a href="#compare" class="hide-sm">Compare</a>
     <a href="dashboard.html">Dashboard</a>
-    <a href="#install" class="hide-sm">Install</a>
     <a href="https://github.com/feedofmri/keel">GitHub</a>
-    <button class="theme-btn" id="theme" aria-label="Toggle colour theme">◐</button>
+    <button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button>
   </nav>
 </div></header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="k" viewBox="590 568 752 792"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></symbol></svg>
 
 <main class="wrap">
+  <!-- ================= HERO ================= -->
   <section class="hero">
-    <div>
-      <svg class="mark" viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>
-      <h1>The code-repair agent that knows when it shouldn't be trusted.</h1>
-      <p class="lead">Coding agents write plausible patches faster than anyone can review them. Keel lets Meta's Muse models fix your failing tests, then uses <b>conformal risk control</b> to decide which fixes are safe to merge on their own, with a statistical guarantee on how often it's wrong.</p>
-      <div class="ctas">
-        <a class="btn primary" href="dashboard.html">Try the risk slider →</a>
-        <a class="btn" href="#install">Install the GitHub Action</a>
+    <div class="hero-head">
+      <div>
+        <span class="eyebrow">Meta Muse models · conformal risk control</span>
+        <h1>Fix it.<br><span class="soft">Then know whether</span><br>to trust the fix.</h1>
+      </div>
+      <div>
+        <p class="lead">Keel is a code-repair agent that knows when it shouldn't be trusted. Meta's models propose and cross-examine patches; a calibrated threshold decides which ones merge on their own, with a guarantee on how often that's wrong.</p>
+        <div class="ctas">
+          <a class="btn primary" href="#install">Install the Action <span class="arrow">→</span></a>
+          <a class="btn" href="dashboard.html">Open the dashboard</a>
+        </div>
       </div>
     </div>
-    <div aria-label="Two example pull requests opened by Keel">
-      <div class="pr">
-        <div class="head"><span class="pill auto"><span class="dot"></span>AUTO-MERGE</span><span class="title">Fix discount applied backwards</span></div>
-        <ul>
-          <li>Passes all 3 failing tests, no regressions</li>
-          <li>Survives 6/6 adversarial tests written by Muse Spark</li>
-          <li>Muse Spark Open independently reached the same behaviour</li>
-        </ul>
-        <div class="meta">risk score 0.001 ≤ threshold at α = 10% · 1 file, +1 −1</div>
+
+    <div class="sea" id="sea">
+      <canvas id="seaCanvas" aria-label="Interactive chart: each chip is a held-out bug positioned by its risk score; patches below the keel line auto-merge"></canvas>
+      <div class="hud">
+        <span class="k">Every chip is a held-out bug · height = risk score · drag the line</span>
+        <span class="legend"><span><i style="background:var(--merge)"></i>auto-merge</span><span><i style="background:var(--review)"></i>review</span><span><i style="background:transparent;border:1.5px solid var(--wrong)"></i>wrong merge</span><span><i style="background:var(--muted)"></i>blocked by gates</span></span>
       </div>
-      <div class="pr">
-        <div class="head"><span class="pill review"><span class="dot"></span>NEEDS REVIEW</span><span class="title">Rounding change in pricing</span></div>
-        <ul>
-          <li>Passes every visible test, so a naive agent would merge it</li>
-          <li>Fails 3 of 6 adversarial tests (rounds to 0.1, not cents)</li>
-          <li>Behaves differently from most other candidates</li>
-        </ul>
-        <div class="meta">risk score 0.939 &gt; threshold · routed to a human with this explanation</div>
+      <div class="controls">
+        <div class="slider"><label for="alpha"><span class="k">Risk level <span style="text-transform:none">α</span></span><span class="v" id="aOut" style="font-size:22px">10%</span></label>
+          <input id="alpha" type="range" min="0.02" max="0.5" step="0.01" value="0.10" aria-label="Risk level alpha"></div>
+        <div><div class="k">Auto-merged</div><div class="v" id="hMerge">–</div><div class="s" id="hMergeS">of held-out bugs</div></div>
+        <div><div class="k">To human review</div><div class="v" id="hRev">–</div><div class="s">with an explanation</div></div>
+        <div><div class="k">Wrong merges</div><div class="v" id="hWrong">–</div><div class="s" id="hWrongS">bound: α of bugs</div></div>
+        <div><div class="k">“Merge if tests pass”</div><div class="v" id="hNaive">–</div><div class="s">wrong merges, any α</div></div>
       </div>
-      <p class="muted" style="font-size:12.5px;margin:10px 2px 0">Illustration from Keel's bundled demo repository.</p>
+    </div>
+    <p class="datanote" id="datanote">Loading evaluation data…</p>
+  </section>
+
+  <!-- ================= PROBLEM ================= -->
+  <section class="section reveal">
+    <span class="eyebrow">The problem</span>
+    <h2>Writing patches is cheap now. Trusting them isn't.</h2>
+    <p class="lead">Agents open pull requests faster than anyone can read them, and "the tests pass" turns out to be a weak promise.</p>
+    <div class="stats">
+      <div><div class="n">65<small>%</small></div><p>of agent PRs get merged, against 85% for human PRs, in a study of 220k Python pull requests.</p><a href="https://robertstowe.com/agent-pull-requests-merge-at-65-humans-at-85/">source</a></div>
+      <div><div class="n">0</div><p>mainstream fix-it agents that decide on their own which fixes skip review. They all end with "tagged you for review".</p><a href="https://github.com/feedofmri/keel/blob/main/docs/competitive-landscape.md">our survey</a></div>
+      <div><div class="n">α</div><p>is what Keel gives you instead: a risk budget you set as policy, enforced by a calibrated threshold.</p><a href="#guarantee">how</a></div>
     </div>
   </section>
 
+  <!-- ================= HOW ================= -->
+  <section class="section band inv" id="how">
+    <span class="eyebrow reveal">How a decision is made</span>
+    <h2 class="reveal">Four Meta-powered steps from red CI to a decision you can defend.</h2>
+
+    <div class="beat reveal">
+      <div><div class="num">01 / GENERATE</div><h3>Two Meta models, many candidate fixes.</h3>
+        <p>Keel reproduces the failure, reads the traceback and samples several patches from Muse Spark and Muse Spark Open. Two models with different training disagree in useful ways.</p>
+        <div class="chips"><span class="chip meta">Muse Spark</span><span class="chip meta">Muse Spark Open</span><span class="chip">sandboxed</span></div></div>
+      <div class="viz"><div class="bar"><span>candidates</span><span>10 patches</span></div><div class="diffs" id="diffs"></div></div>
+    </div>
+
+    <div class="beat reveal">
+      <div><div class="num">02 / ATTACK</div><h3>Muse Spark tries to break them.</h3>
+        <p>It reads every candidate, finds where they disagree, and writes new tests aimed right there. A patch that only fits the visible tests stands out as the column that turns red.</p>
+        <div class="chips"><span class="chip meta">Muse Spark</span><span class="chip">adversarial tests</span><span class="chip">features, never labels</span></div></div>
+      <div class="viz"><div class="bar"><span>candidates × adversarial tests</span><span>survival</span></div><div class="matrix" id="matrix"></div></div>
+    </div>
+
+    <div class="beat reveal">
+      <div><div class="num">03 / SCORE</div><h3>A code-aware score for how strange each patch looks.</h3>
+        <p>Test outcomes, adversarial survival, diff size and locality, new static-analysis warnings, agreement across samples and across models, and Muse Spark Open's own token-level uncertainty. Edits to tests are blocked outright.</p>
+        <div class="chips"><span class="chip">nonconformity score</span><span class="chip">logprobs from open weights</span></div></div>
+      <div class="viz"><div class="bar"><span>risk score per candidate</span><span>lower is safer</span></div><div class="bars" id="bars"></div></div>
+    </div>
+
+    <div class="beat reveal">
+      <div><div class="num">04 / DECIDE</div><h3>A calibrated line, then a labelled PR.</h3>
+        <p>The threshold comes from held-out bug fixes and the risk level you picked. Below it: <b>AUTO-MERGE</b>. Above it: <b>NEEDS REVIEW</b>, with the reasons written out for the reviewer.</p>
+        <div class="chips"><span class="chip">conformal risk control</span><span class="chip">GitHub Action</span></div></div>
+      <div class="viz">
+        <div class="prc"><div class="h"><span class="pill auto stamp"><span class="dot"></span>AUTO-MERGE</span><span class="t">Fix discount applied backwards</span></div>
+          <ul><li style="animation-delay:.5s">3/3 failing tests fixed, no regressions</li><li style="animation-delay:.7s">survives 6/6 adversarial tests</li><li style="animation-delay:.9s">Muse Spark Open reached the same behaviour</li></ul>
+          <div class="m">risk 0.001 ≤ λ̂ 0.375 at α = 10% · +1 −1</div></div>
+        <div class="prc"><div class="h"><span class="pill review stamp" style="animation-delay:.35s"><span class="dot"></span>NEEDS REVIEW</span><span class="t">Rounding change in pricing</span></div>
+          <ul><li style="animation-delay:1.1s">passes every visible test</li><li style="animation-delay:1.3s">fails 3/6 adversarial tests (rounds to 0.1)</li><li style="animation-delay:1.5s">disagrees with most other candidates</li></ul>
+          <div class="m">risk 0.939 &gt; λ̂ · routed to a human</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODELS ================= -->
   <section class="section">
-    <div class="eyebrow">The problem</div>
-    <h2>Generation isn't the bottleneck any more. Review is.</h2>
-    <div class="cols3">
-      <div class="card"><div class="big">“Tests pass”</div><p class="muted">isn't proof. Agents overfit the visible tests, special-case inputs, or quietly edit the tests themselves.</p></div>
-      <div class="card"><div class="big">Confidence</div><p class="muted">scores from the model aren't calibrated. "90% sure" is not 90% right, and you can't set a policy on it.</p></div>
-      <div class="card"><div class="big">Every PR</div><p class="muted">still lands on a human, so the time agents save in writing code comes back as review load.</p></div>
-    </div>
-  </section>
-
-  <section class="section" id="how">
-    <div class="eyebrow">How it works</div>
-    <h2>Meta models propose, cross-examine, and Keel decides.</h2>
-    <p class="lead">Every step runs in a throwaway sandbox. Secrets are scrubbed from the environment of any code a model wrote.</p>
-    <div class="steps">
-      <div class="step"><div><h3>Reproduce</h3><p>Run the test suite, find the failing tests and the code their tracebacks point to.</p></div><span class="model alt">your CI</span></div>
-      <div class="step"><div><h3>Generate</h3><p>Sample several candidate patches from two Meta models for diversity. Muse Spark Open also reports token log-probabilities, a confidence signal only open weights expose.</p></div><span class="model">Muse Spark + Muse Spark Open</span></div>
-      <div class="step"><div><h3>Attack</h3><p>Muse Spark reads all the candidates and writes new tests aimed at where they disagree. Patches that only fit the visible tests fall here.</p></div><span class="model">Muse Spark</span></div>
-      <div class="step"><div><h3>Score</h3><p>A code-aware nonconformity score combines test outcomes, adversarial survival, diff size and locality, static-analysis deltas, agreement across samples and models, and model uncertainty. Edits to tests are hard-blocked.</p></div><span class="model alt">Keel</span></div>
-      <div class="step"><div><h3>Decide</h3><p>A threshold calibrated on held-out bug fixes turns the score into <b>AUTO-MERGE</b> or <b>NEEDS REVIEW</b>, at the risk level you chose. The PR explains why.</p></div><span class="model alt">conformal risk control</span></div>
-    </div>
-  </section>
-
-  <section class="section" id="guarantee">
-    <div class="eyebrow">The guarantee</div>
-    <h2>A bound you can set as policy, not a vibe.</h2>
-    <div class="cols2">
-      <div class="card">
-        <h3 style="margin-top:0">CRC: per bug (default)</h3>
-        <p>Pick α, say 10%. Keel chooses the largest threshold λ̂ whose adjusted error on <i>n</i> held-out bugs stays under α:</p>
-        <div class="formula">λ̂ = max { λ : (Σᵢ wrongᵢ·1[sᵢ ≤ λ] + 1) / (n + 1) ≤ α }</div>
-        <p>Then, on average, <b>at most α of bugs end up with a wrong patch auto-merged</b>. No assumptions about the model or the data distribution are needed.</p>
+    <span class="eyebrow reveal">Meta models, three jobs</span>
+    <h2 class="reveal">Not one chat call. A panel of models that check each other.</h2>
+    <div class="models">
+      <div class="model reveal">
+        <div class="glyph"><svg viewBox="0 0 320 120" aria-hidden="true">
+          <g class="orbit"><circle cx="160" cy="60" r="38" fill="none" stroke="var(--border-strong)" stroke-dasharray="3 5"/><circle cx="198" cy="60" r="5" fill="var(--accent)"/><circle cx="122" cy="60" r="4" fill="var(--wrong)"/></g>
+          <circle cx="160" cy="60" r="14" fill="var(--ink)"/></svg></div>
+        <h3>Muse Spark</h3><div class="via">Meta Model API</div>
+        <p>Writes the main candidate patches, then switches sides and writes the adversarial tests that attack them. It also writes the plain-English explanation on the PR.</p>
       </div>
-      <div class="card">
-        <h3 style="margin-top:0">LTT: per merge</h3>
-        <p>Prefer a bound on the share of <i>auto-merged</i> patches that are wrong? Learn-then-Test tests every threshold on a fixed grid with an exact binomial test, and keeps only the ones it can certify.</p>
-        <p>Then, <b>with probability at least 1 − δ, at most α of auto-merged patches are wrong</b>. It's stricter, so it needs more calibration data before it merges anything.</p>
+      <div class="model reveal" style="transition-delay:.08s">
+        <div class="glyph"><svg viewBox="0 0 320 120" aria-hidden="true"><g class="wave">
+          <path d="M0 60 Q20 20 40 60 T80 60 T120 60 T160 60 T200 60 T240 60 T280 60 T320 60 T360 60 T400 60 T440 60 T480 60" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+          <path d="M0 70 Q20 50 40 70 T80 70 T120 70 T160 70 T200 70 T240 70 T280 70 T320 70 T360 70 T400 70 T440 70 T480 70" fill="none" stroke="var(--accent-2)" stroke-width="1.5" opacity=".6"/></g>
+          <text x="14" y="22" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--muted)">log p(token)</text></svg></div>
+        <h3>Muse Spark Open</h3><div class="via">open weights · meta-models/muse-spark-open-1026</div>
+        <p>A second, independent generator, and a window into its own confidence. Token logprobs and reasoning length become uncertainty features. Closed APIs can't give you that.</p>
+      </div>
+      <div class="model reveal" style="transition-delay:.16s">
+        <div class="glyph"><svg viewBox="0 0 320 120" aria-hidden="true">
+          <path d="M100 100 A60 60 0 0 1 220 100" fill="none" stroke="var(--border-strong)" stroke-width="8" stroke-linecap="round"/>
+          <path d="M100 100 A60 60 0 0 1 142 44" fill="none" stroke="var(--merge)" stroke-width="8" stroke-linecap="round"/>
+          <g class="needle" style="transform-box: fill-box"><line x1="160" y1="100" x2="160" y2="52" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></g>
+          <circle cx="160" cy="100" r="6" fill="var(--ink)"/></svg></div>
+        <h3>Muse Glimmer</h3><div class="via">open weights · optional</div>
+        <p>Cheap triage: estimates how hard a bug is and sets the sampling budget, so easy fixes don't burn the expensive model's tokens. It's also the cost baseline in the evaluation.</p>
       </div>
     </div>
-    <div class="card" style="margin-top:16px">
-      <h3 style="margin-top:0">The fine print</h3>
-      <dl class="kv">
-        <dt>Assumes</dt><dd>new bugs are exchangeable with the calibration bugs: same models, prompts and kind of repository. Keel fingerprints its configuration and refuses to auto-merge on a stale calibration.</dd>
-        <dt>Means</dt><dd>a guarantee on average over bugs, not a promise about one particular patch.</dd>
-        <dt>“Correct”</dt><dd>means passing held-out tests the agent never saw, which is stronger than “passes the tests it was given”, but still not a proof.</dd>
-        <dt>Default</dt><dd>with no calibration data, Keel never auto-merges. Everything goes to review.</dd>
-      </dl>
+  </section>
+
+  <!-- ================= GUARANTEE ================= -->
+  <section class="section band inv" id="guarantee">
+    <span class="eyebrow reveal">The guarantee</span>
+    <h2 class="reveal">A bound you can write into policy.</h2>
+    <p class="lead reveal">Pick α. Keel finds the largest threshold its held-out bugs can support, and the error stays under α. Naive rules don't.</p>
+    <div class="g-grid">
+      <div class="gchart reveal" id="gchart"><svg id="gsvg" viewBox="0 0 640 340"></svg>
+        <div class="legend" id="glegend" style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-top:8px"></div></div>
+      <div>
+        <div class="gcard reveal"><h3>CRC: per bug (default)</h3>
+          <div class="formula">λ̂ = max{ λ : (Σᵢ wrongᵢ·1[sᵢ ≤ λ] + 1)/(n+1) ≤ α }</div>
+          <p>On average, <b>at most α of bugs</b> end up with a wrong patch auto-merged. No assumptions about the model.</p></div>
+        <div class="gcard reveal"><h3>LTT: per merge</h3>
+          <p>Each threshold on a fixed grid passes an exact binomial test. With probability ≥ 1−δ, <b>at most α of auto-merged patches</b> are wrong.</p></div>
+      </div>
+    </div>
+    <div class="fine reveal">
+      <div><b>Exchangeable bugs</b>Same models, prompts and kind of repo as calibration. Keel fingerprints its configuration and refuses a stale calibration.</div>
+      <div><b>On average</b>The guarantee covers bugs in aggregate, not one particular patch.</div>
+      <div><b>Hidden tests</b>“Correct” means passing tests the agent never saw. That's stronger than “passes its own tests”.</div>
+      <div><b>Safe default</b>With no calibration data, Keel never auto-merges. Everything goes to review.</div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="eyebrow">Evaluation</div>
-    <h2>Measured, not promised.</h2>
-    <p class="lead">Keel is evaluated on <b>SWE-bench Lite</b> and <b>QuixBugs</b> with a visible/hidden test split, over hundreds of random calibration/test splits. It's compared with merging whenever tests pass, with model self-confidence, and with its own score without calibration.</p>
-    <div id="teaser" class="cols3"></div>
-    <p style="margin-top:16px"><a href="dashboard.html">Explore every number on the dashboard →</a></p>
+  <!-- ================= COMPARE ================= -->
+  <section class="section" id="compare">
+    <span class="eyebrow reveal">Compared</span>
+    <h2 class="reveal">Others hand you a PR. Keel tells you which ones you can skip.</h2>
+    <div class="cmp reveal"><div class="table-scroll"><table>
+      <thead><tr><th>Tool</th><th>Fixes failing code</th><th>Decides without a human</th><th>Statistical error bound</th><th>Models cross-examine</th><th>Open-weights uncertainty</th></tr></thead>
+      <tbody>
+        <tr><td class="who">Copilot “Fix with Copilot”<small>one-click CI fixes</small></td><td class="y">✓</td><td class="n">tags you for review</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+        <tr><td class="who">Sentry Seer → Copilot<small>root cause from telemetry</small></td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+        <tr><td class="who">OpenHands<small>critic picks best rollout</small></td><td class="y">✓</td><td class="p">ranks only</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+        <tr><td class="who">Agentless<small>consensus on reproduction tests</small></td><td class="y">✓</td><td class="p">always submits</td><td class="n">–</td><td class="p">self-consistency</td><td class="n">–</td></tr>
+        <tr><td class="who">Renovate Merge Confidence<small>dependency bumps</small></td><td class="n">–</td><td class="y">✓</td><td class="n">crowd heuristic</td><td class="n">–</td><td class="n">–</td></tr>
+        <tr class="keel"><td class="who">Keel</td><td class="y">✓</td><td class="y">✓ at your α</td><td class="y">✓ CRC / LTT</td><td class="y">✓ attack + agreement</td><td class="y">✓ logprobs</td></tr>
+      </tbody></table></div></div>
+    <p class="muted" style="font-size:13px;margin-top:10px">Based on public docs and papers, Oct 2026. Details and sources: <a href="https://github.com/feedofmri/keel/blob/main/docs/competitive-landscape.md">competitive landscape</a>. Keel is complementary: it can sit on top of any of these agents as the trust layer.</p>
   </section>
 
-  <section class="section" id="install">
-    <div class="eyebrow">Install</div>
-    <h2>One workflow file.</h2>
-    <p class="lead">Keel runs as a GitHub Action on GitHub's own runners. It triggers when CI fails or when someone with write access comments <code>/keel fix</code>, then opens a labelled pull request.</p>
-    <pre class="code"><code>name: Keel
-on:
-  workflow_run: { workflows: [CI], types: [completed] }
-  issue_comment: { types: [created] }
-permissions: { contents: write, pull-requests: write, issues: write }
-jobs:
-  keel:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with: { ref: "${{ github.event.workflow_run.head_sha || github.ref }}" }
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install -e . pytest
-      - uses: feedofmri/keel@v1
-        env:
-          KEEL_MUSE_SPARK_API_KEY: ${{ secrets.KEEL_MUSE_SPARK_API_KEY }}
-          KEEL_SPARK_OPEN_API_KEY: ${{ secrets.KEEL_SPARK_OPEN_API_KEY }}
-        with: { calibration: .keel/calibration.json, alpha: "0.1" }</code></pre>
-    <p class="muted" style="font-size:14px">Full example: <a href="https://github.com/feedofmri/keel/blob/main/examples/workflows/keel.yml">examples/workflows/keel.yml</a>. Or run it locally: <code>pip install git+https://github.com/feedofmri/keel &amp;&amp; keel repair --repo .</code></p>
-  </section>
-
-  <section class="section">
-    <div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
-      <div><div class="eyebrow">Meta Global AI Developer Hackathon 2026 · Push the Frontier</div>
-        <div style="font-size:18px;font-weight:650;margin-top:6px">Everything here was built during the event, Oct 26 – Nov 4.</div></div>
-      <a class="btn" href="https://github.com/feedofmri/keel/blob/main/HACKATHON.md">What we built →</a>
+  <!-- ================= INSTALL ================= -->
+  <section class="section band inv" id="install">
+    <span class="eyebrow reveal">Install</span>
+    <h2 class="reveal">One workflow file. Free GitHub runners.</h2>
+    <p class="lead reveal">Keel triggers when CI fails or when someone with write access comments <code>/keel fix</code>, then opens a labelled pull request. Model keys stay in repository secrets and never reach code a model wrote.</p>
+    <div class="tabs reveal" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="action">GitHub Action</button>
+      <button role="tab" aria-selected="false" data-tab="cli">CLI</button>
+      <button role="tab" aria-selected="false" data-tab="config">.keel.toml</button>
     </div>
+    <div class="codewrap reveal"><button class="copy" id="copy">Copy</button><pre class="code" id="code"></pre></div>
+  </section>
+
+  <!-- ================= FINALE ================= -->
+  <section class="finale reveal" id="finale">
+    <svg class="big" viewBox="590 568 752 792" aria-hidden="true"><path class="fillin" d="M678 588H906V925C762 896 678 790 678 640Z"/><path class="fillin" d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path class="fillin" d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path class="fillin" d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>
+    <h2>Stop reviewing the patches you don't need to.</h2>
+    <div class="ctas" style="justify-content:center"><a class="btn primary" href="#install">Install Keel <span class="arrow">→</span></a><a class="btn" href="https://github.com/feedofmri/keel">Star on GitHub</a></div>
+    <div class="built"><div><span class="eyebrow">Meta Global AI Developer Hackathon 2026 · Push the Frontier</span>
+      <div style="font-size:18px;font-weight:600;margin-top:8px">Everything here was built during the event.</div></div>
+      <a class="btn" href="https://github.com/feedofmri/keel/blob/main/HACKATHON.md">What we built <span class="arrow">→</span></a></div>
   </section>
 </main>
 
@@ -189,24 +392,226 @@ jobs:
 
 <script>
 (() => {
-  const root = document.documentElement;
-  try { const t = localStorage.getItem("keel-theme"); if (t) root.dataset.theme = t; } catch (e) {}
-  document.getElementById("theme").onclick = () => {
-    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-    root.dataset.theme = dark ? "light" : "dark";
-    try { localStorage.setItem("keel-theme", root.dataset.theme); } catch (e) {}
-  };
-  const pct = x => (100 * x).toFixed(0) + "%";
+  const $ = id => document.getElementById(id);
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pct = (x, d = 0) => (100 * x).toFixed(d) + "%";
+
+  // ================= HERO: the waterline =================
+  const cv = $("seaCanvas"), ctx = cv.getContext("2d");
+  let W = 0, H = 0, dpr = 1, chips = [], cal = [], alpha = 0.10, thr = -1, thrShown = 0.3, data = null, dragging = false;
+  const TOP = 46, BOT = 26;                            // plot margins inside the canvas
+  const yOf = s => TOP + (1 - Math.pow(Math.min(s, 0.999), 0.42)) * (H - TOP - BOT - 34) + 34; // spread low scores
+  const sOfY = y => { const f = 1 - (y - TOP - 34) / (H - TOP - BOT - 34); return Math.pow(Math.max(0, Math.min(1, f)), 1 / 0.42); };
+
+  function resize() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    const r = cv.getBoundingClientRect(); W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function makeChips(test) {
+    // Repeat the held-out points so the sea looks full; each copy keeps its true score and label.
+    const reps = Math.max(1, Math.round(260 / Math.max(1, test.length)));
+    chips = [];
+    test.forEach((p, i) => { for (let r = 0; r < reps; r++) chips.push({
+      s: p[0], wrong: !!p[1], gated: !!p[2] || p[0] >= 1,
+      x: Math.random(), jy: (Math.random() - .5) * 18, sp: 0.00012 + Math.random() * 0.00022,
+      w: 15 + Math.random() * 9, ph: Math.random() * 6.28, mix: 0 }); });
+  }
+  function hexToRgb(h) { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  let C = {};
+  function colors() { C = { merge: hexToRgb(css("--merge")), review: hexToRgb(css("--review")), muted: hexToRgb(css("--muted")), wrong: css("--wrong"), ink: css("--ink"), grid: css("--grid"), accent: css("--accent"), ink2: css("--ink-2") }; }
+  const mixc = (a, b, t) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
+
+  function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+  let last = performance.now(), t = 0;
+  function frame(now) {
+    const dt = Math.min(50, now - last); last = now; t += dt;
+    ctx.clearRect(0, 0, W, H);
+    const target = thr < 0 ? -0.02 : thr;
+    thrShown += (target - thrShown) * (reduce ? 1 : 0.12);
+    const ly = thr < 0 ? H - BOT + 6 : yOf(Math.max(0, thrShown));
+
+    // safe water below the line
+    const g = ctx.createLinearGradient(0, ly, 0, H);
+    g.addColorStop(0, `rgba(${C.merge.join(",")},0.10)`); g.addColorStop(1, `rgba(${C.merge.join(",")},0.02)`);
+    ctx.fillStyle = g; ctx.fillRect(0, ly, W, H - ly);
+    // currents
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    for (let k = 0; k < 7; k++) {
+      const y0 = TOP + 40 + k * (H - TOP - 60) / 7; ctx.beginPath();
+      for (let x = 0; x <= W; x += 16) ctx.lineTo(x, y0 + Math.sin(x / 90 + t / 2400 + k) * 3);
+      ctx.stroke();
+    }
+    // gated band label
+    ctx.fillStyle = C.ink2; ctx.globalAlpha = .55; ctx.font = "500 11px JetBrains Mono, monospace";
+    ctx.fillText("BLOCKED BY GATES (edits tests, fails visible tests, did not apply)", 18, TOP + 12); ctx.globalAlpha = 1;
+
+    let k = 0, w = 0;
+    for (const c of chips) {
+      if (!reduce) c.x += c.sp * dt; if (c.x > 1.05) c.x -= 1.1;
+      const x = c.x * W, y = c.gated ? TOP + 22 + (c.jy + 9) * .7 : yOf(c.s) + c.jy * .35 + Math.sin(t / 900 + c.ph) * 1.6;
+      const below = !c.gated && thr >= 0 && c.s <= thr;
+      c.mix += ((below ? 1 : 0) - c.mix) * (reduce ? 1 : 0.15);
+      const base = c.gated ? C.muted : null;
+      ctx.globalAlpha = c.gated ? .35 : .92;
+      ctx.fillStyle = base ? `rgb(${base.join(",")})` : mixc(C.review, C.merge, c.mix);
+      roundRect(x, y - 4, c.w, 8, 3); ctx.fill();
+      if (below && c.wrong) { ctx.globalAlpha = 1; ctx.strokeStyle = C.wrong; ctx.lineWidth = 1.6; roundRect(x - 2.5, y - 6.5, c.w + 5, 13, 5); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    }
+    // the keel line
+    ctx.save(); ctx.shadowColor = C.accent; ctx.shadowBlur = 14; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+    ctx.beginPath(); for (let x = 0; x <= W; x += 10) ctx.lineTo(x, ly + Math.sin(x / 70 + t / 700) * 1.2); ctx.stroke(); ctx.restore();
+    // handle + label
+    const label = thr < 0 ? "no threshold certified, everything to review" : `keel line  λ̂ = ${thr.toFixed(3)}  ·  α = ${pct(alpha)}`;
+    ctx.font = "600 12px JetBrains Mono, monospace"; const tw = ctx.measureText(label).width;
+    const lx = Math.max(12, W - tw - 34), lyy = Math.max(TOP + 30, ly - 12);
+    ctx.fillStyle = C.ink; roundRect(lx - 10, lyy - 15, tw + 20, 22, 11); ctx.fill();
+    ctx.fillStyle = css("--page"); ctx.fillText(label, lx, lyy);
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(22, ly, 6, 0, 6.28); ctx.fill();
+    ctx.fillStyle = C.ink2; ctx.font = "500 11px JetBrains Mono, monospace";
+    ctx.fillText("↑ riskier", 18, ly - 14); ctx.fillText("↓ auto-merge", 18, Math.min(H - 8, ly + 22));
+    requestAnimationFrame(frame);
+  }
+
+  function update() {
+    if (!data) return;
+    thr = Keel.crcThreshold(cal, alpha);
+    const test = data.slider.test, st = Keel.stats(test, thr);
+    $("aOut").textContent = pct(alpha);
+    $("hMerge").textContent = st.k; $("hMergeS").textContent = `of ${st.n} held-out bugs (${pct(st.merge)})`;
+    $("hRev").textContent = st.n - st.k;
+    $("hWrong").textContent = st.w; $("hWrongS").textContent = `${pct(st.risk, 1)} of bugs · bound ${pct(alpha)} on average`;
+    const naive = test.filter(p => !p[2] && p[0] < 1), nw = naive.filter(p => p[1]).length;
+    $("hNaive").textContent = nw;
+  }
+  function alphaForY(y) { // dragging the line: pick the α whose calibrated threshold is closest
+    const s = sOfY(y); let best = alpha, bd = 9;
+    for (let a = 0.02; a <= 0.5001; a += 0.01) { const th = Keel.crcThreshold(cal, a); const d = Math.abs((th < 0 ? -0.05 : th) - s); if (d < bd) { bd = d; best = +a.toFixed(2); } }
+    return best;
+  }
+  cv.addEventListener("pointerdown", e => { dragging = true; cv.setPointerCapture(e.pointerId); move(e); });
+  cv.addEventListener("pointermove", e => { if (dragging) move(e); });
+  cv.addEventListener("pointerup", () => dragging = false);
+  function move(e) { const r = cv.getBoundingClientRect(); alpha = alphaForY(e.clientY - r.top); $("alpha").value = alpha; update(); }
+  $("alpha").addEventListener("input", e => { alpha = +e.target.value; update(); });
+  addEventListener("resize", resize); addEventListener("keel-theme", colors);
+  
   fetch("data/results.json").then(r => r.json()).then(d => {
-    const m = d.evaluation.methods, at = (k, a) => (m[k] || []).find(r => Math.abs(r.alpha - a) < 1e-9);
-    const keel = at("keel_crc", 0.1), naive = at("tests_pass", 0.1), conf = at("self_confidence", 0.1);
-    if (!keel) return;
-    const sim = d.simulated ? '<div class="muted" style="font-size:12px;margin-top:6px">preview · simulated data</div>' : "";
-    document.getElementById("teaser").innerHTML = `
-      <div class="card"><div class="muted">Keel at α = 10%</div><div class="big">${(100 * keel.risk).toFixed(1)}%</div><div>wrong auto-merges per bug, under the 10% bound, while merging ${pct(keel.merge)} of bugs</div>${sim}</div>
-      <div class="card"><div class="muted">Merge if tests pass</div><div class="big">${(100 * naive.risk).toFixed(1)}%</div><div>wrong merges per bug, with no way to dial it down</div>${sim}</div>
-      <div class="card"><div class="muted">Model self-confidence ≥ 90%</div><div class="big">${(100 * conf.fdr).toFixed(0)}%</div><div>of its merges are wrong: confidence isn't calibration</div>${sim}</div>`;
-  }).catch(() => {});
+    data = d; cal = d.slider.cal; makeChips(d.slider.test); update();
+    const ev = d.evaluation, row = (ev.methods.keel_crc || []).find(r => Math.abs(r.alpha - 0.1) < 1e-9);
+    $("datanote").innerHTML = (d.simulated ? '<b style="color:var(--review)">Preview data.</b> These chips come from <b>simulated</b> evaluation records used to test the statistics; real QuixBugs + SWE-bench Lite results replace them when the benchmark runs finish. '
+      : `Real held-out bugs from ${d.datasets.join(" + ")}. `) + (row ? `Across ${ev.n_splits} random splits at α = 10%, Keel's average wrong-merge rate is ${pct(row.risk, 1)}.` : "")
+      + ' <a href="dashboard.html">Full numbers →</a>';
+    drawGuarantee(d);
+  }).catch(() => { $("datanote").textContent = "Could not load evaluation data."; });
+  resize(); colors(); requestAnimationFrame(frame);
+
+  // ================= story visuals =================
+  const diffs = $("diffs");
+  const shapes = [["del", "add", "", ""], ["", "del", "add", ""], ["del", "add", "", ""], ["", "", "del", "add"], ["del", "add", "add", ""],
+                  ["del", "add", "", ""], ["", "del", "add", ""], ["del", "add", "", ""], ["del", "del", "add", "add"], ["", "", "", ""]];
+  shapes.forEach((sh, i) => {
+    const d = document.createElement("div"); d.className = "dcard"; d.style.animationDelay = (i * 0.09) + "s";
+    d.innerHTML = `<div class="who">${i < 5 ? "muse-spark" : "spark-open"}·${i % 5}</div>` + sh.map(c => `<div class="ln ${c}" style="width:${55 + Math.random() * 45}%"></div>`).join("");
+    diffs.appendChild(d);
+  });
+  const matrix = $("matrix");
+  const M = [ // rows: tests, cols: candidates (1 = passes). Column 6 is the plausible-but-wrong patch.
+    [1,1,1,1,1,1,0,1,1,1],[1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,0,1,1,1],[1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,0,1,1,1],[1,1,1,0,1,1,1,1,1,1]];
+  matrix.innerHTML = '<div></div>' + [...Array(10)].map((_, j) => `<div class="cl">c${j}</div>`).join("") +
+    M.map((row, i) => `<div class="rl">test_attack_${i + 1}</div>` + row.map((v, j) =>
+      `<div class="cell ${v ? "ok" : "bad"}${j === 6 ? " col6" : ""}" style="animation-delay:${(i * 10 + j) * 0.025}s">${v ? "✓" : "✕"}</div>`).join("")).join("");
+  const bars = $("bars");
+  const B = [["muse-spark·0", .001], ["spark-open·4", .001], ["muse-spark·1", .002], ["spark-open·2", .004], ["muse-spark·4", .011], ["spark-open·1", .939], ["muse-spark·3", 1, 1], ["spark-open·3", 1, 1]];
+  const T = .375;
+  bars.innerHTML = B.map(([n, s, g]) => `<div class="brow"><span>${n}</span><span class="track"><span class="fill ${g ? "blk" : s <= T ? "" : "rev"}" data-w="${Math.max(3, Math.pow(s, .42) * 100)}"></span></span><span class="val">${g ? "gated" : s.toFixed(3)}</span></div>`).join("")
+    + `<div class="thr" style="left:calc(130px + (100% - 186px) * ${Math.pow(T, .42)})"><span>λ̂ ${T}</span></div>`;
+  const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return;
+    e.target.querySelectorAll(".fill").forEach((f, i) => setTimeout(() => f.style.width = f.dataset.w + "%", i * 90));
+    setTimeout(() => e.target.querySelectorAll(".col6").forEach(c => c.classList.add("col-hl")), 1900);
+    io.unobserve(e.target); }), { threshold: .3 });
+  document.querySelectorAll(".beat").forEach(b => io.observe(b));
+
+  // ================= guarantee chart =================
+  function drawGuarantee(d) {
+    const svg = $("gsvg"), NS = "http://www.w3.org/2000/svg", m = d.evaluation.methods, al = d.evaluation.alphas;
+    const Wc = 640, Hc = 340, L = 44, R = 110, T0 = 14, B0 = 30;
+    const X = a => L + a / 0.5 * (Wc - L - R), Y = v => Hc - B0 - Math.min(v, 0.5) / 0.5 * (Hc - T0 - B0);
+    const mk = (tag, at) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); svg.appendChild(e); return e; };
+    for (const v of [0, .1, .2, .3, .4, .5]) {
+      mk("line", { x1: L, x2: Wc - R, y1: Y(v), y2: Y(v), stroke: v ? "var(--grid)" : "var(--axis)" });
+      mk("text", { x: L - 8, y: Y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "var(--muted)", "font-family": "JetBrains Mono, monospace" }).textContent = pct(v);
+      mk("text", { x: X(v), y: Hc - 8, "text-anchor": "middle", "font-size": 11, fill: "var(--muted)", "font-family": "JetBrains Mono, monospace" }).textContent = pct(v);
+    }
+    const series = [
+      { k: "bound", name: "guaranteed bound", color: "var(--ink-2)", dash: "6 6", w: 1.6, pts: al.map(a => [a, a]) },
+      { k: "tests_pass", name: "merge if tests pass", color: "var(--series-2)", w: 2.4 },
+      { k: "self_confidence", name: "self-confidence ≥ 1−α", color: "var(--series-4)", w: 2.4 },
+      { k: "keel_crc", name: "Keel", color: "var(--series-1)", w: 3.4 },
+    ];
+    const labels = [];
+    series.forEach((s, i) => {
+      const pts = s.pts || (m[s.k] || []).map(r => [r.alpha, r.risk]); if (!pts.length) return;
+      const dd = pts.map((p, j) => (j ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+      const p = mk("path", { d: dd, fill: "none", stroke: s.color, "stroke-width": s.w, "stroke-linecap": "round", "stroke-linejoin": "round", class: s.dash ? "" : "gline" });
+      if (s.dash) p.setAttribute("stroke-dasharray", s.dash); else p.style.animationDelay = (i * .25) + "s";
+      const lp = pts[pts.length - 1]; labels.push({ y: Y(lp[1]) + 4, name: s.name, color: s.color });
+    });
+    labels.sort((a, b) => a.y - b.y); for (let i = 1; i < labels.length; i++) labels[i].y = Math.max(labels[i].y, labels[i - 1].y + 15);
+    labels.forEach(l => mk("text", { x: Wc - R + 8, y: l.y, "font-size": 11.5, "font-weight": 600, fill: l.color, "font-family": "Instrument Sans, sans-serif" }).textContent = l.name);
+    $("glegend").innerHTML = `<span>x: risk level α</span><span>y: wrong auto-merges per bug, mean over ${d.evaluation.n_splits} splits</span>` + (d.simulated ? '<span style="color:var(--review)">preview: simulated</span>' : `<span>${d.datasets.join(" + ")}</span>`);
+  }
+
+  // ================= install tabs =================
+  const SNIP = {
+    action: `<span class="tok-k">name:</span> Keel
+<span class="tok-k">on:</span>
+  <span class="tok-k">workflow_run:</span> { workflows: [CI], types: [completed] }
+  <span class="tok-k">issue_comment:</span> { types: [created] }
+<span class="tok-k">permissions:</span> { contents: write, pull-requests: write, issues: write }
+<span class="tok-k">jobs:</span>
+  <span class="tok-k">keel:</span>
+    <span class="tok-k">if:</span> github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
+    <span class="tok-k">runs-on:</span> ubuntu-latest
+    <span class="tok-k">steps:</span>
+      - <span class="tok-k">uses:</span> actions/checkout@v4
+        <span class="tok-k">with:</span> { ref: <span class="tok-s">"\${{ github.event.workflow_run.head_sha || github.ref }}"</span> }
+      - <span class="tok-k">uses:</span> actions/setup-python@v5
+        <span class="tok-k">with:</span> { python-version: <span class="tok-s">"3.12"</span> }
+      - <span class="tok-k">run:</span> pip install -e . pytest        <span class="tok-c"># install your project like CI does</span>
+      - <span class="tok-k">uses:</span> feedofmri/keel@v1
+        <span class="tok-k">env:</span>
+          <span class="tok-k">KEEL_MUSE_SPARK_API_KEY:</span> \${{ secrets.KEEL_MUSE_SPARK_API_KEY }}
+          <span class="tok-k">KEEL_SPARK_OPEN_API_KEY:</span> \${{ secrets.KEEL_SPARK_OPEN_API_KEY }}
+        <span class="tok-k">with:</span> { calibration: .keel/calibration.json, alpha: <span class="tok-s">"0.1"</span> }`,
+    cli: `<span class="tok-c"># install</span>
+pip install git+https://github.com/feedofmri/keel
+
+<span class="tok-c"># which Meta model endpoints are configured (never prints keys)</span>
+keel doctor
+
+<span class="tok-c"># repair the failing tests in a repo and print the PR body</span>
+keel repair --repo . --calibration .keel/calibration.json --alpha 0.1
+
+<span class="tok-c"># benchmark + calibrate on your own bug-fix history</span>
+keel eval quixbugs --models muse-spark,muse-spark-open --k 5
+keel calibrate results/quixbugs/records.jsonl --out .keel/calibration.json`,
+    config: `<span class="tok-k">[keel]</span>
+alpha = <span class="tok-s">0.10</span>              <span class="tok-c"># accept at most 10% wrong auto-merges</span>
+method = <span class="tok-s">"crc"</span>            <span class="tok-c"># "crc" per bug, "ltt" per merge</span>
+k = <span class="tok-s">5</span>                     <span class="tok-c"># samples per model</span>
+models = [<span class="tok-s">"muse-spark"</span>, <span class="tok-s">"muse-spark-open"</span>]
+attacker = <span class="tok-s">"muse-spark"</span>     <span class="tok-c"># writes adversarial tests</span>
+calibration = <span class="tok-s">".keel/calibration.json"</span>
+enable_auto_merge = <span class="tok-s">false</span> <span class="tok-c"># label only, or let GitHub merge AUTO-MERGE PRs</span>`,
+  };
+  const code = $("code");
+  function show(tab) { code.innerHTML = SNIP[tab]; document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab)); }
+  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => show(b.dataset.tab)); show("action");
+  $("copy").onclick = () => { navigator.clipboard.writeText(code.innerText).then(() => { $("copy").textContent = "Copied"; setTimeout(() => $("copy").textContent = "Copy", 1400); }).catch(() => {}); };
 })();
 </script>
 </body>
