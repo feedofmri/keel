@@ -50,10 +50,15 @@ def cmd_swebench(a: argparse.Namespace) -> int:
     insts = sb.load_instances(a.n, seed=a.seed)
     cache = Path(a.cache_dir)
     cand = Path(a.candidates)
+    if a.stage == "list-runs":
+        print(json.dumps(sb.run_ids(cand)))
+        return 0
     if a.stage in ("generate", "all"):
         sb.stage_generate(insts, _pipeline(a), cache, cand, log=_log)
     if a.stage in ("harness", "all"):
-        sb.stage_harness(cand, Path(a.workdir), max_workers=a.workers, log=_log)
+        extra = ["--cache_level", "none", "--clean", "True"] if a.low_disk else None
+        sb.stage_harness(cand, Path(a.workdir), max_workers=a.workers, extra_args=extra,
+                         only=a.run_ids.split(",") if a.run_ids else None, log=_log)
     if a.stage in ("records", "all"):
         sb.stage_records(insts, cand, Path(a.workdir), cache, None, Path(a.out), log=_log)
     return 0
@@ -98,7 +103,11 @@ def cmd_calibrate(a: argparse.Namespace) -> int:
     cal = [recs[i] for i in idx[cut:]]
     scorer = fit_scorer(fit)
     sel = score_and_select(cal, scorer)
-    fp = a.fingerprint or fingerprint({m: a.model_ids.get(m, m) for m in a.models.split(",")}, a.k,
+    from ..cli import _model_id
+    from ..generators import build_generator
+    models = a.models.split(",")
+    names = [build_generator(m, cache_dir=None).name for m in models]
+    fp = a.fingerprint or fingerprint({n: _model_id(m) for n, m in zip(names, models)}, a.k,
                                       attack=not a.no_attack, triage=bool(a.triage))
     c = Calibration(scorer=scorer, scores=[s["score"] for s in sel], wrong=[s["wrong"] for s in sel],
                     fingerprint=fp, source=",".join(sorted({r["dataset"] for r in recs})),
@@ -140,7 +149,9 @@ def add_eval_commands(sub) -> None:
 
     w = es.add_parser("swebench", help="SWE-bench Lite: generate / harness / records")
     _gen_args(w)
-    w.add_argument("--stage", choices=["generate", "harness", "records", "all"], default="all")
+    w.add_argument("--stage", choices=["generate", "harness", "records", "all", "list-runs"], default="all")
+    w.add_argument("--run-ids", help="harness stage: only these run ids (comma-separated)")
+    w.add_argument("--low-disk", action="store_true", help="harness stage: delete images after each instance")
     w.add_argument("--n", type=int, default=100, help="instances (fixed-seed random subset)")
     w.add_argument("--seed", type=int, default=0)
     w.add_argument("--cache-dir", default=str(Path.home() / ".cache" / "keel"))
@@ -168,4 +179,4 @@ def add_eval_commands(sub) -> None:
     c.add_argument("--no-attack", action="store_true")
     c.add_argument("--triage")
     c.add_argument("--fingerprint", help="override the computed fingerprint")
-    c.set_defaults(fn=cmd_calibrate, model_ids={})
+    c.set_defaults(fn=cmd_calibrate)

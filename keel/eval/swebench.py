@@ -103,8 +103,13 @@ def stage_generate(instances: list[dict], pipeline: Pipeline, cache: Path, out: 
             f.write(json.dumps({"instance_id": inst["instance_id"], "candidates": [asdict(c) for c in cands]}) + "\n")
 
 
+def run_ids(cand_file: Path) -> list[str]:
+    rows = [json.loads(ln) for ln in cand_file.read_text().splitlines() if ln.strip()]
+    return sorted({f"keel-{c['generator']}-{c['sample_index']}" for r in rows for c in r["candidates"]})
+
+
 def stage_harness(cand_file: Path, workdir: Path, max_workers: int = 4, dataset: str = DATASET,
-                  extra_args: list[str] | None = None, log=print) -> None:
+                  extra_args: list[str] | None = None, only: list[str] | None = None, log=print) -> None:
     """Run the official harness once per (generator, sample index)."""
     rows = [json.loads(ln) for ln in cand_file.read_text().splitlines() if ln.strip()]
     groups: dict[str, list[dict]] = {}
@@ -115,12 +120,14 @@ def stage_harness(cand_file: Path, workdir: Path, max_workers: int = 4, dataset:
                  "model_patch": c["diff"]})
     workdir.mkdir(parents=True, exist_ok=True)
     for run_id, preds in sorted(groups.items()):
+        if only and run_id not in only:
+            continue
         pred_path = workdir / f"{run_id}.jsonl"
         pred_path.write_text("\n".join(json.dumps(p) for p in preds) + "\n")
         log(f"harness: {run_id} ({len(preds)} predictions)")
         cmd = [sys.executable, "-m", "swebench.harness.run_evaluation", "--dataset_name", dataset,
                "--predictions_path", str(pred_path.resolve()), "--max_workers", str(max_workers),
-               "--run_id", run_id, "--cache_level", "env", *(extra_args or [])]
+               "--run_id", run_id, *(extra_args or ["--cache_level", "env"])]
         subprocess.run(cmd, cwd=workdir, check=False)
 
 

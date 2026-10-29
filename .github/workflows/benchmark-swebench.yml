@@ -1,0 +1,103 @@
+name: Benchmark – SWE-bench Lite
+on:
+  workflow_dispatch:
+    inputs:
+      n:
+        description: "Instances (fixed-seed random subset of the 300)"
+        default: "100"
+      models:
+        description: "Generators"
+        default: "muse-spark,muse-spark-open"
+      k:
+        description: "Samples per model"
+        default: "5"
+permissions:
+  contents: write
+concurrency: { group: benchmark-swebench, cancel-in-progress: false }
+env:
+  KEEL_MUSE_SPARK_BASE_URL: ${{ secrets.KEEL_MUSE_SPARK_BASE_URL }}
+  KEEL_MUSE_SPARK_API_KEY: ${{ secrets.KEEL_MUSE_SPARK_API_KEY }}
+  KEEL_MUSE_SPARK_MODEL: ${{ secrets.KEEL_MUSE_SPARK_MODEL }}
+  KEEL_MUSE_SPARK_PRICE_IN: ${{ vars.KEEL_MUSE_SPARK_PRICE_IN }}
+  KEEL_MUSE_SPARK_PRICE_OUT: ${{ vars.KEEL_MUSE_SPARK_PRICE_OUT }}
+  KEEL_SPARK_OPEN_BASE_URL: ${{ vars.KEEL_SPARK_OPEN_BASE_URL }}
+  KEEL_SPARK_OPEN_API_KEY: ${{ secrets.KEEL_SPARK_OPEN_API_KEY }}
+  KEEL_SPARK_OPEN_PRICE_IN: ${{ vars.KEEL_SPARK_OPEN_PRICE_IN }}
+  KEEL_SPARK_OPEN_PRICE_OUT: ${{ vars.KEEL_SPARK_OPEN_PRICE_OUT }}
+  KEEL_GLIMMER_BASE_URL: ${{ vars.KEEL_GLIMMER_BASE_URL }}
+  KEEL_GLIMMER_API_KEY: ${{ secrets.KEEL_GLIMMER_API_KEY }}
+  KEEL_GLIMMER_MODEL: ${{ vars.KEEL_GLIMMER_MODEL }}
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    outputs:
+      runs: ${{ steps.runs.outputs.runs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .
+      - uses: actions/cache@v4
+        with:
+          path: .keel-cache
+          key: keel-cache-swebench-${{ github.run_id }}
+          restore-keys: keel-cache-swebench-
+      - name: Generate candidate patches with Meta models
+        run: keel eval swebench --stage generate --n "${{ inputs.n }}" --models "${{ inputs.models }}" --k "${{ inputs.k }}" --no-attack
+      - id: runs
+        run: echo "runs=$(keel eval swebench --stage list-runs --n '${{ inputs.n }}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with: { name: candidates, path: results/swebench/candidates.jsonl }
+
+  harness:
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        run_id: ${{ fromJSON(needs.generate.outputs.runs) }}
+    steps:
+      - name: Free disk space for Docker images
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h /
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e . "swebench>=4.0"
+      - uses: actions/download-artifact@v4
+        with: { name: candidates, path: results/swebench }
+      - name: Run the official SWE-bench harness
+        run: keel eval swebench --stage harness --run-ids "${{ matrix.run_id }}" --workers 2 --low-disk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harness-${{ matrix.run_id }}
+          path: results/swebench/harness/logs/run_evaluation/
+          if-no-files-found: warn
+
+  records:
+    needs: [generate, harness]
+    if: always() && needs.generate.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .
+      - uses: actions/download-artifact@v4
+        with: { name: candidates, path: results/swebench }
+      - uses: actions/download-artifact@v4
+        with: { pattern: "harness-*", path: results/swebench/harness/logs/run_evaluation, merge-multiple: true }
+      - name: Build records, analyse
+        run: |
+          keel eval swebench --stage records --n "${{ inputs.n }}"
+          keel eval analyze $(ls results/quixbugs/records.jsonl results/swebench/records.jsonl 2>/dev/null) \
+            --out site/data/results.json --splits 200
+      - name: Commit results
+        run: |
+          git config user.name "keel-benchmark[bot]"
+          git config user.email "keel-benchmark@users.noreply.github.com"
+          git add results/swebench/records.jsonl results/swebench/candidates.jsonl site/data
+          git commit -m "Benchmark: SWE-bench Lite results (n=${{ inputs.n }}, ${{ inputs.models }}, k=${{ inputs.k }})" || exit 0
+          git pull --rebase && git push

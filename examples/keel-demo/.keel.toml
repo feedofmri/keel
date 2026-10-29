@@ -1,0 +1,9 @@
+# Keel configuration for this repository.
+[keel]
+alpha = 0.10            # accept at most 10% wrong auto-merges
+method = "crc"          # "crc" (per bug) or "ltt" (per merge)
+k = 5                   # samples per model
+models = ["muse-spark", "muse-spark-open"]
+attacker = "muse-spark" # writes adversarial tests
+calibration = ".keel/calibration.json"
+enable_auto_merge = false   # label only; flip to true to let GitHub merge AUTO-MERGE PRs

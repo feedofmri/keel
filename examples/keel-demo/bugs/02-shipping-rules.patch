@@ -1,0 +1,13 @@
+diff --git a/shopcart/shipping.py b/shopcart/shipping.py
+index 6e3d6de..9b83562 100644
+--- a/shopcart/shipping.py
++++ b/shopcart/shipping.py
+@@ -11,6 +11,6 @@ def shipping_cost(order_total: float, weight_kg: float) -> float:
+     """Shipping cost for an order, rounded to cents."""
+     if weight_kg < 0:
+         raise ValueError("weight must be non-negative")
+-    if order_total >= FREE_SHIPPING_FROM:
++    if order_total > FREE_SHIPPING_FROM:
+         return 0.0
+-    return round(BASE_FEE + PER_KG * weight_kg, 2)
++    return round(BASE_FEE + PER_KG * round(weight_kg), 2)

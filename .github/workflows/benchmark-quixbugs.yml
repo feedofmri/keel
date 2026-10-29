@@ -1,0 +1,65 @@
+name: Benchmark – QuixBugs
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Generators"
+        default: "muse-spark,muse-spark-open"
+      k:
+        description: "Samples per model"
+        default: "5"
+      attacker:
+        description: "Adversarial test writer ('none' to disable)"
+        default: "muse-spark"
+permissions:
+  contents: write
+concurrency: { group: benchmark-quixbugs, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    env:
+      KEEL_MUSE_SPARK_BASE_URL: ${{ secrets.KEEL_MUSE_SPARK_BASE_URL }}
+      KEEL_MUSE_SPARK_API_KEY: ${{ secrets.KEEL_MUSE_SPARK_API_KEY }}
+      KEEL_MUSE_SPARK_MODEL: ${{ secrets.KEEL_MUSE_SPARK_MODEL }}
+      KEEL_MUSE_SPARK_PRICE_IN: ${{ vars.KEEL_MUSE_SPARK_PRICE_IN }}
+      KEEL_MUSE_SPARK_PRICE_OUT: ${{ vars.KEEL_MUSE_SPARK_PRICE_OUT }}
+      KEEL_SPARK_OPEN_BASE_URL: ${{ vars.KEEL_SPARK_OPEN_BASE_URL }}
+      KEEL_SPARK_OPEN_API_KEY: ${{ secrets.KEEL_SPARK_OPEN_API_KEY }}
+      KEEL_SPARK_OPEN_PRICE_IN: ${{ vars.KEEL_SPARK_OPEN_PRICE_IN }}
+      KEEL_SPARK_OPEN_PRICE_OUT: ${{ vars.KEEL_SPARK_OPEN_PRICE_OUT }}
+      KEEL_GLIMMER_BASE_URL: ${{ vars.KEEL_GLIMMER_BASE_URL }}
+      KEEL_GLIMMER_API_KEY: ${{ secrets.KEEL_GLIMMER_API_KEY }}
+      KEEL_GLIMMER_MODEL: ${{ vars.KEEL_GLIMMER_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .
+      - run: keel doctor
+      - uses: actions/cache@v4
+        with:
+          path: .keel-cache
+          key: keel-cache-quixbugs-${{ github.run_id }}
+          restore-keys: keel-cache-quixbugs-
+      - name: Run Keel on QuixBugs
+        run: |
+          ATTACK="--attacker ${{ inputs.attacker }}"
+          if [ "${{ inputs.attacker }}" = "none" ]; then ATTACK="--no-attack"; fi
+          keel eval quixbugs --models "${{ inputs.models }}" --k "${{ inputs.k }}" $ATTACK \
+            --out results/quixbugs/records.jsonl --reports results/quixbugs/reports
+      - name: Analyse and calibrate
+        run: |
+          ATTACK=""; if [ "${{ inputs.attacker }}" = "none" ]; then ATTACK="--no-attack"; fi
+          # Real records only (never mix in the simulated preview data).
+          keel eval analyze $(ls results/quixbugs/records.jsonl results/swebench/records.jsonl 2>/dev/null) \
+            --out site/data/results.json --splits 200
+          keel calibrate results/quixbugs/records.jsonl --out results/quixbugs/calibration.json \
+            --models "${{ inputs.models }}" --k "${{ inputs.k }}" $ATTACK
+      - name: Commit results
+        run: |
+          git config user.name "keel-benchmark[bot]"
+          git config user.email "keel-benchmark@users.noreply.github.com"
+          git add results/quixbugs site/data
+          git commit -m "Benchmark: QuixBugs results (${{ inputs.models }}, k=${{ inputs.k }})" || exit 0
+          git push

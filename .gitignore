@@ -11,3 +11,5 @@ build/
 dist/
 results/raw/
 *.pem
+results/*/work/
+results/*/harness/

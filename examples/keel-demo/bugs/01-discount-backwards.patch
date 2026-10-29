@@ -1,0 +1,13 @@
+diff --git a/shopcart/pricing.py b/shopcart/pricing.py
+index 38c7c25..63901a7 100644
+--- a/shopcart/pricing.py
++++ b/shopcart/pricing.py
+@@ -7,7 +7,7 @@ def apply_discount(price: float, percent: float) -> float:
+     """Return `price` reduced by `percent` percent, rounded to cents."""
+     if not 0 <= percent <= 100:
+         raise ValueError("percent must be between 0 and 100")
+-    discounted = price * (100 - percent) / 100
++    discounted = price * percent / 100
+     return round(discounted, 2)
+ 
+ 
