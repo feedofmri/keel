@@ -86,6 +86,16 @@ d("platform app (needs TEST_DATABASE_URL)", () => {
     expect((await app.inject({ url: "/api/me", cookies: { keel_session: sid } })).json().user.login).toBe("octo");
   });
 
+  it("refreshes expired GitHub tokens, and drops sessions that cannot be refreshed", async () => {
+    const { loadSession } = await import("../src/auth/sessions.js");
+    const u = await one<{ id: string }>(db, "insert into users (github_id, login) values (2, 'expiring') returning id");
+    const sid = await createSession(db, env.SESSION_SECRET, Number(u!.id), { access_token: "old", refresh_token: "r1", expires_at: Date.now() - 1000 });
+    const fresh = await loadSession(db, env.SESSION_SECRET, sid, async rt => rt === "r1" ? { access_token: "new", refresh_token: "r2", expires_at: Date.now() + 8 * 3600e3 } : null);
+    expect(fresh!.githubToken).toBe("new");
+    const sid2 = await createSession(db, env.SESSION_SECRET, Number(u!.id), { access_token: "old", expires_at: Date.now() - 1000 });
+    expect(await loadSession(db, env.SESSION_SECRET, sid2, async () => null)).toBeNull();
+  });
+
   it("blocks state-changing calls without the CSRF header or from another origin", async () => {
     expect((await app.inject({ method: "POST", url: "/api/repos/acme/shop/fix" })).statusCode).toBe(403);
     expect((await app.inject({ method: "POST", url: "/api/repos/acme/shop/fix", headers: { "x-keel": "1", origin: "https://evil.example" } })).statusCode).toBe(403);

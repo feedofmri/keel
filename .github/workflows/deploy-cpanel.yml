@@ -1,0 +1,60 @@
+name: Deploy to cPanel (keel.boraqs.com)
+on:
+  push:
+    branches: [main]
+    paths: ["platform/**", "site/**", ".github/workflows/deploy-cpanel.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency: { group: deploy-cpanel, cancel-in-progress: false }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+      CPANEL_USER: ${{ secrets.CPANEL_USER }}
+      CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+      CPANEL_SSH_PORT: ${{ secrets.CPANEL_SSH_PORT }}
+      CPANEL_FTP_PASSWORD: ${{ secrets.CPANEL_FTP_PASSWORD }}
+      APP_DIR: ${{ vars.CPANEL_APP_DIR || 'keel-app' }}
+    steps:
+      - name: Check deploy credentials
+        id: creds
+        run: |
+          if [ -z "$CPANEL_HOST" ] || [ -z "$CPANEL_USER" ]; then echo "No cPanel credentials yet; skipping deploy."; echo "skip=1" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: steps.creds.outputs.skip != '1'
+      - uses: actions/setup-node@v4
+        if: steps.creds.outputs.skip != '1'
+        with: { node-version: "22", cache: npm, cache-dependency-path: platform/package-lock.json }
+      - name: Build
+        if: steps.creds.outputs.skip != '1'
+        working-directory: platform
+        run: |
+          npm ci
+          npm run build
+          rm -rf ../deploy && mkdir -p ../deploy/tmp
+          cp -r dist package.json package-lock.json app.cjs ../deploy/
+          (cd ../deploy && npm ci --omit=dev --ignore-scripts)
+          date -u > ../deploy/tmp/restart.txt   # Passenger restarts the app when this file changes
+      - name: Upload over SSH (rsync)
+        if: steps.creds.outputs.skip != '1' && env.CPANEL_SSH_KEY != ''
+        run: |
+          mkdir -p ~/.ssh && echo "$CPANEL_SSH_KEY" > ~/.ssh/id && chmod 600 ~/.ssh/id
+          PORT="${CPANEL_SSH_PORT:-22}"
+          ssh-keyscan -p "$PORT" "$CPANEL_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          rsync -az --delete --exclude ".env" --exclude "stderr.log" -e "ssh -i ~/.ssh/id -p $PORT" deploy/ "$CPANEL_USER@$CPANEL_HOST:$APP_DIR/"
+          ssh -i ~/.ssh/id -p "$PORT" "$CPANEL_USER@$CPANEL_HOST" "mkdir -p $APP_DIR/tmp && touch $APP_DIR/tmp/restart.txt"
+      - name: Upload over FTPS (lftp)
+        if: steps.creds.outputs.skip != '1' && env.CPANEL_SSH_KEY == '' && env.CPANEL_FTP_PASSWORD != ''
+        run: |
+          sudo apt-get install -y -qq lftp >/dev/null
+          lftp -u "$CPANEL_USER","$CPANEL_FTP_PASSWORD" "ftp://$CPANEL_HOST" -e "set ftp:ssl-force true; set ssl:verify-certificate ${{ vars.CPANEL_FTP_VERIFY_TLS || 'yes' }}; \
+            mirror -R --delete --parallel=8 --exclude-glob .env --exclude-glob stderr.log deploy/ $APP_DIR/; bye"
+      - name: Smoke test
+        if: steps.creds.outputs.skip != '1'
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS https://keel.boraqs.com/healthz; then exit 0; fi; sleep 10
+          done
+          echo "health check failed" && exit 1

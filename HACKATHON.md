@@ -25,6 +25,9 @@ This list is updated as components land (with commit references):
 | Website: waterline hero, story, comparison, install; risk dashboard | `site/` | Oct 29 |
 | Logo SVG (from the team's logo PNG), favicon | `site/assets/` | Oct 29 |
 | Demo repo template, video motion graphics, docs | `examples/`, `docs/` | Oct 29 |
+| Keel platform backend: GitHub sign-in, sessions, repo setup PRs, sealed-box secrets, OIDC run reports, webhooks (Node.js + PostgreSQL) | `platform/` | Oct 29 |
+| Keel app screens: sign-in, repositories, setup wizard, repo dashboard (with a demo mode for GitHub Pages) | `site/app/` | Oct 29 |
+| cPanel deploy pipeline and platform CI (PostgreSQL 12 and 16) | `.github/workflows/deploy-cpanel.yml`, `platform-ci.yml` | Oct 29 |
 
 Exact dates and diffs: `git log --stat`.
 

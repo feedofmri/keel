@@ -7,6 +7,19 @@ import { COOKIE, createSession, destroySession, setSessionCookie, type StoredTok
 
 const STATE_COOKIE = "keel_oauth_state";
 
+/** Exchange a refresh token for a new GitHub App user token. */
+export function githubRefresher(env: Env) {
+  return async (refreshToken: string): Promise<StoredToken | null> => {
+    const r = await fetch("https://github.com/login/oauth/access_token", {
+      method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET,
+                             grant_type: "refresh_token", refresh_token: refreshToken }) });
+    const t = await r.json() as { access_token?: string; refresh_token?: string; expires_in?: number };
+    if (!t.access_token) return null;
+    return { access_token: t.access_token, refresh_token: t.refresh_token, expires_at: t.expires_in ? Date.now() + t.expires_in * 1000 : undefined };
+  };
+}
+
 export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
   const secure = env.APP_URL.startsWith("https://");
   const redirectUri = `${env.APP_URL}/auth/github/callback`;

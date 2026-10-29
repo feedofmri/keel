@@ -16,7 +16,9 @@ export async function createSession(db: Db, secret: string, userId: number, toke
   return id;
 }
 
-export async function loadSession(db: Db, secret: string, id: string | undefined): Promise<SessionUser | null> {
+export type Refresher = (refreshToken: string) => Promise<StoredToken | null>;
+
+export async function loadSession(db: Db, secret: string, id: string | undefined, refresh?: Refresher): Promise<SessionUser | null> {
   if (!id) return null;
   const row = await one<{ user_id: string; login: string; avatar_url: string | null; enc_github_token: Buffer }>(db,
     `select s.user_id, u.login, u.avatar_url, s.enc_github_token from sessions s join users u on u.id = s.user_id
@@ -24,6 +26,14 @@ export async function loadSession(db: Db, secret: string, id: string | undefined
   if (!row) return null;
   let token: StoredToken;
   try { token = JSON.parse(decrypt(row.enc_github_token, secret)); } catch { return null; }
+  // GitHub App user tokens expire after 8 hours; refresh them transparently (5-minute margin).
+  if (token.expires_at && token.expires_at < Date.now() + 300_000) {
+    const fresh = token.refresh_token && refresh ? await refresh(token.refresh_token).catch(() => null) : null;
+    if (!fresh) { await destroySession(db, id); return null; }
+    token = fresh;
+    await db.query("update sessions set enc_github_token = $2, token_expires_at = $3 where id = $1",
+      [id, encrypt(JSON.stringify(token), secret), token.expires_at ? new Date(token.expires_at) : null]);
+  }
   return { id: Number(row.user_id), login: row.login, avatar_url: row.avatar_url, githubToken: token.access_token, sessionId: id };
 }
 

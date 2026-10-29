@@ -1,0 +1,33 @@
+name: Platform CI
+on:
+  push:
+    branches: [main]
+    paths: ["platform/**", "site/**", ".github/workflows/platform-ci.yml"]
+  pull_request:
+    paths: ["platform/**", "site/**"]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        postgres: ["12", "16"]   # cPanel hosts often run older PostgreSQL
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: keel_test }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run: { working-directory: platform }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: npm, cache-dependency-path: platform/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+        env: { TEST_DATABASE_URL: "postgres://postgres:postgres@localhost:5432/keel_test" }
+      - run: npm run build

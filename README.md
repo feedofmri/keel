@@ -5,7 +5,8 @@
 <h1 align="center">Keel</h1>
 <p align="center"><b>A code-repair agent that knows when it should not be trusted.</b></p>
 <p align="center">
-  <a href="https://feedofmri.github.io/keel/">Website</a> ·
+  <a href="https://keel.boraqs.com">keel.boraqs.com</a> ·
+  <a href="https://feedofmri.github.io/keel/">Preview (GitHub Pages)</a> ·
   <a href="https://feedofmri.github.io/keel/dashboard.html">Risk dashboard</a> ·
   <a href="#install-as-a-github-action">Install</a> ·
   <a href="HACKATHON.md">What we built at the hackathon</a>
@@ -57,6 +58,15 @@ fingerprints its models, prompts and scorer and refuses to auto-merge on a stale
 calibration at all, Keel never auto-merges.
 
 `tests/test_conformal.py` checks both guarantees by simulation on every CI run.
+
+## The Keel platform
+
+At [keel.boraqs.com/app](https://keel.boraqs.com/app/), sign in with GitHub, pick a repository and
+set a risk level. Keel stores your Meta model keys as encrypted repository secrets and opens one setup
+pull request. After you merge it, every run shows up on the repository's dashboard. The code is in
+[`platform/`](platform/) (Node.js, Fastify, PostgreSQL), and deployment is described in
+[`docs/cpanel-setup.md`](docs/cpanel-setup.md). The GitHub Pages copy of the site runs the app screens
+in a demo mode with sample data.
 
 ## Quick start (local)
 

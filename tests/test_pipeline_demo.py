@@ -46,3 +46,13 @@ def test_stale_calibration_blocks(demo_repo, responses):
     rep = p.run(BugTask(task_id="demo", repo_path=str(demo_repo)))
     assert rep.decision.label == NEEDS_REVIEW
     assert any("recalibrate" in r for r in rep.decision.reasons)
+
+
+def test_platform_report_payload_matches_schema(demo_repo, responses):
+    from datetime import datetime, timezone
+
+    from keel.github.platform import payload
+    rep = _pipeline(responses).run(BugTask(task_id="demo", repo_path=str(demo_repo)))
+    p = payload(rep, "workflow_run", 12, datetime.now(timezone.utc))
+    assert set(p) >= {"trigger", "commit_sha", "n_candidates", "selected_score", "threshold", "decision", "pr_number", "cost_usd"}
+    assert p["decision"] in ("AUTO-MERGE", "NEEDS REVIEW") and p["n_candidates"] == 10 and 0 <= p["selected_score"] <= 1

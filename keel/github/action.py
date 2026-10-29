@@ -18,6 +18,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ..cli import build_pipeline
@@ -26,6 +27,7 @@ from ..report import pr_body
 from ..sandbox import git
 from ..types import AUTO_MERGE, BugTask
 from .api import GitHub
+from .platform import report_run
 
 COMMAND_RE = re.compile(r"^\s*/keel\s+fix\b", re.IGNORECASE | re.MULTILINE)
 WRITE_PERMS = {"admin", "maintain", "write"}
@@ -123,6 +125,7 @@ def cmd_action(a: argparse.Namespace) -> int:
                           cache=str(tmp / "cache"), log=_log)
     task = BugTask(task_id=f"{repo}@{trig.base_branch}", repo_path=str(ws), test_command=cfg.test_command,
                    protected_globs=cfg.protected_globs, test_timeout=cfg.test_timeout, problem_statement=trig.problem)
+    started = datetime.now(timezone.utc)
     report = pipe.run(task)
     body = pr_body(report, pipe.summary(report.decision))
     _summary(body)
@@ -133,6 +136,7 @@ def cmd_action(a: argparse.Namespace) -> int:
         _log("no candidate passes the gates; reporting without a PR")
         if gh and trig.issue_number:
             gh.comment(trig.issue_number, "### Keel could not produce a safe fix\n\n" + body)
+        report_run(report, event_name, None, started, log=_log)
         return 0
 
     label = report.decision.label
@@ -164,6 +168,7 @@ def cmd_action(a: argparse.Namespace) -> int:
             _log(f"could not enable auto-merge: {e}")
     if trig.issue_number:
         gh.comment(trig.issue_number, f"Keel opened {pr['html_url']} ({label}).")
+    report_run(report, event_name, pr["number"], started, log=_log)
     return 0
 
 

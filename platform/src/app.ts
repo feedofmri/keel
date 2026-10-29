@@ -6,7 +6,7 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { registerApi } from "./api.js";
-import { registerAuth } from "./auth/github.js";
+import { githubRefresher, registerAuth } from "./auth/github.js";
 import { COOKIE, loadSession } from "./auth/sessions.js";
 import type { Db } from "./db/index.js";
 import type { Env } from "./env.js";
@@ -25,7 +25,8 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
     try { done(null, body ? JSON.parse(body as string) : {}); } catch (e) { done(e as Error, undefined); }
   });
   app.decorateRequest("user", null);
-  app.addHook("onRequest", async req => { req.user = await loadSession(db, env.SESSION_SECRET, req.cookies[COOKIE]); });
+  const refresh = githubRefresher(env);
+  app.addHook("onRequest", async req => { req.user = await loadSession(db, env.SESSION_SECRET, req.cookies[COOKIE], refresh); });
   app.addHook("onSend", async (_req, reply) => {
     reply.header("X-Content-Type-Options", "nosniff");
     reply.header("Referrer-Policy", "strict-origin-when-cross-origin");

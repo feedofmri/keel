@@ -185,3 +185,5 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
 }
+
+[hidden] { display: none !important; }
