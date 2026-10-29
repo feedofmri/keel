@@ -121,13 +121,9 @@
   .install-band { background: var(--surface-2); box-shadow: 0 0 0 100vmax var(--surface-2); clip-path: inset(0 -100vmax); }
   .install { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 64px; align-items: start; }
   @media (max-width: 900px) { .install { grid-template-columns: minmax(0, 1fr); } }
-  .codecard { padding: 22px 24px 26px; }
-  .tabs { display: flex; gap: 4px; margin-bottom: 18px; }
-  .tabs button { border: 0; background: transparent; color: var(--ink-2); padding: 5px 12px 5px 10px; height: 34px; border-radius: 48px; font: 400 14px var(--font); cursor: pointer;
-    box-shadow: inset 0 0 0 1px transparent; transition: color .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease); }
-  .tabs button[aria-selected="true"] { color: var(--ink); background: var(--b1); box-shadow: inset 0 0 0 1px var(--b2); }
-  .copy { position: absolute; top: 20px; right: 20px; height: 30px; padding: 0 12px; font-size: 13px; }
-  .t-k { color: #8fd8ff; } .t-s { color: #f6f48a; } .t-c { color: #5d6966; }
+
+  .steps-start { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .steps-start .idx { font: 400 12px var(--mono); color: var(--muted); margin-bottom: 8px; }
 
   /* ---------------- footer (deep water) ---------------- */
   .foot { padding: 144px 0 40px; position: relative; overflow: hidden; }
@@ -263,15 +259,16 @@
     <p class="cmp-src"><a href="https://github.com/feedofmri/keel/blob/main/docs/competitive-landscape.md">Full comparison and sources →</a></p>
   </div></section>
 
-  <!-- INSTALL -->
-  <section class="section install-band" id="install"><div class="wrap install">
-    <div class="head"><span class="eyebrow">Install</span>
-      <h2 class="h-sec">One workflow file</h2>
-      <p class="p-large">Runs on free GitHub runners when CI fails or someone comments <code>/keel fix</code>.</p></div>
-    <div class="stage inv codecard" style="height:auto;background:var(--surface-1)">
-      <div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-tab="action">Action</button><button role="tab" aria-selected="false" data-tab="cli">CLI</button><button role="tab" aria-selected="false" data-tab="config">.keel.toml</button></div>
-      <button class="btn copy" id="copy">Copy</button>
-      <pre class="code" id="code"></pre>
+  <!-- GET STARTED -->
+  <section class="section install-band" id="start"><div class="wrap install">
+    <div class="head"><span class="eyebrow">Get started</span>
+      <h2 class="h-sec">Live in three steps</h2>
+      <p class="p-large">No YAML to write. Keel sets itself up with one pull request.</p>
+      <div class="ctas" style="justify-content:flex-start"><a class="btn primary" href="login.html" data-auth-cta>Get started</a></div></div>
+    <div class="cols steps-start">
+      <div><div class="idx">01</div><h4>Sign in with GitHub</h4><p class="p-small">Install the Keel app on the repositories you choose.</p></div>
+      <div><div class="idx">02</div><h4>Set your policy</h4><p class="p-small">Pick the Meta models and your risk level α.</p></div>
+      <div><div class="idx">03</div><h4>Merge one pull request</h4><p class="p-small">Keel adds a workflow and a config file, then repairs failing CI on its own.</p></div>
     </div>
   </div></section>
 </main>
@@ -525,74 +522,7 @@
     new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); o.disconnect(); } })).observe(svg.parentElement);
   }
 
-  /* ================= footer: halftone Keel mark ================= */
-  (() => {
-    const c = $("logoField"), x = c.getContext("2d");
-    let pts = [], Wf = 0, Hf = 0, t0 = 0, vis = false;
-    function build() {
-      const dp = Math.min(1.5, devicePixelRatio || 1), r = c.getBoundingClientRect(); Wf = r.width; Hf = r.height;
-      c.width = Wf * dp; c.height = Hf * dp; x.setTransform(dp, 0, 0, dp, 0, 0);
-      const off = document.createElement("canvas"); off.width = Wf; off.height = Hf; const o = off.getContext("2d");
-      const sc = Math.min(Wf / 752, Hf / 792) * 0.86; o.translate((Wf - 752 * sc) / 2, (Hf - 792 * sc) / 2); o.scale(sc, sc); o.translate(-590, -568);
-      ["M678 588H906V925C762 896 678 790 678 640Z", "M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z",
-       "M906 1026V1340H610C622 1160 742 1030 906 1026Z", "M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"].forEach(p => o.fill(new Path2D(p)));
-      const img = o.getImageData(0, 0, Wf, Hf).data; pts = [];
-      const P = 8;
-      for (let yy = 0; yy < Hf; yy += P * 0.866) for (let xx = ((yy / (P * 0.866)) % 2 ? P / 2 : 0); xx < Wf; xx += P) {
-        const a = img[(Math.floor(yy) * Math.floor(Wf) + Math.floor(xx)) * 4 + 3]; if (a > 128) pts.push([xx, yy, Math.random() * 6.28]);
-      }
-    }
-    function draw(now) {
-      requestAnimationFrame(draw); if (!vis && !t0) return;
-      if (!t0) t0 = now; const t = (now - t0) / 1000, intro = reduce ? 1 : Math.min(1, t / 1.6);
-      x.clearRect(0, 0, Wf, Hf);
-      const cx = Wf / 2, cy = Hf / 2, md = Math.hypot(cx, cy);
-      for (const [px2, py, ph] of pts) {
-        const d = Math.hypot(px2 - cx, py - cy) / md; if (d > intro * 1.1) continue;
-        const flash = Math.max(0, 1 - Math.abs(d - intro) * 8) * (1 - intro);
-        const v = 0.45 + 0.35 * Math.sin(t * 0.9 + ph + px2 * 0.01) + 0.2 * Math.sin(t * 0.4 - py * 0.02);
-        const lvl = Math.min(15, Math.max(2, Math.floor(v * 15 + flash * 8)));
-        x.fillStyle = RAMP[lvl]; x.beginPath(); x.arc(px2, py, 1 + lvl / 15 * 2.4, 0, 6.283); x.fill();
-      }
-    }
-    new IntersectionObserver(es => es.forEach(e => { vis = e.isIntersecting; })).observe(c);
-    addEventListener("resize", build); build(); requestAnimationFrame(draw);
-  })();
-
-  /* ================= install tabs ================= */
-  const SNIP = {
-    action: `<span class="t-c"># .github/workflows/keel.yml</span>
-<span class="t-k">on</span>:
-  <span class="t-k">workflow_run</span>: { workflows: [CI], types: [completed] }
-  <span class="t-k">issue_comment</span>: { types: [created] }
-<span class="t-k">permissions</span>: { contents: write, pull-requests: write, issues: write }
-<span class="t-k">jobs</span>:
-  <span class="t-k">keel</span>:
-    <span class="t-k">runs-on</span>: ubuntu-latest
-    <span class="t-k">steps</span>:
-      - <span class="t-k">uses</span>: actions/checkout@v4
-      - <span class="t-k">uses</span>: actions/setup-python@v5
-      - <span class="t-k">run</span>: pip install -e . pytest
-      - <span class="t-k">uses</span>: feedofmri/keel@v1
-        <span class="t-k">env</span>:
-          <span class="t-k">KEEL_MUSE_SPARK_API_KEY</span>: \${{ secrets.KEEL_MUSE_SPARK_API_KEY }}
-          <span class="t-k">KEEL_SPARK_OPEN_API_KEY</span>: \${{ secrets.KEEL_SPARK_OPEN_API_KEY }}
-        <span class="t-k">with</span>: { calibration: .keel/calibration.json, alpha: <span class="t-s">"0.1"</span> }`,
-    cli: `pip install git+https://github.com/feedofmri/keel
-
-keel doctor                        <span class="t-c"># check Meta model endpoints</span>
-keel repair --repo . --alpha 0.1   <span class="t-c"># repair, score, decide</span>`,
-    config: `[<span class="t-k">keel</span>]
-alpha = <span class="t-s">0.10</span>
-method = <span class="t-s">"crc"</span>
-models = [<span class="t-s">"muse-spark"</span>, <span class="t-s">"muse-spark-open"</span>]
-attacker = <span class="t-s">"muse-spark"</span>
-calibration = <span class="t-s">".keel/calibration.json"</span>`,
-  };
-  const code = $("code");
-  function show(tab) { code.innerHTML = SNIP[tab]; document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab)); }
-  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => show(b.dataset.tab)); show("action");
-  $("copy").onclick = () => navigator.clipboard.writeText(code.innerText).then(() => { $("copy").textContent = "Copied"; setTimeout(() => $("copy").textContent = "Copy", 1400); }).catch(() => {});
+  Keel.halftoneLogo($("logoField"));
 
   // header switches to the dark variant over the hero and footer
   const top = $("top"), hero = document.querySelector(".hero"), foot = document.querySelector(".foot");

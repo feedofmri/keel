@@ -20,10 +20,11 @@
   .gh svg { width: 18px; height: 18px; }
   .fine { font-size: 13px; color: var(--muted); margin-top: 18px; }
   .side { position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 56px; }
+  .side .cols { z-index: 1; }
   .side::before { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 50% at 50% 70%, var(--glow), transparent); }
   .side .cols { position: relative; grid-template-columns: minmax(0, 1fr); gap: 28px; max-width: 420px; }
   .side h4 { font-size: 15px; }
-  #field { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .9; }
+  #field { position: absolute; left: 0; right: 0; top: 6%; height: 62%; width: 100%; }
 </style>
 </head>
 <body>
@@ -41,6 +42,7 @@
     <p class="fine" id="fine">Keel only sees the repositories you choose when installing the GitHub App. Your code stays on GitHub.</p>
   </div></section>
   <aside class="side inv">
+    <canvas id="field" aria-hidden="true"></canvas>
     <div class="cols">
       <div><h4>1 · Sign in and install</h4><p class="p-small">Pick the repositories Keel may work on.</p></div>
       <div><h4>2 · Set your policy</h4><p class="p-small">Risk level α, Meta models, label-only or auto-merge.</p></div>
@@ -50,6 +52,7 @@
 </div>
 
 <script>
+Keel.halftoneLogo(document.getElementById("field"), { pitch: 9, scale: 0.8 });
 (async () => {
   const next = (() => { const n = Keel.params.get("next") || ""; return n.startsWith("/app") || n.startsWith("app/") ? n : "app/"; })();
   const m = await Keel.session();

@@ -43,11 +43,6 @@
   .tip b { font-variant-numeric: tabular-nums; }
   .sentence { font-size: 16px; color: var(--ink); margin: 14px 0 0; }
   details summary { cursor: pointer; color: var(--ink-2); font-size: 13.5px; margin-top: 10px; }
-  .prs { list-style: none; margin: 0; padding: 0; }
-  .prs li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--grid); flex-wrap: wrap; }
-  .prs li a { color: var(--ink); text-decoration: none; font-weight: 550; }
-  .prs li a:hover { text-decoration: underline; }
-  .prs .when { margin-left: auto; color: var(--muted); font-size: 13px; }
   section { margin-top: 18px; }
 </style>
 </head>
@@ -132,11 +127,7 @@
     </div>
   </section>
 
-  <section class="card">
-    <p class="chart-title">Recent Keel pull requests</p>
-    <p class="chart-sub" id="prSub">Live from the demo repository via the public GitHub API.</p>
-    <ul class="prs" id="prs"><li class="muted">Loading…</li></ul>
-  </section>
+
 </main>
 
 <footer><div class="wrap">
@@ -298,11 +289,11 @@
 
   // ---------- main ----------
   let state = { alpha: 0.1, method: "crc", metric: "risk" };
-  Promise.all([fetch("data/results.json").then(r => r.json()), fetch("data/site.json").then(r => r.json()).catch(() => ({}))])
-    .then(([data, site]) => { init(data, site); })
+  fetch("data/results.json").then(r => r.json())
+    .then(data => { init(data); })
     .catch(e => { $("banner").hidden = false; $("banner").textContent = "Could not load results: " + e; });
 
-  function init(data, site) {
+  function init(data) {
     const ev = data.evaluation, cal = data.slider.cal, test = data.slider.test, delta = ev.delta || 0.1;
     const banner = $("banner");
     if (data.simulated) {
@@ -369,24 +360,9 @@
       state.metric = b.dataset.metric; document.querySelectorAll("[data-metric]").forEach(x => x.setAttribute("aria-pressed", x === b)); redraw(); });
     let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(redraw, 120); });
     redraw();
-    loadPRs(site.demo_repo);
   }
 
-  function loadPRs(repo) {
-    const ul = $("prs");
-    if (!repo) { ul.innerHTML = '<li class="muted">No demo repository configured yet.</li>'; return; }
-    $("prSub").innerHTML = `Live from <a href="https://github.com/${esc(repo)}/pulls">${esc(repo)}</a> via the public GitHub API.`;
-    fetch(`https://api.github.com/repos/${repo}/pulls?state=all&per_page=30`).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(prs => {
-      const keel = prs.filter(p => (p.head && p.head.ref || "").startsWith("keel/"));
-      if (!keel.length) { ul.innerHTML = '<li class="muted">No Keel pull requests yet.</li>'; return; }
-      ul.innerHTML = keel.slice(0, 10).map(p => {
-        const auto = p.labels.some(l => l.name === "AUTO-MERGE");
-        const pill = auto ? '<span class="pill auto"><span class="dot"></span>AUTO-MERGE</span>' : '<span class="pill review"><span class="dot"></span>NEEDS REVIEW</span>';
-        const state = p.merged_at ? "merged" : p.state;
-        return `<li>${pill}<a href="${esc(p.html_url)}">#${p.number} ${esc(p.title.replace(/^\[[^\]]+\]\s*/, ""))}</a><span class="when">${state} · ${new Date(p.created_at).toLocaleDateString()}</span></li>`;
-      }).join("");
-    }).catch(() => { ul.innerHTML = '<li class="muted">Couldn\'t reach the GitHub API right now (rate limits are 60 requests an hour per visitor).</li>'; });
-  }
+
 })();
 </script>
 </body>
