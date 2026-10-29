@@ -152,10 +152,9 @@
   <nav class="nav">
     <a href="#how" class="hide-sm">How it works</a>
     <a href="#guarantee" class="hide-sm">Guarantee</a>
-    <a href="#install" class="hide-sm">Install</a>
-    <a href="dashboard.html">Dashboard</a>
+    <a href="results.html">Results</a>
     <a href="https://github.com/feedofmri/keel" class="hide-sm">GitHub</a>
-    <a href="app/" class="btn primary" style="height:32px;margin-left:8px;padding:0 14px">Sign in</a>
+    <a href="login.html" class="btn primary" data-auth style="height:32px;margin-left:8px;padding:0 14px">Sign in</a>
     <button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button>
   </nav>
 </div></header>
@@ -166,7 +165,7 @@
   <span class="eyebrow">Meta Global AI Developer Hackathon</span>
   <h1 class="h-hero">Fix it. Then know if you can <span class="sig">trust it</span>.</h1>
   <p class="p-large">Keel repairs failing tests and auto-merges only the fixes it can vouch for.</p>
-  <div class="ctas"><a class="btn primary" href="app/">Connect a repository</a><a class="btn" href="dashboard.html">See the numbers</a></div>
+  <div class="ctas"><a class="btn primary" href="login.html" data-auth-cta>Get started</a><a class="btn" href="results.html">See the numbers</a></div>
 
   <div class="stage-hero">
     <canvas id="sea" aria-label="Each bright mark is a held-out bug, placed by its risk score. Marks below the keel line auto-merge. Drag vertically to move the line."></canvas>
@@ -281,12 +280,12 @@
 <div class="inv"><footer class="foot"><div class="wrap">
   <div class="foot-grid">
     <div><h2 class="h-sec">Review less. Merge with proof.</h2>
-      <div class="ctas" style="justify-content:flex-start"><a class="btn primary" href="#install">Install Keel</a><a class="btn" href="https://github.com/feedofmri/keel">GitHub</a></div></div>
+      <div class="ctas" style="justify-content:flex-start"><a class="btn primary" href="login.html" data-auth-cta>Get started</a><a class="btn" href="https://github.com/feedofmri/keel">GitHub</a></div></div>
     <canvas id="logoField" aria-hidden="true"></canvas>
   </div>
   <div class="foot-bottom">
     <span>Keel · MIT · built during the Meta Global AI Developer Hackathon 2026</span>
-    <nav><a href="dashboard.html">Dashboard</a><a href="https://github.com/feedofmri/keel/blob/main/HACKATHON.md">What we built</a><a href="https://github.com/feedofmri/keel">GitHub</a></nav>
+    <nav><a href="results.html">Results</a><a href="https://github.com/feedofmri/keel/blob/main/HACKATHON.md">What we built</a><a href="https://github.com/feedofmri/keel">GitHub</a></nav>
   </div>
 </div></footer></div>
 
@@ -421,8 +420,8 @@
 
   fetch("data/results.json").then(r => r.json()).then(d => {
     data = d; cal = d.slider.cal; makeMarks(d.slider.test); update();
-    $("note").innerHTML = d.simulated ? 'Preview built from simulated evaluation data. Real benchmark results replace it. <a href="dashboard.html">Details</a>'
-      : `Held-out bugs from ${d.datasets.join(" + ")}. <a href="dashboard.html">Details</a>`;
+    $("note").innerHTML = d.simulated ? 'Preview built from simulated evaluation data. Real benchmark results replace it. <a href="results.html">Details</a>'
+      : `Held-out bugs from ${d.datasets.join(" + ")}. <a href="results.html">Details</a>`;
     drawGuarantee(d);
   }).catch(() => {});
 

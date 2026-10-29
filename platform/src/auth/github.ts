@@ -6,6 +6,10 @@ import { userApi } from "../github/client.js";
 import { COOKIE, createSession, destroySession, setSessionCookie, type StoredToken } from "./sessions.js";
 
 const STATE_COOKIE = "keel_oauth_state";
+const NEXT_COOKIE = "keel_next";
+
+/** Only ever redirect back into the app (no open redirects). */
+export const safeNext = (n: unknown) => typeof n === "string" && /^\/app(\/|$)[\w\-./?=&%]*$/.test(n) && !n.includes("//") ? n : "/app/";
 
 /** Exchange a refresh token for a new GitHub App user token. */
 export function githubRefresher(env: Env) {
@@ -24,9 +28,10 @@ export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
   const secure = env.APP_URL.startsWith("https://");
   const redirectUri = `${env.APP_URL}/auth/github/callback`;
 
-  app.get("/auth/github/login", async (_req, reply) => {
+  app.get<{ Querystring: { next?: string } }>("/auth/github/login", async (req, reply) => {
     const state = randomId(16);
     reply.setCookie(STATE_COOKIE, state, { path: "/auth", httpOnly: true, secure, sameSite: "lax", maxAge: 600 });
+    reply.setCookie(NEXT_COOKIE, safeNext(req.query.next), { path: "/auth", httpOnly: true, secure, sameSite: "lax", maxAge: 600 });
     const u = new URL("https://github.com/login/oauth/authorize");
     u.searchParams.set("client_id", env.GITHUB_CLIENT_ID);
     u.searchParams.set("redirect_uri", redirectUri);
@@ -36,10 +41,10 @@ export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
 
   app.get<{ Querystring: { code?: string; state?: string; installation_id?: string } }>("/auth/github/callback", async (req, reply) => {
     const { code, state } = req.query;
-    const expected = req.cookies[STATE_COOKIE];
-    reply.clearCookie(STATE_COOKIE, { path: "/auth" });
-    // Installing the App can also land here; it then needs a normal sign-in round trip.
-    if (!code) return reply.redirect("/app");
+    const expected = req.cookies[STATE_COOKIE], next = safeNext(req.cookies[NEXT_COOKIE]);
+    reply.clearCookie(STATE_COOKIE, { path: "/auth" }); reply.clearCookie(NEXT_COOKIE, { path: "/auth" });
+    // Installing the App can also land here without a sign-in code.
+    if (!code) return reply.redirect(req.user ? "/app/" : "/login.html");
     if (!state || !expected || state !== expected) return reply.code(400).send("Invalid sign-in state. Please try again.");
 
     const r = await fetch("https://github.com/login/oauth/access_token", {
@@ -58,7 +63,7 @@ export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
                                   expires_at: tok.expires_in ? Date.now() + tok.expires_in * 1000 : undefined };
     const sid = await createSession(db, env.SESSION_SECRET, Number(user!.id), stored);
     setSessionCookie(reply, sid, secure);
-    return reply.redirect("/app");
+    return reply.redirect(next);
   });
 
   app.post("/auth/logout", async (req, reply) => {

@@ -11,17 +11,18 @@
 <script src="../assets/site.js"></script>
 <script src="app.js"></script>
 </head>
-<body>
+<body class="booting">
 <div id="demo"></div>
 <header class="top app-top"><div class="wrap">
-  <a class="brand" href="../"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
-  <nav class="nav"><a href="./" id="back">Repositories</a><button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button></nav>
+  <a class="brand" href="./" data-app><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
+  <nav class="nav"><a href="./" data-app>Repositories</a><button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button></nav>
   <div class="who" id="who"></div>
 </div></header>
 
 <main class="app"><div class="wrap">
-  <div class="crumbs"><a href="./" id="crumb">Repositories</a> / <span id="rname"></span></div>
-  <div class="page-head"><h1>Set up Keel</h1></div>
+  <div class="crumbs"><a href="./" data-app>Repositories</a> / <a id="rlink" href="#"></a><span id="rname"></span></div>
+  <div class="page-head"><h1 id="title">Set up Keel</h1></div>
+  <nav class="tabs-repo" id="tabs" hidden><a id="tabOverview" href="#">Overview</a><a aria-current="page" href="#">Settings</a></nav>
 
   <div class="wizard">
     <nav class="rail" aria-label="Setup steps">
@@ -35,7 +36,7 @@
       <section class="panel-step on" data-step="0">
         <h2>Here's what we found</h2>
         <p class="p-small">Keel read your repository's file list and workflows. Adjust anything that looks wrong.</p>
-        <div class="found" id="found"><div><div class="k">Language</div><div class="v">…</div></div></div>
+        <div class="found" id="found"><div><div class="k">Reading repository</div><div class="v"><span class="live">detecting</span></div></div></div>
         <div class="field"><label for="install">Install command (runs before Keel, like your CI)</label><input type="text" id="install"></div>
         <div class="field"><label for="ci">Run Keel when this workflow fails</label><select id="ci"></select>
           <span class="hint">Keel also runs on <code>/keel fix</code> comments and on demand.</span></div>
@@ -87,13 +88,20 @@
 
 <script>
 (async () => {
-  const { api, esc, shell, DEMO, params } = KeelApp;
+  const { api, esc, guard, href, params } = KeelApp;
   const full = params.get("repo") || "";
-  const q = DEMO ? "&demo" : "";
-  document.getElementById("rname").textContent = full;
-  if (DEMO) { document.getElementById("back").href = "./?demo"; document.getElementById("crumb").href = "./?demo"; }
-  const me = await api("/api/me"); shell(me);
-  if (!me.user) { location.href = DEMO ? "./?demo" : "./"; return; }
+  const me = await guard(); if (!me) return;
+  // A repository that is already set up shows this page as its Settings tab.
+  let current = null;
+  try { current = (await api(`/api/repos/${full.split("/").map(encodeURIComponent).join("/")}`)).repo; } catch (e) {}
+  const settingsMode = current && current.status !== "new";
+  if (settingsMode) {
+    document.getElementById("title").textContent = "Settings";
+    document.getElementById("tabs").hidden = false;
+    document.getElementById("tabOverview").href = href("repo.html", full);
+    const rl = document.getElementById("rlink"); rl.textContent = full; rl.href = href("repo.html", full);
+    document.getElementById("activate").innerHTML = 'Open settings pull request <span class="arrow">→</span>';
+  } else document.getElementById("rname").textContent = full;
 
   // ---- steps
   const steps = [...document.querySelectorAll(".panel-step")], rail = [...document.querySelectorAll(".rail button")];
@@ -149,6 +157,12 @@
       : `With the shared calibration, Keel would auto-merge about <b>${Math.round(st.merge * 100)}%</b> of fixes and send the rest to review.`;
   }
   alphaEl.oninput = preview;
+  if (settingsMode) {
+    alphaEl.value = current.alpha; preview();
+    document.querySelector(`input[name=method][value=${current.method}]`).checked = true;
+    document.querySelector(`input[name=merge][value=${current.autoMerge ? "auto" : "label"}]`).checked = true;
+    document.querySelectorAll('.checks input[type=checkbox]').forEach(i => i.checked = current.models.includes(i.value)); renderKeys();
+  }
 
   // ---- activate
   const val = n => document.querySelector(`input[name=${n}]:checked`).value;
@@ -178,7 +192,7 @@
         <h3 class="h-panel" style="margin-top:12px">Merge pull request #${r.pr.number} to activate Keel</h3>
         <p class="p-small" style="margin-top:6px">${r.secretsStored.length} secret(s) stored on GitHub.</p>
         <div class="ctas" style="justify-content:flex-start"><a class="btn primary" href="${esc(r.pr.url)}" target="_blank" rel="noopener">Review on GitHub</a>
-        <a class="btn" href="repo.html?repo=${encodeURIComponent(full)}${q}">Go to dashboard</a></div></div>`;
+        <a class="btn" href="${href("repo.html", full)}">Go to overview</a></div></div>`;
       btn.hidden = true;
     } catch (x) { err.textContent = x.message; err.hidden = false; btn.disabled = false; btn.innerHTML = 'Open setup pull request <span class="arrow">→</span>'; }
   };

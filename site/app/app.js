@@ -1,8 +1,7 @@
 // Keel app client. Talks to the Keel API on the same origin. On GitHub Pages (or with ?demo) there is
 // no API, so it runs in demo mode with sample data and clearly says so.
 (() => {
-  const params = new URLSearchParams(location.search);
-  const DEMO = location.hostname.endsWith("github.io") || params.has("demo");
+  const { DEMO, params, session, setDemoSigned, withDemo } = window.Keel;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   const demo = {
@@ -36,8 +35,7 @@
   async function api(path, opts = {}) {
     if (DEMO) {
       await sleep(250 + Math.random() * 250);
-      if (path === "/api/me") { let signed = false; try { signed = sessionStorage.getItem("keel-demo-signed") === "1"; } catch (e) {}
-        return signed ? demo.me : { ...demo.me, user: null }; }
+      if (path === "/api/me") { const m = await session(); return m.user ? demo.me : { ...demo.me, user: null }; }
       if (path === "/api/repos") return demo.repos;
       if (path.endsWith("/detect")) return demo.detect;
       if (path.endsWith("/setup")) return { pr: { number: 2, url: "https://github.com/feedofmri/keel/pulls" }, secretsStored: Object.keys(JSON.parse(opts.body || "{}").secrets || {}) };
@@ -58,23 +56,41 @@
   const STATUS = { new: ["Not set up", "muted"], setup_pr_open: ["Setup PR open", "review"], active: ["Active", "auto"], paused: ["Paused", "muted"], error: ["Error", "review"] };
   const statusPill = s => { const [t, c] = STATUS[s] || [s, "muted"]; return `<span class="pill ${c}"><span class="dot"></span>${esc(t)}</span>`; };
 
-  function shell(me) {
-    const banner = DEMO ? `<div class="demo-banner">Demo mode with sample data. The live app runs at <a href="https://keel.boraqs.com/app/">keel.boraqs.com</a>.</div>` : "";
-    document.getElementById("demo").innerHTML = banner;
-    const u = me && me.user;
-    document.getElementById("who").innerHTML = u
-      ? `<img src="${esc(u.avatar_url)}" alt="" width="24" height="24"><span>${esc(u.login)}</span><button class="btn" id="signout" style="height:30px">Sign out</button>`
-      : `<a class="btn primary" href="${signInHref()}" data-signin style="height:32px">Sign in with GitHub</a>`;
-    const so = document.getElementById("signout");
-    if (so) so.onclick = async () => {
-      if (DEMO) { try { sessionStorage.removeItem("keel-demo-signed"); } catch (e) {} location.href = "./?demo"; return; }
-      await api("/auth/logout", { method: "POST", body: "{}" }); location.href = "/"; };
-    wireSignIn();
+  // Every app page calls this first: signed-out visitors go to the public sign-in page, and the
+  // page stays hidden (body.booting) until we know who is signed in, so nothing flashes.
+  async function guard() {
+    let me;
+    try { me = await api("/api/me"); }
+    catch (e) { document.body.classList.remove("booting"); throw e; }
+    if (!me.user) { location.replace(withDemo("../login.html?next=" + encodeURIComponent(location.pathname.replace(/^.*\/app\//, "/app/") + location.search.replace(/[?&]demo\b/, "")))); return null; }
+    shell(me);
+    document.body.classList.remove("booting");
+    return me;
   }
-  const signInHref = () => DEMO ? "./?demo" : "/auth/github/login";
-  // In demo mode "signing in" just flips a flag for this tab.
-  function wireSignIn() { if (DEMO) document.querySelectorAll("[data-signin]").forEach(a => a.onclick = e => {
-    e.preventDefault(); try { sessionStorage.setItem("keel-demo-signed", "1"); } catch (x) {} location.href = "./?demo"; }); }
 
-  window.KeelApp = { api, esc, ago, statusPill, shell, DEMO, params, signInHref, wireSignIn };
+  function shell(me) {
+    document.getElementById("demo").innerHTML = DEMO
+      ? `<div class="demo-banner">Demo mode with sample data. The live app runs at <a href="https://keel.boraqs.com/app/">keel.boraqs.com</a>.</div>` : "";
+    const u = me.user;
+    document.getElementById("who").innerHTML = `
+      <button class="acct" id="acctBtn" aria-haspopup="menu" aria-expanded="false"><img src="${esc(u.avatar_url)}" alt="" width="24" height="24"><span>${esc(u.login)}</span></button>
+      <div class="menu" id="acctMenu" role="menu" hidden>
+        <a role="menuitem" href="${withDemo("../")}">Keel website</a>
+        <a role="menuitem" href="${withDemo("../results.html")}">Benchmark results</a>
+        <a role="menuitem" href="https://github.com/settings/installations" target="_blank" rel="noopener">Manage GitHub access</a>
+        <button role="menuitem" id="signout">Sign out</button>
+      </div>`;
+    const btn = document.getElementById("acctBtn"), menu = document.getElementById("acctMenu");
+    btn.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; btn.setAttribute("aria-expanded", String(!menu.hidden)); };
+    document.addEventListener("click", () => { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); });
+    document.getElementById("signout").onclick = async () => {
+      if (DEMO) { setDemoSigned(false); location.href = withDemo("../"); return; }
+      await api("/auth/logout", { method: "POST", body: "{}" }).catch(() => {}); location.href = "/";
+    };
+    document.querySelectorAll("a[data-app]").forEach(a => a.href = withDemo(a.getAttribute("href")));
+  }
+
+  const href = (page, repo) => withDemo(`${page}${repo ? `?repo=${encodeURIComponent(repo)}` : ""}`);
+
+  window.KeelApp = { api, esc, ago, statusPill, guard, href, DEMO, params };
 })();

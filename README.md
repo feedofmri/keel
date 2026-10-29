@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://keel.boraqs.com">keel.boraqs.com</a> ·
   <a href="https://feedofmri.github.io/keel/">Preview (GitHub Pages)</a> ·
-  <a href="https://feedofmri.github.io/keel/dashboard.html">Risk dashboard</a> ·
+  <a href="https://feedofmri.github.io/keel/results.html">Results</a> ·
   <a href="#install-as-a-github-action">Install</a> ·
   <a href="HACKATHON.md">What we built at the hackathon</a>
 </p>
@@ -102,7 +102,7 @@ keel calibrate      results/quixbugs/records.jsonl --out calibration.json
 ```
 
 Both benchmarks also run from the Actions tab (`Benchmark – QuixBugs`, `Benchmark – SWE-bench Lite`).
-Results feed the [dashboard](https://feedofmri.github.io/keel/dashboard.html). It compares Keel with
+Results feed the [results page](https://feedofmri.github.io/keel/results.html). It compares Keel with
 merging whenever tests pass, with model self-confidence ≥ 1−α, and with Keel's own score without
 calibration. It also shows per-model cost and feature ablations.
 

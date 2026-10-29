@@ -3,6 +3,21 @@
   const root = document.documentElement;
   try { const t = localStorage.getItem("keel-theme"); if (t) root.dataset.theme = t; } catch (e) {}
   const current = () => root.dataset.theme || "light";
+  // Demo mode: GitHub Pages (or ?demo) has no API, so "signed in" is a per-tab flag.
+  const params = new URLSearchParams(location.search);
+  const DEMO = location.hostname.endsWith("github.io") || params.has("demo");
+  const DEMO_KEY = "keel-demo-signed";
+  const demoSigned = () => { try { return sessionStorage.getItem(DEMO_KEY) === "1"; } catch (e) { return false; } };
+  const setDemoSigned = v => { try { v ? sessionStorage.setItem(DEMO_KEY, "1") : sessionStorage.removeItem(DEMO_KEY); } catch (e) {} };
+  const withDemo = href => (DEMO && params.has("demo") && !/^https?:/.test(href)) ? href + (href.includes("?") ? "&" : "?") + "demo" : href;
+  let me = null;
+  async function session() {
+    if (me) return me;
+    if (DEMO) return (me = { user: demoSigned() ? { login: "octocat", avatar_url: "https://avatars.githubusercontent.com/u/583231?v=4" } : null });
+    try { const r = await fetch("/api/me", { credentials: "same-origin" }); me = r.ok ? await r.json() : { user: null }; }
+    catch (e) { me = { user: null }; }
+    return me;
+  }
   const sun = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   const moon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
   function paintBtn() { const b = document.getElementById("theme"); if (b) b.innerHTML = current() === "dark" ? sun : moon; }
@@ -15,6 +30,12 @@
       paintBtn();
       window.dispatchEvent(new Event("keel-theme"));
     });
+    // Public pages: the header button reads "Sign in" or "Open app" depending on the session.
+    const auth = document.querySelectorAll("[data-auth], [data-auth-cta]");
+    if (auth.length) session().then(m => auth.forEach(a => {
+      if (m.user) { a.href = withDemo(a.dataset.appHref || "app/"); a.textContent = "Open app"; }
+      else a.href = withDemo(a.getAttribute("href"));
+    }));
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }),
       { rootMargin: "0px 0px -8% 0px" });
     document.querySelectorAll(".reveal, .stage").forEach(el => io.observe(el));
@@ -73,5 +94,5 @@
     for (const lam of LTT_GRID) { const s = stats(cal, lam); if (binomP(s.w, s.k, alpha) <= level) best = Math.max(best, lam); }
     return best;
   }
-  window.Keel = { NEVER, GATED, crcThreshold, lttThreshold, stats, current, countUp };
+  window.Keel = { NEVER, GATED, crcThreshold, lttThreshold, stats, current, countUp, DEMO, params, session, setDemoSigned, withDemo };
 })();

@@ -11,11 +11,11 @@
 <script src="../assets/site.js"></script>
 <script src="app.js"></script>
 </head>
-<body>
+<body class="booting">
 <div id="demo"></div>
 <header class="top app-top"><div class="wrap">
-  <a class="brand" href="../"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
-  <nav class="nav"><a href="./" id="back">Repositories</a><button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button></nav>
+  <a class="brand" href="./" data-app><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
+  <nav class="nav"><a href="./" data-app>Repositories</a><button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button></nav>
   <div class="who" id="who"></div>
 </div></header>
 
@@ -23,11 +23,9 @@
 
 <script>
 (async () => {
-  const { api, esc, ago, statusPill, shell, DEMO, params } = KeelApp;
-  const full = params.get("repo") || "", q = DEMO ? "&demo" : "";
-  if (DEMO) document.getElementById("back").href = "./?demo";
-  const me = await api("/api/me"); shell(me);
-  if (!me.user) { location.href = DEMO ? "./?demo" : "./"; return; }
+  const { api, esc, ago, statusPill, guard, href, DEMO, params } = KeelApp;
+  const full = params.get("repo") || "";
+  const me = await guard(); if (!me) return;
   const base = `/api/repos/${full.split("/").map(encodeURIComponent).join("/")}`;
   const view = document.getElementById("view");
   let timer = null, flash = "";
@@ -36,10 +34,11 @@
     let d;
     try { d = await api(base); } catch (e) { view.innerHTML = `<p class="err">${esc(e.message)}</p>`; return; }
     const r = d.repo, s = d.stats;
+    if (r.status === "new" && r.canManage) { location.replace(href("setup.html", r.full_name)); return; }
     const budget = s.autoMerged ? s.wrong / s.autoMerged : 0;
     const paused = r.status === "paused";
     view.innerHTML = `
-      <div class="crumbs"><a href="./${DEMO ? "?demo" : ""}">Repositories</a> / ${esc(r.full_name)}</div>
+      <div class="crumbs"><a href="${href("./")}">Repositories</a> / ${esc(r.full_name)}</div>
       <div class="page-head"><div><h1>${esc(r.full_name)}</h1>
           <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">${statusPill(r.status)}
           <span class="muted" style="font-size:13px">α ${Math.round(r.alpha * 100)}% · ${r.method.toUpperCase()} · ${r.autoMerge ? "auto-merge" : "label only"} · ${esc(r.models.join(" + "))}</span>
@@ -47,7 +46,8 @@
         ${r.canManage ? `<div class="actions">
           <button class="btn primary" id="fix">Fix now</button>
           <button class="btn" id="toggle">${paused ? "Resume" : "Pause"}</button>
-          <a class="btn" href="setup.html?repo=${encodeURIComponent(r.full_name)}${q}">Settings</a></div>` : ""}</div>
+          </div>` : ""}</div>
+      <nav class="tabs-repo"><a aria-current="page" href="${href("repo.html", r.full_name)}">Overview</a>${r.canManage ? `<a href="${href("setup.html", r.full_name)}">Settings</a>` : ""}</nav>
       ${flash ? `<div class="banner" style="margin-bottom:28px">${flash}</div>` : ""}
       ${r.status === "setup_pr_open" ? `<div class="banner" style="margin-bottom:28px">Waiting for setup PR #${r.setupPr} to be merged. Keel goes live as soon as it is.</div>` : ""}
       <div class="kpis">

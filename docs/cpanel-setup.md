@@ -110,7 +110,7 @@ cPanel shows the exact `node` path at the top of the Node.js app page ("Enter to
 ## 7. Check it
 - `https://keel.boraqs.com/healthz` → `{"ok":true}`
 - `https://keel.boraqs.com/` → landing page
-- `https://keel.boraqs.com/app/` → "Sign in with GitHub" → install on `keel-demo` → set up
+- `https://keel.boraqs.com/app/` → redirects to `/login.html` → *Continue with GitHub* → Repositories → set up `keel-demo`
 
 ## Troubleshooting
 - **503 or "Incomplete response":** open `keel-app/stderr.log`. A `ZodError` means an environment

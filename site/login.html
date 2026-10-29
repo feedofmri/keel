@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign In to Keel</title>
+<meta name="description" content="Sign in to Keel with GitHub.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/site.js"></script>
+<style>
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  .login { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: calc(100vh - 64px); }
+  @media (max-width: 900px) { .login { grid-template-columns: minmax(0, 1fr); } .login .side { display: none; } }
+  .login .main { display: flex; align-items: center; justify-content: center; padding: 64px 24px; }
+  .card-login { width: 100%; max-width: 400px; }
+  .card-login h1 { font-size: 38px; line-height: 1.1; letter-spacing: -0.01em; margin-top: 18px; }
+  .card-login p { margin: 14px 0 0; }
+  .gh { width: 100%; justify-content: center; height: 46px; font-size: 16px; margin-top: 32px; }
+  .gh svg { width: 18px; height: 18px; }
+  .fine { font-size: 13px; color: var(--muted); margin-top: 18px; }
+  .side { position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 56px; }
+  .side::before { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 50% at 50% 70%, var(--glow), transparent); }
+  .side .cols { position: relative; grid-template-columns: minmax(0, 1fr); gap: 28px; max-width: 420px; }
+  .side h4 { font-size: 15px; }
+  #field { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .9; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
+  <nav class="nav"><a href="./">Home</a><a href="results.html" class="hide-sm">Results</a><button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button></nav>
+</div></header>
+
+<div class="login">
+  <section class="main"><div class="card-login">
+    <span class="eyebrow">Sign in</span>
+    <h1>Welcome to Keel</h1>
+    <p class="p-large">Sign in with GitHub to connect repositories and set your risk level.</p>
+    <a class="btn primary gh" id="signin" href="#"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Continue with GitHub</a>
+    <p class="fine" id="fine">Keel only sees the repositories you choose when installing the GitHub App. Your code stays on GitHub.</p>
+  </div></section>
+  <aside class="side inv">
+    <div class="cols">
+      <div><h4>1 · Sign in and install</h4><p class="p-small">Pick the repositories Keel may work on.</p></div>
+      <div><h4>2 · Set your policy</h4><p class="p-small">Risk level α, Meta models, label-only or auto-merge.</p></div>
+      <div><h4>3 · Merge one PR</h4><p class="p-small">Keel adds a workflow and a config file. That's it.</p></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(async () => {
+  const next = (() => { const n = Keel.params.get("next") || ""; return n.startsWith("/app") || n.startsWith("app/") ? n : "app/"; })();
+  const m = await Keel.session();
+  if (m.user) { location.replace(Keel.withDemo(next.startsWith("/") ? "." + next : next)); return; }
+  const btn = document.getElementById("signin");
+  if (Keel.DEMO) {
+    document.getElementById("fine").textContent = "Demo mode: this opens the app with sample data. The live app runs at keel.boraqs.com.";
+    btn.onclick = e => { e.preventDefault(); Keel.setDemoSigned(true); location.href = Keel.withDemo(next.startsWith("/") ? "." + next : next); };
+  } else {
+    btn.href = "/auth/github/login?next=" + encodeURIComponent(next.startsWith("/") ? next : "/" + next);
+  }
+})();
+</script>
+</body>
+</html>

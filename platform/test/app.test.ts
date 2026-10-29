@@ -102,6 +102,17 @@ d("platform app (needs TEST_DATABASE_URL)", () => {
     expect((await app.inject({ method: "POST", url: "/api/repos/acme/shop/fix", headers: { "x-keel": "1" } })).statusCode).toBe(401);
   });
 
+  it("keeps the app behind sign-in and never redirects outside it", async () => {
+    const r = await app.inject("/app/repo.html?repo=acme/shop");
+    expect(r.statusCode).toBe(302);
+    expect(r.headers.location).toBe("/login.html?next=%2Fapp%2Frepo.html%3Frepo%3Dacme%2Fshop");
+    const { safeNext } = await import("../src/auth/github.js");
+    expect(safeNext("/app/repo.html?repo=a/b")).toBe("/app/repo.html?repo=a/b");
+    expect(safeNext("https://evil.example")).toBe("/app/");
+    expect(safeNext("//evil.example/app")).toBe("/app/");
+    expect(safeNext("/app//evil")).toBe("/app/");
+  });
+
   it("requires sign-in for repository data", async () => {
     expect((await app.inject("/api/repos")).statusCode).toBe(401);
     expect((await app.inject("/api/repos/acme/shop")).statusCode).toBe(401);

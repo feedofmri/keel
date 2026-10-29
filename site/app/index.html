@@ -11,12 +11,11 @@
 <script src="../assets/site.js"></script>
 <script src="app.js"></script>
 </head>
-<body>
+<body class="booting">
 <div id="demo"></div>
 <header class="top app-top"><div class="wrap">
-  <a class="brand" href="../"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
-  <nav class="nav"><a href="./" aria-current="page">Repositories</a><a href="../dashboard.html" class="hide-sm">Benchmarks</a>
-    <button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button></nav>
+  <a class="brand" href="./" data-app><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
+  <nav class="nav"><a href="./" data-app aria-current="page">Repositories</a><button class="theme-btn" id="theme" aria-label="Toggle colour theme"></button></nav>
   <div class="who" id="who"></div>
 </div></header>
 
@@ -24,32 +23,10 @@
 
 <script>
 (async () => {
-  const { api, esc, statusPill, shell, DEMO, signInHref, wireSignIn } = KeelApp;
+  const { api, esc, statusPill, guard, href } = KeelApp;
+  const me = await guard(); if (!me) return;
   const view = document.getElementById("view");
-  const gh = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>';
-  let me;
-  try { me = await api("/api/me"); } catch (e) { view.innerHTML = `<p class="err">Couldn't reach the Keel API: ${esc(e.message)}</p>`; return; }
-  shell(me);
-
-  if (!me.user) {
-    view.innerHTML = `<section class="signin">
-      <div><span class="eyebrow">Keel app</span>
-        <h1 style="margin-top:16px">Connect a repository. Keel handles the rest.</h1>
-        <p class="p-large" style="margin-top:16px;max-width:460px">Sign in with GitHub, pick a repository, choose your risk level. Keel opens one setup pull request; merge it and you're live.</p>
-        <div class="ctas" style="justify-content:flex-start;margin-top:28px"><a class="btn primary gh" href="${signInHref()}" data-signin>${gh} Sign in with GitHub</a></div>
-        ${me.configured ? "" : '<p class="muted" style="font-size:13px;margin-top:14px">The GitHub App isn\'t configured on this server yet.</p>'}
-      </div>
-      <div class="steps3">
-        <div><b>1 · Sign in and install</b><span class="p-small">Keel only sees the repositories you choose.</span></div>
-        <div><b>2 · Set your policy</b><span class="p-small">Risk level α, models, and whether AUTO-MERGE actually merges.</span></div>
-        <div><b>3 · Merge one PR</b><span class="p-small">Keel adds a workflow and a config file. Your code stays on GitHub.</span></div>
-      </div></section>`;
-    wireSignIn();
-    return;
-  }
-
-  view.innerHTML = `<div class="crumbs">Signed in as ${esc(me.user.login)}</div>
-    <div class="page-head"><h1>Repositories</h1>
+  view.innerHTML = `<div class="page-head" style="margin-top:0"><div><div class="crumbs">${esc(me.user.login)}</div><h1 style="margin-top:8px">Repositories</h1></div>
       <div class="actions"><a class="btn" href="${esc(me.installUrl)}" target="_blank" rel="noopener">Add repositories on GitHub</a></div></div>
     <div id="list"><p class="muted">Loading repositories…</p></div>`;
   try {
@@ -62,15 +39,13 @@
       return;
     }
     list.innerHTML = `<div class="repo-list">` + repos.map(r => {
-      const href = (r.status === "new" ? "setup.html" : "repo.html") + `?repo=${encodeURIComponent(r.full_name)}${DEMO ? "&demo" : ""}`;
-      const cta = r.status === "new" ? (r.canManage ? "Set up" : "View") : "Open";
+      const isNew = r.status === "new";
+      const link = isNew ? href("setup.html", r.full_name) : href("repo.html", r.full_name);
       return `<div class="repo-row"><div class="name">${esc(r.full_name)}<small>${r.private ? "Private" : "Public"}${r.language ? " · " + esc(r.language) : ""}</small></div>
-        <div class="hide-sm">${statusPill(r.status)}</div><div class="hide-sm muted" style="font-size:13px">α ${Math.round(r.alpha * 100)}%</div>
-        <a class="btn ${r.status === "new" ? "primary" : ""}" href="${href}">${cta} <span class="arrow">→</span></a></div>`;
+        <div class="hide-sm">${statusPill(r.status)}</div><div class="hide-sm muted" style="font-size:13px">${isNew ? "" : "α " + Math.round(r.alpha * 100) + "%"}</div>
+        <a class="btn ${isNew && r.canManage ? "primary" : ""}" href="${link}">${isNew ? (r.canManage ? "Set up" : "View") : "Open"} <span class="arrow">→</span></a></div>`;
     }).join("") + `</div>`;
-  } catch (e) {
-    document.getElementById("list").innerHTML = `<p class="err">${esc(e.message)}</p>`;
-  }
+  } catch (e) { document.getElementById("list").innerHTML = `<p class="err">${esc(e.message)}</p>`; }
 })();
 </script>
 </body>

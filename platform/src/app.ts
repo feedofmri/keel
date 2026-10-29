@@ -33,6 +33,14 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
     reply.header("X-Frame-Options", "DENY");
   });
 
+  // Two zones: public pages, and the app (/app/*) which needs a session.
+  app.addHook("onRequest", async (req, reply) => {
+    const path = req.url.split("?")[0];
+    if ((path === "/app" || path.startsWith("/app/")) && !req.user)
+      return reply.redirect(`/login.html?next=${encodeURIComponent(req.url)}`);
+    if (path === "/login.html" && req.user) return reply.redirect("/app/");
+  });
+
   app.get("/healthz", async () => { await db.query("select 1"); return { ok: true }; });
   registerAuth(app, db, env);
   registerWebhooks(app, db, env);
@@ -43,7 +51,6 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
   const pub = opts.publicDir || [join(here, "public"), join(here, "..", "..", "site")].find(existsSync);
   if (pub) {
     await app.register(fstatic, { root: pub, index: ["index.html"], redirect: true });
-    app.get("/app", (_req, reply) => reply.redirect("/app/"));
   }
   app.setNotFoundHandler((req, reply) => reply.code(404).send(req.url.startsWith("/api/") ? { error: "not found" } : "Not found"));
   return app;
