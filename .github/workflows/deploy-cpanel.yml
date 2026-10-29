@@ -43,7 +43,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh && echo "$CPANEL_SSH_KEY" > ~/.ssh/id && chmod 600 ~/.ssh/id
           PORT="${CPANEL_SSH_PORT:-22}"
-          ssh-keyscan -p "$PORT" "$CPANEL_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p "$PORT" "$CPANEL_HOST" >> ~/.ssh/known_hosts 2>/dev/null || {
+            echo "::error::Cannot reach SSH on $CPANEL_HOST port $PORT. If your host has no SSH access, delete the CPANEL_SSH_KEY secret to deploy over FTP instead."; exit 1; }
           rsync -az --delete --exclude ".env" --exclude "stderr.log" --exclude ".htaccess" --exclude ".well-known" --exclude "cgi-bin" -e "ssh -i ~/.ssh/id -p $PORT" deploy/ "$CPANEL_USER@$CPANEL_HOST:$APP_DIR/"
           ssh -i ~/.ssh/id -p "$PORT" "$CPANEL_USER@$CPANEL_HOST" "mkdir -p $APP_DIR/tmp && touch $APP_DIR/tmp/restart.txt"
       - name: Upload over FTPS (lftp)
