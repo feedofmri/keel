@@ -36,7 +36,7 @@ export default function RepoOverview() {
     setBusy(kind);
     try {
       if (kind === "fix") { await api.action(full, "fix"); setFlash("Keel run started on GitHub Actions. It appears here when it finishes."); }
-      else { await api.action(full, paused ? "resume" : "pause"); setFlash(paused ? "Resumed." : "Paused. Keel won't run until you resume."); }
+      else { await api.action(full, paused ? "resume" : "pause"); setFlash(paused ? "Resumed." : "Paused. Keel will not run until it is resumed."); }
     } catch (e) { setFlash((e as Error).message); }
     setBusy(""); reload(); recent.reload();
   };
@@ -61,7 +61,7 @@ export default function RepoOverview() {
       <div className="kpis">
         <div><div className="k">Runs</div><div className="v">{s.runs}</div><div className="s">last 50</div></div>
         <div><div className="k">Auto-merged</div><div className="v">{s.autoMerged}</div><div className="s">{s.runs ? Math.round(100 * s.autoMerged / s.runs) : 0}% of runs</div></div>
-        <div><div className="k">Wrong merges</div><div className="v">{s.wrong}</div><div className="s">reverted or flagged</div></div>
+        <div><div className="k">Incorrect merges</div><div className="v">{s.wrong}</div><div className="s">reverted or flagged</div></div>
         <div><div className="k">Model cost</div><div className="v">${s.cost.toFixed(2)}</div><div className="s">all runs</div></div>
       </div>
       <div className="budget">

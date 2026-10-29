@@ -22,7 +22,7 @@ export default function RunDetail() {
   const wrong = Boolean(r.labelled_wrong || r.reverted_at);
   const secs = r.started_at && r.finished_at ? (new Date(r.finished_at).getTime() - new Date(r.started_at).getTime()) / 1000 : null;
   const feedback = async (w: boolean) => { setBusy(true); setMsg("");
-    try { await api.feedback(id, w); setMsg(w ? "Marked as wrong. It now counts against this repository's risk budget." : "Wrong mark cleared."); reload(); }
+    try { await api.feedback(id, w); setMsg(w ? "Marked as incorrect. The run now counts against this repository's risk budget." : "The incorrect mark has been cleared."); reload(); }
     catch (e) { setMsg((e as Error).message); }
     setBusy(false); };
 
@@ -52,7 +52,7 @@ export default function RunDetail() {
         <div className="panel-box">
           <h3>Guarantee</h3>
           <p className="p-small">{rep.guarantee || "No calibration was available, so Keel did not auto-merge."}</p>
-          {rep.n_calibration != null && <p className="p-small" style={{ marginTop: 8 }}>Calibration: {rep.n_calibration} held-out bugs. <Link to="/app/calibration">How it's holding up →</Link></p>}
+          {rep.n_calibration != null && <p className="p-small" style={{ marginTop: 8 }}>Calibration: {rep.n_calibration} held-out bugs. <Link to="/app/calibration">View calibration status →</Link></p>}
         </div>
       </div>
 
@@ -73,19 +73,19 @@ export default function RunDetail() {
                 : c.top_factors.map(([k, v]) => <span key={k} className={`factor ${v < 0 ? "neg" : "pos"}`} title={v < 0 ? "lowers risk" : "raises risk"}>{k.replace(/_/g, " ")}</span>)}</td>
             </tr>))}</tbody>
         </table></div>
-      ) : <p className="muted">This run didn't report candidate details. Runs from the current Keel Action do.</p>}
+      ) : <p className="muted">Candidate details were not reported for this run. They are reported by the current version of the Keel Action.</p>}
 
       <div className="section-h"><h2>Failing tests</h2></div>
       <ul className="bullets">{(rep.failing_tests || []).map(t => <li key={t}><code>{t}</code></li>)}</ul>
 
       {r.can_manage && r.decision === "AUTO-MERGE" && (
         <div className="panel-box" style={{ marginTop: 40 }}>
-          <h3>Was this fix wrong?</h3>
-          <p className="p-small">Reverting the PR on GitHub counts automatically. You can also mark it here; it counts against this repository's risk budget and helps recalibration.</p>
+          <h3>Was this fix incorrect?</h3>
+          <p className="p-small">A revert on GitHub is recorded automatically. The run can also be marked here; it is then counted against this repository's risk budget and used for recalibration.</p>
           <div className="row-actions">
-            {wrong && !r.reverted_at ? <button className="btn" disabled={busy} onClick={() => feedback(false)}>Clear the wrong mark</button>
-              : !wrong ? <button className="btn danger-btn" disabled={busy} onClick={() => feedback(true)}>Mark as wrong</button>
-              : <span className="muted" style={{ fontSize: 14 }}>Reverted on GitHub, so it already counts as wrong.</span>}
+            {wrong && !r.reverted_at ? <button className="btn" disabled={busy} onClick={() => feedback(false)}>Clear the incorrect mark</button>
+              : !wrong ? <button className="btn danger-btn" disabled={busy} onClick={() => feedback(true)}>Mark as incorrect</button>
+              : <span className="muted" style={{ fontSize: 14 }}>This pull request was reverted on GitHub and is already counted as incorrect.</span>}
             {msg && <span className="ok-text">{msg}</span>}
           </div>
         </div>

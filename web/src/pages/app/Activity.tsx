@@ -10,9 +10,9 @@ export default function Activity() {
   const { data, error } = useAsync(() => api.activity(), []);
   return (
     <>
-      <PageHead title="Activity" sub="Who changed what, across your repositories: setup pull requests, pause and resume, Fix now, and feedback on runs." />
+      <PageHead title="Activity" sub="A record of changes across your repositories, including setup pull requests, pause and resume actions, Fix now requests and feedback on runs." />
       {error ? <p className="err">{error}</p> : !data ? <Loading /> : data.length ? <ActivityList events={data} />
-        : <Empty title="No activity yet">Changes you and other maintainers make appear here.</Empty>}
+        : <Empty title="No activity yet">Changes made by you and other maintainers will be listed here.</Empty>}
     </>
   );
 }

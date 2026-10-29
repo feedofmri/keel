@@ -9,7 +9,7 @@ export default function Runs() {
   const repos = useAsync(() => api.repos(), []);
   return (
     <>
-      <PageHead title="Runs" sub="Every repair Keel ran, across your repositories. Open one to see its candidates and the reasons for its decision." />
+      <PageHead title="Runs" sub="All repair runs across your repositories. Select a run to view its candidates and the basis for its decision." />
       <RunsBrowser repos={repos.data?.repos.filter(r => r.status !== "new").map(r => r.full_name)} />
     </>
   );

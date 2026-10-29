@@ -6,7 +6,7 @@ export default function GitHubAction() {
   useTitle("GitHub Action · Keel Docs");
   return (
     <div className="prose">
-      <DocHead group="Configure" title="GitHub Action" lead="feedofmri/keel@v1 runs the whole repair on your runner and opens a labelled pull request." />
+      <DocHead group="Configure" title="GitHub Action" lead="feedofmri/keel@v1 performs the complete repair on your runner and opens a labelled pull request." />
 
       <h2>Inputs</h2>
       <p>Inputs override <code>.keel.toml</code> for a single workflow.</p>

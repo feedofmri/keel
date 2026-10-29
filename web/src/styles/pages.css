@@ -9,7 +9,7 @@
 @media (max-width: 720px) { .intro { padding: 120px 0 64px; } }
 
 .sec { padding: 112px 0; }
-.sec + .sec:not(.tint):not(.band) { padding-top: 0; }
+.sec:not(.tint):not(.band) + .sec:not(.tint):not(.band) { padding-top: 0; }
 .sec.tint { background: var(--surface-2); box-shadow: 0 0 0 100vmax var(--surface-2); clip-path: inset(0 -100vmax); }
 .sec.band { padding: 112px 0; }
 @media (max-width: 720px) { .sec, .sec.band { padding: 72px 0; } }
@@ -143,3 +143,12 @@ table.ref th { white-space: nowrap; }
 
 /* legal */
 .legal .updated { font: 400 12.5px var(--mono); color: var(--muted); }
+.formula { white-space: normal; overflow-wrap: anywhere; font-size: 14px; line-height: 1.6; }
+/* reference tables stack into labelled rows on phones */
+@media (max-width: 640px) {
+  table.ref thead { display: none; }
+  table.ref, table.ref tbody, table.ref tr, table.ref td { display: block; width: 100%; }
+  table.ref tr { padding: 14px 0; border-bottom: 1px solid var(--b2); }
+  table.ref td { padding: 2px 0; border: 0; }
+  table.ref td.k { white-space: normal; overflow-wrap: anywhere; margin-bottom: 4px; }
+}

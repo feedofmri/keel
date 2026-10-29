@@ -14,7 +14,7 @@ export default function Calibration() {
   const { data: shared } = useResults();
   return (
     <>
-      <PageHead title="Calibration" sub="Is the guarantee holding? Observed wrong auto-merges in each repository, against the risk level you chose." />
+      <PageHead title="Calibration" sub="The observed rate of incorrect automatic merges in each repository, compared with its configured risk level." />
       <div className="grid2">
         <div className="panel-box">
           <h3>Shared calibration · shared-v1</h3>
@@ -30,7 +30,7 @@ export default function Calibration() {
 
       <div className="section-h"><h2>Repositories</h2></div>
       {error ? <p className="err">{error}</p> : !data ? <Loading /> : !data.length ? (
-        <Empty title="No connected repositories yet" actions={<Link className="btn primary" to="/app/repos">Set up a repository</Link>}>Once a repository has runs, its observed error appears here.</Empty>
+        <Empty title="No connected repositories yet" actions={<Link className="btn primary" to="/app/repos">Set up a repository</Link>}>The observed error rate is shown once a repository has completed runs.</Empty>
       ) : (
         <div className="table-scroll"><table className="data">
           <thead><tr><th>Repository</th><th>Policy</th><th className="num">Runs</th><th className="num">Auto-merged</th><th className="num">Wrong</th><th>Observed vs α</th><th>Status</th></tr></thead>
@@ -49,7 +49,7 @@ export default function Calibration() {
           })}</tbody>
         </table></div>
       )}
-      <p className="p-small" style={{ marginTop: 20 }}>A repository over budget for a sustained period means its bugs don't resemble the calibration bugs. Lower α, switch to LTT, or recalibrate on its own history.</p>
+      <p className="p-small" style={{ marginTop: 20 }}>A repository that remains over budget indicates that its bugs are not comparable to the calibration bugs. Lower α, switch to LTT, or recalibrate on its own history.</p>
     </>
   );
 }

@@ -24,11 +24,11 @@ export default function Repositories() {
   const shown = repos.filter(r => FILTERS.find(x => x[0] === f)![2](r.status) && r.full_name.toLowerCase().includes(q.toLowerCase()));
   return (
     <>
-      <PageHead title="Repositories" sub="Repositories the Keel GitHub App can see. Change which ones on GitHub."
+      <PageHead title="Repositories" sub="Repositories accessible to the Keel GitHub App. Access is managed on GitHub."
         actions={<a className="btn primary" href={install} target="_blank" rel="noopener">Add repositories</a>} />
       {error ? <p className="err">{error}</p> : !data ? <Loading what="repositories" /> : !repos.length ? (
         <Empty title="Install the Keel GitHub App to get started" actions={<a className="btn primary" href={install}>Install Keel on GitHub</a>}>
-          Choose the repositories Keel may work on. You can change this any time on GitHub.
+          Select the repositories Keel may access. This selection can be changed on GitHub at any time.
         </Empty>
       ) : (
         <>

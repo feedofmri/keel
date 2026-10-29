@@ -117,3 +117,19 @@ a.list-row:hover { background: linear-gradient(90deg, transparent, var(--b1) 10%
 .list-row .mono-s { white-space: nowrap; }
 @media (max-width: 900px) { .runs-list .list-row, .runs-list.with-repo .list-row { grid-template-columns: minmax(0, 1fr) auto; } }
 .setup-row { grid-template-columns: minmax(0, 1fr) auto auto; } @media (max-width: 720px) { .setup-row { grid-template-columns: minmax(0, 1fr) auto; } }
+/* long test names and meta lines wrap instead of being cut off */
+.list-row .t { overflow: visible; overflow-wrap: anywhere; }
+.list-row .t small { white-space: normal; overflow: visible; }
+@media (max-width: 900px) { .wizard .rail { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; } }
+/* sidebar divider runs the full height of the page */
+@media (min-width: 901px) { .shell { background: linear-gradient(to right, transparent 231px, var(--b1) 231px, var(--b1) 232px, transparent 232px); } .side-nav { border-right: 0; } }
+/* checkbox rows inside fields keep normal text styling */
+.field label.check { font-size: 15px; color: var(--ink); }
+.field label.check span { font-size: 13.5px; color: var(--ink-2); }
+/* fixed decision column so the score column lines up */
+.runs-list .list-row > :last-child { justify-self: end; }
+.runs-list .list-row { grid-template-columns: 100px minmax(0, 1fr) 230px 130px; }
+.runs-list.with-repo .list-row { grid-template-columns: 90px minmax(0, 1fr) 150px 230px 130px; }
+@media (max-width: 900px) { .runs-list .list-row, .runs-list.with-repo .list-row { grid-template-columns: minmax(0, 1fr) auto; } }
+table.cand-table th, table.cand-table td { white-space: nowrap; }
+table.cand-table { min-width: 820px; }

@@ -29,21 +29,20 @@ export default function Login() {
     <div className="page-login">
       <div className="login">
         <section className="main"><div className="card-login">
-          <span className="eyebrow">Sign in</span>
-          <h1>Welcome to Keel</h1>
-          <p className="p-large">Sign in with GitHub to connect repositories and set your risk level.</p>
+          <h1>Sign in to Keel</h1>
+          <p className="p-large">Use your GitHub account to connect repositories and configure Keel.</p>
           <a className="btn primary gh" href={DEMO ? "#" : href} onClick={DEMO ? demoSignIn : undefined}>
             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d={GH} /></svg>Continue with GitHub</a>
           <p className="fine">{DEMO
-            ? "Demo mode: this opens the app with sample data. The live app runs at keel.boraqs.com."
-            : "Keel only sees the repositories you choose when installing the GitHub App. Your code stays on GitHub."}</p>
+            ? "Demo mode: this opens the application with sample data. The production service is available at keel.boraqs.com."
+            : "Keel can access only the repositories you select when installing the GitHub App. Your source code remains on GitHub."}</p>
         </div></section>
         <aside className="side inv">
           <HalftoneCanvas className="field" pitch={9} scale={0.8} />
           <div className="cols">
-            <div><h4>1 · Sign in and install</h4><p className="p-small">Pick the repositories Keel may work on.</p></div>
-            <div><h4>2 · Set your policy</h4><p className="p-small">Risk level α, Meta models, label-only or auto-merge.</p></div>
-            <div><h4>3 · Merge one PR</h4><p className="p-small">Keel adds a workflow and a config file. That's it.</p></div>
+            <div><h4>1 · Install the GitHub App</h4><p className="p-small">Select the repositories Keel may access.</p></div>
+            <div><h4>2 · Configure the policy</h4><p className="p-small">Choose the risk level, the Meta models and the merge behaviour.</p></div>
+            <div><h4>3 · Merge the setup pull request</h4><p className="p-small">Keel adds a workflow and a configuration file to the repository.</p></div>
           </div>
         </aside>
       </div>

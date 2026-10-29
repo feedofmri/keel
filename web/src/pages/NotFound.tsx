@@ -6,8 +6,8 @@ export default function NotFound() {
   return (
     <section className="msg-page"><div>
       <div className="code">404</div>
-      <h1 className="h-sec">This page drifted off</h1>
-      <p className="p-large">The link may be old. Everything Keel has is one click away.</p>
+      <h1 className="h-sec">Page not found</h1>
+      <p className="p-large">The page you requested does not exist or has been moved.</p>
       <div className="ctas"><Link className="btn primary" to="/">Home</Link><Link className="btn" to="/results">Results</Link><Link className="btn" to="/app">Open app</Link></div>
     </div></section>
   );

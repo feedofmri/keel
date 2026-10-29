@@ -6,7 +6,7 @@ export default function Cli() {
   useTitle("CLI · Keel Docs");
   return (
     <div className="prose">
-      <DocHead group="Reference" title="CLI" lead="The keel command does everything the Action does, plus evaluation and calibration." />
+      <DocHead group="Reference" title="CLI" lead="The keel command provides the functionality of the GitHub Action, together with evaluation and calibration tools." />
       <Code lang="shell">{`pip install git+https://github.com/feedofmri/keel
 keel --help`}</Code>
 
@@ -41,7 +41,7 @@ keel --help`}</Code>
       ]} />
 
       <h2>keel action</h2>
-      <p>The entry point used inside the GitHub Action. You don't normally run it yourself.</p>
+      <p>The entry point used by the GitHub Action. It is not intended to be run directly.</p>
     </div>
   );
 }

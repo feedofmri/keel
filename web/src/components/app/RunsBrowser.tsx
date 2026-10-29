@@ -7,7 +7,7 @@ import { RunsList } from "./RunsList";
 
 const VIEWS: [string, string, RunFilter][] = [
   ["all", "All", {}], ["review", "Needs review", { decision: "review" }], ["auto", "Auto-merged", { decision: "auto" }],
-  ["open", "Open PRs", { outcome: "open" }], ["wrong", "Wrong", { outcome: "wrong" }],
+  ["open", "Open pull requests", { outcome: "open" }], ["wrong", "Incorrect", { outcome: "wrong" }],
 ];
 
 /** Filterable, paginated runs. The view lives in the URL (?view=review) so it can be linked and survives reloads. */

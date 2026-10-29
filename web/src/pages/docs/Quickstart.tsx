@@ -7,20 +7,20 @@ export default function Quickstart() {
   useTitle("Quickstart · Keel Docs");
   return (
     <div className="prose">
-      <DocHead group="Getting started" title="Quickstart" lead="Connect a repository and get your first labelled fix. There are two ways in: the Keel app, or the GitHub Action on its own." />
+      <DocHead group="Getting started" title="Quickstart" lead="Connect a repository and receive your first labelled fix. Keel can be set up through the Keel application or by using the GitHub Action directly." />
 
-      <h2>With the Keel app (recommended)</h2>
+      <h2>Using the Keel application (recommended)</h2>
       <ol>
         <li><strong>Sign in</strong> at <Link to="/login">keel.boraqs.com</Link> with GitHub and install the Keel GitHub App on the repositories you choose.</li>
-        <li><strong>Set up a repository.</strong> Keel detects your language, install command and CI workflow. Adjust anything that's off.</li>
-        <li><strong>Choose models and add keys.</strong> Pick Muse Spark and Muse Spark Open, paste your API keys. They're stored as encrypted repository secrets.</li>
-        <li><strong>Set your risk level α</strong> and the guarantee (per bug or per merge), and whether AUTO-MERGE should only label or actually merge.</li>
-        <li><strong>Merge the setup pull request.</strong> It adds <code>.github/workflows/keel.yml</code> and <code>.keel.toml</code>. Keel is live.</li>
+        <li><strong>Set up a repository.</strong> Keel detects the language, install command and CI workflow. Review and correct these values as needed.</li>
+        <li><strong>Select models and add keys.</strong> Select Muse Spark and Muse Spark Open and enter the API keys. They are stored as encrypted repository secrets.</li>
+        <li><strong>Set the risk level α</strong>, the form of guarantee (per bug or per merge), and whether AUTO-MERGE pull requests are labelled only or merged automatically.</li>
+        <li><strong>Merge the setup pull request.</strong> It adds <code>.github/workflows/keel.yml</code> and <code>.keel.toml</code>. Keel is then active on the repository.</li>
       </ol>
-      <p>The next time your CI fails, Keel opens a pull request labelled AUTO-MERGE or NEEDS REVIEW, and the run appears in the app.</p>
+      <p>When CI next fails, Keel opens a pull request labelled AUTO-MERGE or NEEDS REVIEW, and the run is recorded in the application.</p>
 
-      <h2>With the GitHub Action only</h2>
-      <p>Copy the example workflow into your repository and add your model keys as repository secrets.</p>
+      <h2>Using the GitHub Action only</h2>
+      <p>Add the example workflow to your repository and store your model keys as repository secrets.</p>
       <Code lang="yaml">{`# .github/workflows/keel.yml
 name: Keel
 on:
@@ -51,11 +51,11 @@ jobs:
           calibration: .keel/calibration.json`}</Code>
       <p className="callout">Without a calibration file Keel still repairs and explains, but labels every fix NEEDS REVIEW. See <Link to="/docs/calibration">Calibration</Link>.</p>
 
-      <h2>Try it locally</h2>
+      <h2>Running locally</h2>
       <Code lang="shell">{`pip install git+https://github.com/feedofmri/keel
 keel doctor                       # which model endpoints are configured
 keel repair --repo path/to/repo   # find failing tests, repair, print the PR body`}</Code>
-      <p>No keys yet? The offline demo replays recorded model responses:</p>
+      <p>An offline demonstration replays recorded model responses and requires no keys:</p>
       <Code lang="shell">{`keel repair --repo examples/demo_repo --cache "" \\
   --models scripted:muse-spark:examples/responses/muse-spark.json,scripted:muse-spark-open:examples/responses/muse-spark-open.json \\
   --attacker scripted:attacker:examples/responses/attacker.json`}</Code>

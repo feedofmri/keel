@@ -95,7 +95,7 @@ export function createSea(host: HTMLElement, cv: HTMLCanvasElement, onDrag: (sco
     ctx.beginPath(); for (let x = 0; x <= W; x += 8) ctx.lineTo(x, ly + Math.sin(x / 80 + t * 1.3) * 1.1); ctx.stroke();
     ctx.lineWidth = 8; ctx.globalAlpha = 0.12 * ease; ctx.stroke();
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
-    const label = thr < 0 ? "no safe threshold · all to review" : `keel line λ̂ ${thr.toFixed(3)}`;
+    const label = thr < 0 ? "no threshold certified · all fixes to review" : `threshold ${thr.toFixed(3)}`;
     ctx.font = "400 12px JetBrains Mono, monospace"; const tw = ctx.measureText(label).width;
     const lx = W / 2 - tw / 2, lyy = Math.max(26, ly - 16);
     ctx.fillStyle = "rgba(5,9,9,.78)"; roundRect(lx - 10, lyy - 14, tw + 20, 21, 10.5); ctx.fill();

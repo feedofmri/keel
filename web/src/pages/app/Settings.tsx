@@ -72,7 +72,7 @@ export function GitHubAccess() {
       </div>
       <div className="panel-box">
         <h3>Your GitHub authorization</h3>
-        <p className="p-small">Keel acts with your permissions while you're signed in. Revoke it any time in <a href="https://github.com/settings/apps/authorizations">GitHub → Settings → Applications</a>; that signs you out of Keel everywhere.</p>
+        <p className="p-small">Keel acts with your permissions while you are signed in. Authorisation can be revoked at any time in <a href="https://github.com/settings/apps/authorizations">GitHub → Settings → Applications</a>; that signs you out of Keel everywhere.</p>
       </div>
     </Shell>
   );
@@ -90,7 +90,7 @@ export function DefaultsPage() {
       {error ? <p className="err">{error}</p> : !d ? <Loading /> : (
         <div className="panel-box" style={{ maxWidth: 720 }}>
           <h3>Defaults for new repositories</h3>
-          <p className="p-small">The setup wizard starts from these. Each repository can still be changed on its own Settings tab.</p>
+          <p className="p-small">These values are used as the starting point for new repositories. Each repository can be changed individually on its Settings tab.</p>
           <div className="field"><label>Risk level α</label>
             <div className="alpha-big"><span className="num" style={{ fontSize: 40 }}>{Math.round(d.alpha * 100)}%</span>
               <input type="range" min={0.02} max={0.3} step={0.01} value={d.alpha} onChange={e => setD({ ...d, alpha: +e.target.value })} aria-label="Default risk level" /></div></div>
@@ -101,7 +101,7 @@ export function DefaultsPage() {
             {Object.keys(MODEL_NAMES).map(m => (
               <label className="check" key={m}><input type="checkbox" checked={d.models.includes(m)} onChange={e => setD({ ...d, models: e.target.checked ? [...d.models, m] : d.models.filter(x => x !== m) })} /><div><b>{MODEL_NAMES[m]}</b></div></label>))}
           </div></div>
-          <div className="field"><label className="check"><input type="checkbox" checked={d.autoMerge} onChange={e => setD({ ...d, autoMerge: e.target.checked })} /><div><b>Merge AUTO-MERGE fixes automatically</b><span>Off means label only: a person still clicks merge.</span></div></label></div>
+          <div className="field"><label className="check"><input type="checkbox" checked={d.autoMerge} onChange={e => setD({ ...d, autoMerge: e.target.checked })} /><div><b>Merge AUTO-MERGE fixes automatically</b><span>When disabled, AUTO-MERGE is a label only and a maintainer completes the merge.</span></div></label></div>
           <div className="row-actions"><button className="btn primary" disabled={busy || !d.models.length} onClick={save}>{busy ? "Saving…" : "Save defaults"}</button>{saved && <span className="ok-text">{saved}</span>}</div>
         </div>
       )}

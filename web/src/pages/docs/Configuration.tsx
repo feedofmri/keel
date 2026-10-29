@@ -6,7 +6,7 @@ export default function Configuration() {
   useTitle("Configuration · Keel Docs");
   return (
     <div className="prose">
-      <DocHead group="Configure" title="Configuration" lead="Keel reads .keel.toml from the root of your repository. Every key is optional; the setup pull request writes the ones you chose." />
+      <DocHead group="Configure" title="Configuration" lead="Keel reads .keel.toml from the root of your repository. All keys are optional; the setup pull request writes the values selected during setup." />
       <Code lang=".keel.toml">{`[keel]
 alpha = 0.10            # accept at most 10% wrong auto-merges
 method = "crc"          # "crc" (per bug) or "ltt" (per merge)
@@ -32,7 +32,7 @@ enable_auto_merge = false   # label only; true lets GitHub merge AUTO-MERGE PRs`
         ["temperature", "0.8", "Sampling temperature for generators."],
         ["attacker", "\"muse-spark\"", "Model that writes adversarial tests. Set to \"none\" to turn attacks off."],
         ["triage", "none", "Optional cheap model (e.g. \"muse-glimmer\") that sets the sample budget per bug."],
-        ["explainer", "none", "Optional model (e.g. \"muse-spark\") that writes a plain-English summary in the PR."],
+        ["explainer", "none", "Optional model (e.g. \"muse-spark\") that writes a plain-language summary in the pull request."],
       ]} />
 
       <h2>Tests</h2>

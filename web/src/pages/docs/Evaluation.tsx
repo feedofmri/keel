@@ -7,7 +7,7 @@ export default function Evaluation() {
   useTitle("Evaluation · Keel Docs");
   return (
     <div className="prose">
-      <DocHead group="Reference" title="Evaluation" lead="How the numbers on the Results page are produced, and how to reproduce them." />
+      <DocHead group="Reference" title="Evaluation" lead="How the figures on the Results page are produced, and how to reproduce them." />
       <h2>Protocol</h2>
       <ul>
         <li><strong>Hidden tests.</strong> Keel only sees half of the failing tests. A fix is correct if it passes all hidden tests; for SWE-bench, every FAIL_TO_PASS and PASS_TO_PASS test in the official Docker harness.</li>

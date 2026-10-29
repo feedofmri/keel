@@ -10,9 +10,6 @@
 .page-results .slider-row { flex: 1 1 340px; }
 .page-results .slider-row label { display: flex; justify-content: space-between; font-weight: 500; font-size: 14px; margin-bottom: 6px; }
 .page-results input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
-.page-results .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; padding: 3px; background: var(--surface-2); }
-.page-results .seg button { border: 0; background: transparent; color: var(--ink-2); padding: 6px 14px; border-radius: 999px; font: 500 13px var(--font); cursor: pointer; }
-.page-results .seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--ink); box-shadow: 0 0 0 1px var(--border); }
 .page-results .two { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
 @media (max-width: 860px) {
   .page-results .two { grid-template-columns: minmax(0, 1fr); }

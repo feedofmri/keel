@@ -11,7 +11,7 @@ export function SiteFooter() {
       <footer className="foot"><div className="wrap">
         <div className="foot-grid">
           <div>
-            <h2 className="h-sec">Review less. Merge with proof.</h2>
+            <h2 className="h-sec">Get started with Keel</h2>
             <div className="ctas start"><GetStarted /><a className="btn" href={REPO_URL}>GitHub</a></div>
           </div>
           <HalftoneCanvas className="logo-field" />
@@ -25,7 +25,7 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="foot-bottom">
-          <span>Keel · MIT · built during the Meta Global AI Developer Hackathon 2026</span>
+          <span>© 2026 Keel. Released under the MIT License.</span>
           <span className="theme-row">Theme <ThemeToggle /></span>
         </div>
       </div></footer>

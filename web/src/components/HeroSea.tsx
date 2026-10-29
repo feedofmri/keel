@@ -30,7 +30,7 @@ export function HeroSea({ data }: { data: Results | null }) {
     <>
       <div className="stage-hero" ref={host}>
         <canvas ref={canvas} aria-label="Each bright mark is a held-out bug, placed by its risk score. Marks below the keel line auto-merge. Drag vertically to move the line." />
-        <span className="hint">drag the keel line</span>
+        <span className="hint">Drag to adjust the threshold</span>
       </div>
       <div className="strip">
         <div className="slider">
@@ -39,10 +39,10 @@ export function HeroSea({ data }: { data: Results | null }) {
         </div>
         <div><div className="lab">Auto-merged</div><div className="num">{st ? st.k : "–"}</div></div>
         <div><div className="lab">To review</div><div className="num">{st ? st.n - st.k : "–"}</div></div>
-        <div><div className="lab">Wrong merges</div><div className="num">{st ? st.w : "–"}</div></div>
+        <div><div className="lab">Incorrect merges</div><div className="num">{st ? st.w : "–"}</div></div>
       </div>
       {data && <p className="note">
-        {data.simulated ? "Preview built from simulated evaluation data. Real benchmark results replace it. " : `Held-out bugs from ${data.datasets.join(" + ")}. `}
+        {data.simulated ? "This preview uses simulated evaluation data until benchmark results are published. " : `Held-out bugs from ${data.datasets.join(" + ")}. `}
         <Link to="/results">Details</Link></p>}
     </>
   );

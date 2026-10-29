@@ -10,8 +10,8 @@ function describe(e: ActivityEvent) {
     case "fix_now": return <>started a run on {repo}</>;
     case "pause": return <>paused Keel on {repo}</>;
     case "resume": return <>resumed Keel on {repo}</>;
-    case "marked_wrong": return <>marked <Link to={`/app/runs/${d.run}`}>run {d.run}</Link> on {repo} as wrong</>;
-    case "unmarked_wrong": return <>cleared the wrong mark on <Link to={`/app/runs/${d.run}`}>run {d.run}</Link></>;
+    case "marked_wrong": return <>marked <Link to={`/app/runs/${d.run}`}>run {d.run}</Link> on {repo} as incorrect</>;
+    case "unmarked_wrong": return <>cleared the incorrect mark on <Link to={`/app/runs/${d.run}`}>run {d.run}</Link></>;
     case "disconnect": return <>disconnected {repo} from Keel</>;
     default: return <>{e.action.replace(/_/g, " ")} {repo}</>;
   }

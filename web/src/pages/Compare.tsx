@@ -4,23 +4,23 @@ import { useTitle } from "../hooks/useTitle";
 type Mark = "y" | "p" | "n";
 const COLS = ["Writes the fix", "Tests its own fix adversarially", "Decides without a human", "Calibrated error bound", "Explains the decision", "Open source"];
 const ROWS: [string, Mark[], string][] = [
-  ["Copilot “Fix with Copilot”", ["y", "n", "n", "n", "p", "n"], "One click on a failed Actions job; Copilot pushes a fix and tags you for review."],
-  ["Sentry Seer", ["y", "n", "n", "n", "y", "n"], "Finds the root cause from production telemetry, then hands off to Copilot for a PR."],
-  ["Devin, Cursor agents, Codex", ["y", "p", "n", "n", "p", "n"], "General coding agents. Their PRs merge far less often than human PRs: the trust gap Keel targets."],
-  ["OpenHands (critic)", ["y", "n", "n", "n", "n", "y"], "A learned critic ranks rollouts, but doesn't say whether the best one can be trusted."],
-  ["Agentless", ["y", "p", "n", "n", "n", "y"], "Filters by regression tests and picks by consensus. Always submits a patch; no abstention."],
-  ["Renovate Merge Confidence", ["n", "n", "y", "n", "p", "p"], "Auto-merges dependency bumps from crowd data. Can't judge new code; no statistical bound."],
-  ["Keel", ["y", "y", "y", "y", "y", "y"], "Generates, attacks and scores fixes, then auto-merges only under a calibrated risk bound you choose."],
+  ["Copilot “Fix with Copilot”", ["y", "n", "n", "n", "p", "n"], "Starts from a failed Actions job; Copilot pushes a fix and requests a review."],
+  ["Sentry Seer", ["y", "n", "n", "n", "y", "n"], "Identifies the root cause from production telemetry, then hands off to Copilot to open a pull request."],
+  ["Devin, Cursor agents, Codex", ["y", "p", "n", "n", "p", "n"], "General-purpose coding agents. Their pull requests are merged considerably less often than those written by people."],
+  ["OpenHands (critic)", ["y", "n", "n", "n", "n", "y"], "A learned critic ranks candidate solutions but does not indicate whether the best one can be trusted."],
+  ["Agentless", ["y", "p", "n", "n", "n", "y"], "Filters by regression tests and selects by consensus. It always submits a patch and does not abstain."],
+  ["Renovate Merge Confidence", ["n", "n", "y", "n", "p", "p"], "Merges dependency updates automatically based on aggregated data. It does not evaluate new code and provides no statistical bound."],
+  ["Keel", ["y", "y", "y", "y", "y", "y"], "Generates, tests and scores patches, and merges automatically only within a calibrated risk bound that you set."],
 ];
 
 export default function Compare() {
   useTitle("Keel Compared");
   return (
     <>
-      <PageIntro eyebrow="Compared" title="Others hand you a PR. Keel tells you which to skip."
-        lead="Most tools stop at “here's a fix, please review”. Keel's output is a decision, with a bound on how often it's wrong." />
+      <PageIntro title="Keel compared with other tools"
+        lead="Most tools propose a patch and request a review. Keel issues a decision and states a bound on how often that decision is incorrect." />
 
-      <Section eyebrow="Side by side" title="Where each tool stops">
+      <Section title="Capabilities">
         <div className="cmp-full"><table>
           <thead><tr><th></th>{COLS.map(c => <th key={c}>{c}</th>)}</tr></thead>
           <tbody>{ROWS.map(([name, marks]) => (
@@ -30,27 +30,27 @@ export default function Compare() {
         <div className="legend-inline"><span><span className="sig">●</span> yes</span><span><span style={{ color: "var(--review)" }}>◐</span> partly</span><span>— no</span></div>
       </Section>
 
-      <Section tone="tint" eyebrow="In detail" title="What each one does">
+      <Section tone="tint" title="Tool summaries">
         <div className="cards c2">
           {ROWS.map(([name, , text]) => <div className="card-x" key={name}><h3 style={{ marginTop: 0 }}>{name}</h3><p className="p-small">{text}</p></div>)}
         </div>
       </Section>
 
-      <Section eyebrow="Better together" title="Keel can be the trust layer for other agents">
+      <Section title="Working alongside other agents">
         <div className="split">
-          <p className="p-large">Keel's guarantee doesn't depend on who wrote the patch. A stronger generator raises the auto-merge rate without loosening the bound.</p>
+          <p className="p-large">Keel's guarantee does not depend on how a patch was produced. A stronger generator increases the automatic merge rate without weakening the bound.</p>
           <ul className="bullets">
-            <li>Where others are ahead today: raw solve rate on hard repository-level bugs, and root-cause analysis from production telemetry.</li>
-            <li>Keel starts from failing tests, and reports solve rate per Meta model honestly on the Results page.</li>
-            <li>Sources for every claim are in the <a href="https://github.com/feedofmri/keel/blob/main/docs/competitive-landscape.md">competitive landscape notes</a>.</li>
+            <li>Other tools currently lead on solve rate for complex repository-level bugs and on root-cause analysis from production telemetry.</li>
+            <li>Keel starts from failing tests and reports the solve rate of each Meta model on the Results page.</li>
+            <li>Sources for each statement are listed in the <a href="https://github.com/feedofmri/keel/blob/main/docs/competitive-landscape.md">competitive landscape notes</a>.</li>
           </ul>
         </div>
       </Section>
 
       <NextLinks links={[
-        { to: "/guarantee", title: "The guarantee", text: "What “calibrated error bound” means here." },
-        { to: "/results", title: "Results", text: "Keel against naive auto-merge rules." },
-        { to: "/docs", title: "Quickstart", text: "Try it on a repository." },
+        { to: "/guarantee", title: "The guarantee", text: "The meaning of a calibrated error bound." },
+        { to: "/results", title: "Results", text: "Keel compared with baseline merge policies." },
+        { to: "/docs", title: "Quickstart", text: "Set up Keel on a repository." },
       ]} />
     </>
   );

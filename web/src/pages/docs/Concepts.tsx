@@ -7,7 +7,7 @@ export default function Concepts() {
   useTitle("Concepts · Keel Docs");
   return (
     <div className="prose">
-      <DocHead group="Getting started" title="Concepts" lead="The handful of terms you'll see across Keel's pull requests, dashboard and settings." />
+      <DocHead group="Getting started" title="Concepts" lead="Terms used in Keel's pull requests, dashboard and settings." />
       <RefTable mono={false} head={["Term", "Meaning"]} rows={[
         [<strong>Run</strong>, "One repair attempt for a set of failing tests: generate, attack, score, decide."],
         [<strong>Candidate</strong>, "One patch from one model sample. A run has k candidates per model (10 by default)."],

@@ -1,12 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-/** The dark band that opens every public page: eyebrow, title, one-line lead, optional actions. */
-export function PageIntro({ eyebrow, title, lead, children }: { eyebrow: string; title: ReactNode; lead?: ReactNode; children?: ReactNode }) {
+/** The dark band that opens every public page: title, one-line lead, optional actions. */
+export function PageIntro({ title, lead, children }: { title: ReactNode; lead?: ReactNode; children?: ReactNode }) {
   return (
     <div className="inv" data-dark-zone>
       <section className="intro"><div className="wrap">
-        <span className="eyebrow">{eyebrow}</span>
         <h1 className="h-hero">{title}</h1>
         {lead && <p className="p-large">{lead}</p>}
         {children}
@@ -15,15 +14,14 @@ export function PageIntro({ eyebrow, title, lead, children }: { eyebrow: string;
   );
 }
 
-/** A page section: eyebrow, heading, lead and body. `tone="tint"` gives it the soft grey band. */
-export function Section({ id, eyebrow, title, lead, tone, children }:
-  { id?: string; eyebrow?: string; title?: ReactNode; lead?: ReactNode; tone?: "tint" | "dark"; children?: ReactNode }) {
+/** A page section: heading, lead and body. `tone="tint"` gives it the soft grey band. */
+export function Section({ id, title, lead, tone, children }:
+  { id?: string; title?: ReactNode; lead?: ReactNode; tone?: "tint" | "dark"; children?: ReactNode }) {
   const cls = `sec${tone === "tint" ? " tint" : ""}${tone === "dark" ? " band inv" : ""}`;
   return (
     <section id={id} className={cls} data-dark-zone={tone === "dark" ? "" : undefined}><div className="wrap">
-      {(eyebrow || title) && <div className="sec-head">
-        {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-        {title && <h2 className="h-sec">{title}</h2>}
+      {title && <div className="sec-head">
+        <h2 className="h-sec">{title}</h2>
         {lead && <p className="p-large">{lead}</p>}
       </div>}
       {children}
@@ -35,7 +33,7 @@ export function Section({ id, eyebrow, title, lead, tone, children }:
 export function NextLinks({ links }: { links: { to: string; title: string; text: string }[] }) {
   return (
     <section className="sec next"><div className="wrap">
-      <span className="eyebrow">Read next</span>
+      <h2 className="h-panel">Related topics</h2>
       <div className="next-grid">
         {links.map(l => <Link key={l.to} to={l.to} className="next-card"><h4>{l.title} <span className="arrow">→</span></h4><p className="p-small">{l.text}</p></Link>)}
       </div>

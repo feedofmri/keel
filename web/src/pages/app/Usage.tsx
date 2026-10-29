@@ -16,14 +16,14 @@ export default function Usage() {
   const merged = data?.daily.reduce((s, d) => s + d.auto_merged, 0) ?? 0;
   return (
     <>
-      <PageHead title="Usage" sub="Model spend under your own keys, and the review work Keel removed." actions={
+      <PageHead title="Usage" sub="Model costs incurred under your keys, and the number of reviews avoided through automatic merging." actions={
         <Segmented label="Period" value={days} onChange={setDays} options={[["7", "7 days"], ["30", "30 days"], ["90", "90 days"]]} />} />
       {error ? <p className="err">{error}</p> : !data ? <Loading /> : (
         <>
           <div className="kpis">
             <div><div className="k">Model cost</div><div className="v">${cost.toFixed(2)}</div><div className="s">last {days} days</div></div>
             <div><div className="k">Runs</div><div className="v">{runs}</div><div className="s">${runs ? (cost / runs).toFixed(3) : "0"} per run</div></div>
-            <div><div className="k">Auto-merged</div><div className="v">{merged}</div><div className="s">reviews you didn't do</div></div>
+            <div><div className="k">Auto-merged</div><div className="v">{merged}</div><div className="s">reviews avoided</div></div>
             <div><div className="k">Cost per auto-merge</div><div className="v">${merged ? (cost / merged).toFixed(2) : "–"}</div><div className="s">all runs ÷ merges</div></div>
           </div>
           <div className="panel-box" style={{ marginTop: 40 }}>

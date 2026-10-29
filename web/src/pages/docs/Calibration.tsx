@@ -7,13 +7,13 @@ export default function CalibrationDocs() {
   useTitle("Calibration · Keel Docs");
   return (
     <div className="prose">
-      <DocHead group="Configure" title="Calibration" lead="A calibration turns your risk level α into an auto-merge threshold. Keel never auto-merges without one." />
+      <DocHead group="Configure" title="Calibration" lead="A calibration converts the configured risk level α into a merge threshold. Keel does not merge automatically without one." />
 
-      <h2>What's inside</h2>
+      <h2>Contents of a calibration</h2>
       <p>A calibration JSON holds, for each held-out bug, the risk score of the fix Keel selected and whether that fix passed hidden tests. It also stores the fitted score weights and a fingerprint of the models and pipeline settings that produced it.</p>
 
       <h2>The shared calibration</h2>
-      <p>Repositories set up through the app start on the shared calibration built from QuixBugs and SWE-bench Lite. It's a reasonable start, and the guarantee assumes your bugs resemble those bugs.</p>
+      <p>Repositories configured through the Keel application use the shared calibration built from QuixBugs and SWE-bench Lite. In this case, the guarantee assumes that your bugs are comparable to those benchmark bugs.</p>
 
       <h2>Build your own</h2>
       <p>Records come from <code>keel eval</code> runs (one JSON line per bug, with the hidden-test outcome). Fit the score and build the calibration:</p>

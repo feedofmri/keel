@@ -35,9 +35,8 @@ export default function Results() {
     <div className="page-results">
       <div className="wrap">
         <section className="band inv" data-dark-zone style={{ padding: "104px 0 56px", marginTop: -64 }}>
-          <div className="eyebrow">Benchmark results</div>
-          <h1 className="h-hero" style={{ margin: "18px 0 12px" }}>How much can Keel safely auto-merge?</h1>
-          <p className="p-large" style={{ margin: "0 0 28px" }}>Pick a risk level. See what Keel merges, and how often it's wrong.</p>
+          <h1 className="h-hero" style={{ margin: "18px 0 12px" }}>Benchmark results</h1>
+          <p className="p-large" style={{ margin: "0 0 28px" }}>Select a risk level to see the share of fixes Keel would merge automatically and the observed error rate.</p>
           {error && <div className="banner">Could not load results: {error}</div>}
           {data ? <Explorer data={data} alpha={alpha} setAlpha={setAlpha} method={method} setMethod={setMethod} thr={thr} />
             : !error && <p className="muted">Loading results…</p>}
@@ -45,19 +44,19 @@ export default function Results() {
         {data && <Details data={data} alpha={alpha} thr={thr} />}
       </div>
     </div>
-    <Section tone="tint" eyebrow="Method" title="How these numbers are made">
+    <Section tone="tint" title="Methodology">
       <Points cols={4} items={[
-        { idx: "01", title: "Hidden tests", text: "Keel sees half of each bug's failing tests. A fix counts as correct only if it passes the hidden half too." },
-        { idx: "02", title: "Real harnesses", text: "QuixBugs labels are checked for all 40 programs; SWE-bench Lite runs in the official Docker harness." },
-        { idx: "03", title: "Many splits", text: "Bugs are split into fit, calibration and test sets, 200 times at random. Curves show the mean." },
-        { idx: "04", title: "Naive baselines", text: "Merge if tests pass, merge on model self-confidence, and Keel's own score without calibration." },
+        { idx: "01", title: "Hidden tests", text: "Keel is shown half of each bug's failing tests. A patch is counted as correct only if it also passes the hidden half." },
+        { idx: "02", title: "Official harnesses", text: "QuixBugs labels are verified for all 40 programs; SWE-bench Lite is run in the official Docker harness." },
+        { idx: "03", title: "Repeated splits", text: "Bugs are divided into fitting, calibration and test sets 200 times at random. Curves show the mean." },
+        { idx: "04", title: "Baseline policies", text: "Merging when tests pass, merging on model self-confidence, and Keel's score without calibration." },
       ]} />
       <Link className="more" to="/docs/evaluation">Reproduce the evaluation <span className="arrow">→</span></Link>
     </Section>
     <NextLinks links={[
-      { to: "/guarantee", title: "The guarantee", text: "Why Keel's curve stays under the bound." },
-      { to: "/models", title: "Meta models", text: "What each model adds to the score." },
-      { to: "/docs", title: "Quickstart", text: "Run Keel on your own repository." },
+      { to: "/guarantee", title: "The guarantee", text: "Why Keel remains within the bound." },
+      { to: "/models", title: "Meta models", text: "The contribution of each model to the score." },
+      { to: "/docs", title: "Quickstart", text: "Set up Keel on a repository." },
     ]} />
     </>
   );
@@ -76,7 +75,7 @@ function Explorer({ data, alpha, setAlpha, method, setMethod, thr }: ExplorerPro
   };
   return (
     <>
-      {data.simulated && <div className="banner" style={{ marginBottom: 18 }}>Preview: simulated evaluation data. Real QuixBugs and SWE-bench Lite results replace it after the benchmark runs.</div>}
+      {data.simulated && <div className="banner" style={{ marginBottom: 18 }}>These results use simulated evaluation data. They will be replaced by QuixBugs and SWE-bench Lite results when the benchmark runs are complete.</div>}
       <section className="card controls">
         <div className="slider-row">
           <label htmlFor="alpha"><span>Risk level α</span><span>{pct(alpha)}</span></label>
@@ -89,16 +88,16 @@ function Explorer({ data, alpha, setAlpha, method, setMethod, thr }: ExplorerPro
       </section>
       <section className="grid tiles" aria-live="polite">
         <div className="card tile"><div className="label">Auto-merge threshold λ̂</div><div className="value">{thr > NEVER ? thr.toFixed(3) : "none"}</div>
-          <div className="sub">{thr > NEVER ? "risk score at or below this merges" : `can't certify α with ${cal.length} calibration bugs`}</div></div>
+          <div className="sub">{thr > NEVER ? "risk score at or below this merges" : `α cannot be certified with ${cal.length} calibration bugs`}</div></div>
         <div className="card tile"><div className="label">Bugs auto-merged</div><div className="value">{pct(st.merge)}</div><div className="sub">{st.k} of {st.n} held-out bugs</div></div>
-        <div className="card tile"><div className="label">Wrong auto-merges</div><div className="value">{pct(st.risk, 1)}</div><div className="sub">this split · mean over splits {near("risk")}</div></div>
-        <div className="card tile"><div className="label">Wrong among merged</div><div className="value">{st.k ? pct(st.fdr, 1) : "–"}</div>
+        <div className="card tile"><div className="label">Incorrect automatic merges</div><div className="value">{pct(st.risk, 1)}</div><div className="sub">this split · mean over splits {near("risk")}</div></div>
+        <div className="card tile"><div className="label">Incorrect among merged</div><div className="value">{st.k ? pct(st.fdr, 1) : "–"}</div>
           <div className="sub">{method === "ltt" ? `bound α w.p. ${pct(1 - delta)} · mean ${near("fdr")}` : `this split · mean ${near("fdr")}`}</div></div>
       </section>
       <p className="sentence">{thr > NEVER
-        ? <>On this split Keel would auto-merge <b>{st.k}</b> of {st.n} held-out bugs, and <b>{st.w}</b> of those merges would be wrong. Everything else goes to a human with an explanation.</>
-        : <>At α = {pct(alpha)} Keel cannot certify any threshold with {cal.length} calibration bugs, so every fix goes to human review. That is the safe default.</>}</p>
-      <p className="muted" style={{ fontSize: 13, margin: "6px 0 0" }}>One fixed split shown; the bound holds on average across splits (charts below).</p>
+        ? <>On this split, Keel would merge <b>{st.k}</b> of {st.n} held-out bugs automatically, of which <b>{st.w}</b> would be incorrect. All other bugs would be sent for review with an explanation.</>
+        : <>At α = {pct(alpha)}, no threshold can be certified with {cal.length} calibration bugs, so every fix is sent for review.</>}</p>
+      <p className="muted" style={{ fontSize: 13, margin: "6px 0 0" }}>A single split is shown. The bound applies on average across splits, as shown in the charts below.</p>
     </>
   );
 }
@@ -117,9 +116,9 @@ function Details({ data, alpha, thr }: { data: R; alpha: number; thr: number }) 
     <>
       <section className="grid two">
         <div className="card">
-          <p className="chart-title">{metric === "risk" ? "Wrong auto-merges per bug vs. the bound" : "Wrong share among auto-merged vs. the bound"}</p>
+          <p className="chart-title">{metric === "risk" ? "Incorrect automatic merges per bug, compared with the bound" : "Incorrect share of automatic merges, compared with the bound"}</p>
           <p className="chart-sub">{data.n_bugs} bugs ({data.datasets.join(", ")}), mean over {ev.n_splits} random calibration/test splits.</p>
-          <div style={{ marginBottom: 8 }}><Segmented label="Error metric" value={metric} onChange={setMetric} options={[["risk", "Wrong merges per bug"], ["fdr", "Wrong among merged"]]} /></div>
+          <div style={{ marginBottom: 8 }}><Segmented label="Error metric" value={metric} onChange={setMetric} options={[["risk", "Per bug"], ["fdr", "Per merge"]]} /></div>
           <Chart deps={[metric, alpha, data]} draw={h => lineChart(h, ser, { label: "Empirical error versus risk level", xmax: 0.5, ymax, marker: alpha, labelRoom: 84, yticks: AXIS.filter(t => t <= ymax), xticks: AXIS })} />
           <Legend items={ser} />
           <details><summary>Show as table</summary><div className="table-scroll"><table className="data">
