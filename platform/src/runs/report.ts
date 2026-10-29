@@ -19,8 +19,8 @@ export async function verifyActionsToken(token: string, audience: string, keys =
 export const ReportSchema = z.object({
   trigger: z.string().max(64),
   commit_sha: z.string().max(64),
-  started_at: z.string().datetime().optional(),
-  finished_at: z.string().datetime().optional(),
+  started_at: z.string().datetime({ offset: true }).optional(),   // Python sends "+00:00" offsets
+  finished_at: z.string().datetime({ offset: true }).optional(),
   n_candidates: z.number().int().nonnegative().max(1000),
   selected_score: z.number().min(0).max(1).nullable(),
   threshold: z.number().nullable(),

@@ -50,4 +50,5 @@ export interface CalibrationRow {
 export interface ActivityEvent { id: number; action: string; detail: Record<string, unknown> | null; at: string; actor: string | null; avatar_url: string | null; repo: string | null }
 export interface Defaults { alpha: number; method: "crc" | "ltt"; autoMerge: boolean; models: string[] }
 export interface Account { user: { login: string; avatar_url: string | null; created_at: string }; sessions: { id: string; created_at: string; expires_at: string; current: boolean }[] }
+export interface SharedCalibrationInfo { available: boolean; ref?: string; n?: number; source?: string }
 export interface Installation { id: number; account: string; type: string; repositorySelection: string; manageUrl: string }

@@ -73,6 +73,7 @@ function RepoDanger({ full, paused, onChange }: { full: string; paused: boolean;
 function Wizard({ full, current }: { full: string; current: RepoDetail | null }) {
   const det = useAsync(() => api.detect(full), [full]);
   const defaults = useAsync(() => api.defaults(), []);
+  const shared = useAsync(() => api.sharedCalibration(), []);
   const { data: results } = useResults();
   const [step, setStep] = useState(0);
   const [install, setInstall] = useState("");
@@ -207,6 +208,9 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
             <div><div className="k">Policy</div><div className="v">α {Math.round(alpha * 100)}% · {method.toUpperCase()} · {autoMerge ? "auto-merge" : "label only"}</div></div>
             <div><div className="k">Secrets to store</div><div className="v">{Object.keys(settings().secrets).length}</div></div>
           </div>
+          {shared.data && <p className={`callout${shared.data.available ? "" : " warn"}`} style={{ marginTop: 24 }}>{shared.data.available
+            ? <>The pull request also adds the shared calibration ({shared.data.n} held-out bugs, {shared.data.source}) as <code>.keel/calibration.json</code>, which sets the merge threshold.</>
+            : <>No shared calibration has been published yet. Keel will label fixes but will not merge any automatically until a calibration is added.</>}</p>}
           {!done && <div className="nav-steps">
             <button className="btn" onClick={() => go(2)}>Back</button>
             <button className="btn primary" disabled={busy} onClick={activate}>{busy ? "Opening pull request…" : <>Open {current ? "settings" : "setup"} pull request <span className="arrow">→</span></>}</button>

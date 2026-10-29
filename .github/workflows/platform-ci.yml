@@ -33,4 +33,11 @@ jobs:
       - run: npm run typecheck
       - run: npm test
         env: { TEST_DATABASE_URL: "postgres://postgres:postgres@localhost:5432/keel_test" }
+      - name: Browser end-to-end (live web build against the real API and a fake GitHub)
+        if: matrix.postgres == '16'
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          npx vitest run test/browser.e2e.test.ts
+        env: { TEST_DATABASE_URL: "postgres://postgres:postgres@localhost:5432/keel_test", E2E_BROWSER: "1" }
       - run: npm run build

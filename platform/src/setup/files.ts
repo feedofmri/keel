@@ -8,6 +8,7 @@ export interface RepoSettings {
   ciWorkflow: string | null;
   installCommand: string;
   testCommand: string;
+  calibration?: string | null;   // path in the repository, when a calibration is delivered
 }
 
 const MODEL_ENV: Record<string, string[]> = {
@@ -70,5 +71,5 @@ models = [${s.models.map(m => `"${m}"`).join(", ")}]
 attacker = "${s.models.includes("muse-spark") ? "muse-spark" : s.models[0]}"
 test_command = ${JSON.stringify(s.testCommand)}
 enable_auto_merge = ${s.autoMerge}
-`;
+${s.calibration ? `calibration = ${JSON.stringify(s.calibration)}   # without a calibration Keel never merges automatically\n` : ""}`;
 }

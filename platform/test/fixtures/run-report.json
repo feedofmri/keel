@@ -1,0 +1,373 @@
+{
+ "alpha": 0.1,
+ "candidates": [
+  {
+   "applied": true,
+   "attacks_passed": 6,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [],
+   "id": "muse-spark-0",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark",
+   "score": 0.000257,
+   "selected": true,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_survival",
+     1.2
+    ],
+    [
+     "log_diff_size",
+     0.7007
+    ],
+    [
+     "cross_model_agreement",
+     0.7
+    ],
+    [
+     "consensus_score",
+     0.6857
+    ],
+    [
+     "behavior_agreement",
+     0.6667
+    ]
+   ]
+  },
+  {
+   "applied": true,
+   "attacks_passed": 6,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [],
+   "id": "muse-spark-1",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark",
+   "score": 0.00053,
+   "selected": false,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_survival",
+     1.2
+    ],
+    [
+     "log_diff_size",
+     0.7007
+    ],
+    [
+     "cross_model_agreement",
+     0.7
+    ],
+    [
+     "consensus_score",
+     0.6857
+    ],
+    [
+     "behavior_agreement",
+     0.6667
+    ]
+   ]
+  },
+  {
+   "applied": true,
+   "attacks_passed": 6,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [],
+   "id": "muse-spark-2",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark",
+   "score": 0.000257,
+   "selected": false,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_survival",
+     1.2
+    ],
+    [
+     "log_diff_size",
+     0.7007
+    ],
+    [
+     "cross_model_agreement",
+     0.7
+    ],
+    [
+     "consensus_score",
+     0.6857
+    ],
+    [
+     "behavior_agreement",
+     0.6667
+    ]
+   ]
+  },
+  {
+   "applied": true,
+   "attacks_passed": 1,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [
+    "failing_tests_still_fail",
+    "modifies_tests_or_config"
+   ],
+   "id": "muse-spark-3",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark",
+   "score": 1.0,
+   "selected": false,
+   "tests_passed": 1,
+   "tests_total": 3,
+   "top_factors": []
+  },
+  {
+   "applied": true,
+   "attacks_passed": 6,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [],
+   "id": "muse-spark-4",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark",
+   "score": 0.000675,
+   "selected": false,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_survival",
+     1.2
+    ],
+    [
+     "log_diff_size",
+     0.7007
+    ],
+    [
+     "cross_model_agreement",
+     0.7
+    ],
+    [
+     "consensus_score",
+     0.6857
+    ],
+    [
+     "behavior_agreement",
+     0.6667
+    ]
+   ]
+  },
+  {
+   "applied": true,
+   "attacks_passed": 6,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [],
+   "id": "muse-spark-open-0",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark-open",
+   "score": 0.000434,
+   "selected": false,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_survival",
+     1.2
+    ],
+    [
+     "cross_model_agreement",
+     0.8
+    ],
+    [
+     "log_diff_size",
+     0.7007
+    ],
+    [
+     "consensus_score",
+     0.6857
+    ],
+    [
+     "behavior_agreement",
+     0.6667
+    ]
+   ]
+  },
+  {
+   "applied": true,
+   "attacks_passed": 3,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 4,
+   "gates": [],
+   "id": "muse-spark-open-1",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark-open",
+   "score": 0.973941,
+   "selected": false,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_minority",
+     -1.6
+    ],
+    [
+     "behavior_agreement",
+     -1.3333
+    ],
+    [
+     "consensus_score",
+     -0.8908
+    ],
+    [
+     "cross_model_agreement",
+     -0.8
+    ],
+    [
+     "attack_survival",
+     -0.8
+    ]
+   ]
+  },
+  {
+   "applied": true,
+   "attacks_passed": 6,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [],
+   "id": "muse-spark-open-2",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark-open",
+   "score": 0.001001,
+   "selected": false,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_survival",
+     1.2
+    ],
+    [
+     "cross_model_agreement",
+     0.8
+    ],
+    [
+     "log_diff_size",
+     0.7007
+    ],
+    [
+     "consensus_score",
+     0.6857
+    ],
+    [
+     "behavior_agreement",
+     0.6667
+    ]
+   ]
+  },
+  {
+   "applied": false,
+   "attacks_passed": 0,
+   "attacks_total": 0,
+   "cost_usd": 0.0,
+   "diff_lines": 0,
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "id": "muse-spark-open-3",
+   "kept_passing": 0,
+   "kept_total": 0,
+   "model": "muse-spark-open",
+   "score": 1.0,
+   "selected": false,
+   "tests_passed": 0,
+   "tests_total": 0,
+   "top_factors": []
+  },
+  {
+   "applied": true,
+   "attacks_passed": 6,
+   "attacks_total": 6,
+   "cost_usd": 0.0,
+   "diff_lines": 2,
+   "gates": [],
+   "id": "muse-spark-open-4",
+   "kept_passing": 3,
+   "kept_total": 3,
+   "model": "muse-spark-open",
+   "score": 0.000419,
+   "selected": false,
+   "tests_passed": 3,
+   "tests_total": 3,
+   "top_factors": [
+    [
+     "attack_survival",
+     1.2
+    ],
+    [
+     "cross_model_agreement",
+     0.8
+    ],
+    [
+     "log_diff_size",
+     0.7007
+    ],
+    [
+     "consensus_score",
+     0.6857
+    ],
+    [
+     "behavior_agreement",
+     0.6667
+    ]
+   ]
+  }
+ ],
+ "commit_sha": "9f2c1ab",
+ "cost_usd": 0.0,
+ "decision": "NEEDS REVIEW",
+ "failing_tests": [
+  "tests/test_pricing.py::test_cart_total_mixed_lines",
+  "tests/test_pricing.py::test_no_discount_keeps_price",
+  "tests/test_pricing.py::test_ten_percent_discount"
+ ],
+ "finished_at": "2026-10-29T12:06:00+00:00",
+ "guarantee": "Conformal risk control on 0 held-out bugs: in expectation, at most 10% of bugs end up with a wrong patch auto-merged.",
+ "method": "crc",
+ "n_calibration": 0,
+ "n_candidates": 10,
+ "pr_number": 41,
+ "reasons": [
+  "Keel has no calibration data, so it never auto-merges",
+  "+ passes 100% of the adversarial tests written by Muse Spark",
+  "+ the change is small and targeted",
+  "+ the other Meta model independently reached the same behaviour",
+  "+ belongs to the largest group of candidates that pass the same tests"
+ ],
+ "selected_score": 0.000257,
+ "started_at": "2026-10-29T12:00:00+00:00",
+ "threshold": -1.0,
+ "trigger": "workflow_run"
+}

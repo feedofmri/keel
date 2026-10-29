@@ -14,7 +14,7 @@ export const safeNext = (n: unknown) => typeof n === "string" && /^\/app(\/|$)[\
 /** Exchange a refresh token for a new GitHub App user token. */
 export function githubRefresher(env: Env) {
   return async (refreshToken: string): Promise<StoredToken | null> => {
-    const r = await fetch("https://github.com/login/oauth/access_token", {
+    const r = await fetch(`${env.GITHUB_WEB_URL}/login/oauth/access_token`, {
       method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET,
                              grant_type: "refresh_token", refresh_token: refreshToken }) });
@@ -32,7 +32,7 @@ export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
     const state = randomId(16);
     reply.setCookie(STATE_COOKIE, state, { path: "/auth", httpOnly: true, secure, sameSite: "lax", maxAge: 600 });
     reply.setCookie(NEXT_COOKIE, safeNext(req.query.next), { path: "/auth", httpOnly: true, secure, sameSite: "lax", maxAge: 600 });
-    const u = new URL("https://github.com/login/oauth/authorize");
+    const u = new URL(`${env.GITHUB_WEB_URL}/login/oauth/authorize`);
     u.searchParams.set("client_id", env.GITHUB_CLIENT_ID);
     u.searchParams.set("redirect_uri", redirectUri);
     u.searchParams.set("state", state);
@@ -47,7 +47,7 @@ export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
     if (!code) return reply.redirect(req.user ? "/app" : "/login");
     if (!state || !expected || state !== expected) return reply.code(400).send("Invalid sign-in state. Please try again.");
 
-    const r = await fetch("https://github.com/login/oauth/access_token", {
+    const r = await fetch(`${env.GITHUB_WEB_URL}/login/oauth/access_token`, {
       method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code, redirect_uri: redirectUri }),
     });

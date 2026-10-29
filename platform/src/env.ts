@@ -15,6 +15,10 @@ const schema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().default(""),
   OIDC_AUDIENCE: z.string().default("keel.boraqs.com"),
   KEEL_ACTION_REF: z.string().default("feedofmri/keel@v1"),
+  // Overridable for tests against a fake GitHub; leave unset in production.
+  GITHUB_API_URL: z.string().url().default("https://api.github.com"),
+  GITHUB_WEB_URL: z.string().url().default("https://github.com"),
+  RATE_LIMIT: z.enum(["on", "off"]).default("on"),
 });
 
 export type Env = z.infer<typeof schema>;

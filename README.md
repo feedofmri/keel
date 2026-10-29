@@ -111,6 +111,17 @@ tests (for SWE-bench: every FAIL_TO_PASS and PASS_TO_PASS test, in the official 
 QuixBugs, a check confirms that the reference fix passes and the buggy program fails the hidden tests for
 all 40 programs. Bugs are split into fit / calibration / test sets, repeated over 200 random splits.
 
+## Tests
+
+```bash
+pytest -q && ruff check keel tests                           # engine and Action (includes the run-report contract)
+cd platform && TEST_DATABASE_URL=postgres://… npm test       # API, plus end to end against a fake GitHub
+E2E_BROWSER=1 TEST_DATABASE_URL=postgres://… npx vitest run test/browser.e2e.test.ts   # live web build in Chromium
+cd web && npm run build                                      # typecheck and build the web app
+```
+
+CI runs all of them, on PostgreSQL 12 and 16.
+
 ## Repository map
 
 | Path | What |

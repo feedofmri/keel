@@ -4,7 +4,7 @@ import {
   demoRepos, demoRun, demoRuns, demoState, demoUsage, logDemo, saveDemo,
 } from "./demo";
 import type {
-  Account, ActivityEvent, CalibrationRow, Defaults, Detection, Installation, Me, Overview, RepoPayload, RepoSummary,
+  Account, ActivityEvent, CalibrationRow, SharedCalibrationInfo, Defaults, Detection, Installation, Me, Overview, RepoPayload, RepoSummary,
   RunDetail, RunFilter, RunRow, SetupSettings, Usage,
 } from "./types";
 
@@ -81,6 +81,8 @@ export const api = {
     await http(`/api/runs/${id}/feedback`, post({ wrong }));
   },
   usage: (days: number): Promise<Usage> => (DEMO ? demo(() => demoUsage(days)) : http(`/api/usage?days=${days}`)),
+  // In the demo there is no published calibration yet, as on a fresh deployment.
+  sharedCalibration: (): Promise<SharedCalibrationInfo> => (DEMO ? demo(() => ({ available: false })) : http("/api/calibration/shared")),
   async calibration(): Promise<CalibrationRow[]> {
     if (DEMO) return demo(demoCalibration);
     return (await http<{ repos: CalibrationRow[] }>("/api/calibration")).repos;

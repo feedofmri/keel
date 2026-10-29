@@ -8,6 +8,7 @@ import { detect } from "./setup/detect.js";
 import { renderKeelToml, renderWorkflow, secretNamesFor, type RepoSettings } from "./setup/files.js";
 import { openSetupPR, setupPRBody } from "./setup/pr.js";
 import { putRepoSecrets } from "./setup/secrets.js";
+import { CALIBRATION_PATH, sharedCalibration } from "./setup/calibration.js";
 
 interface RepoRow { id: string; full_name: string; status: string; alpha: string; method: string; auto_merge: boolean; models: string[];
   test_command: string | null; ci_workflow: string | null; setup_pr_number: number | null; default_branch: string;
@@ -73,6 +74,12 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env): { ensureSyn
     if (!u?.fresh) await syncRepos(user);
   };
 
+  // What a setup pull request will deliver: the shared calibration, if a real one has been published.
+  app.get("/api/calibration/shared", async () => {
+    const cal = sharedCalibration();
+    return { available: Boolean(cal), ...(cal ? { ref: cal.ref, n: cal.n, source: cal.source, fingerprint: cal.fingerprint } : {}) };
+  });
+
   app.get("/api/repos", async (req, reply) => {
     const user = requireUser(req, reply); if (!user) return;
     return syncRepos(user);
@@ -127,28 +134,37 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env): { ensureSyn
     const b = body.data;
     const allowed = new Set(secretNamesFor(b.models));
     const secrets = Object.fromEntries(Object.entries(b.secrets).filter(([k]) => allowed.has(k)));
+    const cal = sharedCalibration();
     const settings: RepoSettings = { alpha: b.alpha, method: b.method, autoMerge: b.autoMerge, models: b.models, ciWorkflow: b.ciWorkflow,
-                                     installCommand: b.installCommand, testCommand: "{python} -m pytest -q -p no:cacheprovider {tests} --junitxml={junit}" };
+                                     installCommand: b.installCommand, testCommand: "{python} -m pytest -q -p no:cacheprovider {tests} --junitxml={junit}",
+                                     calibration: cal ? CALIBRATION_PATH : null };
     const octo = await octoFor(ctx.repo);
     const [owner, repo] = ctx.repo.full_name.split("/");
     const stored = await putRepoSecrets(octo, owner, repo, secrets);
     const pr = await openSetupPR(octo, owner, repo, ctx.repo.default_branch, {
       ".github/workflows/keel.yml": renderWorkflow(settings, env.KEEL_ACTION_REF, env.APP_URL),
       ".keel.toml": renderKeelToml(settings),
-    }, setupPRBody(env.APP_URL, b.alpha, b.method, b.autoMerge));
+      ...(cal ? { [CALIBRATION_PATH]: cal.json } : {}),
+    }, setupPRBody(env.APP_URL, b.alpha, b.method, b.autoMerge, cal));
     await db.query(`update repos set status = case when status = 'active' then 'active' else 'setup_pr_open' end, alpha = $2, method = $3,
-                    auto_merge = $4, models = $5, ci_workflow = $6, setup_pr_number = $7, created_by = coalesce(created_by, $8) where id = $1`,
-                   [ctx.repo.id, b.alpha, b.method, b.autoMerge, b.models, b.ciWorkflow, pr.number, ctx.user.id]);
+                    auto_merge = $4, models = $5, ci_workflow = $6, setup_pr_number = $7, created_by = coalesce(created_by, $8),
+                    calibration_ref = $9 where id = $1`,
+                   [ctx.repo.id, b.alpha, b.method, b.autoMerge, b.models, b.ciWorkflow, pr.number, ctx.user.id, cal ? cal.ref : "none"]);
     await db.query("insert into audit_log (user_id, repo_id, action, detail) values ($1,$2,'setup_pr',$3)",
                    [ctx.user.id, ctx.repo.id, JSON.stringify({ pr: pr.number, secrets: stored })]);
-    return { pr, secretsStored: stored };
+    return { pr, secretsStored: stored, calibration: cal ? { ref: cal.ref, n: cal.n } : null };
   });
 
   app.post<{ Params: { owner: string; name: string } }>("/api/repos/:owner/:name/fix", async (req, reply) => {
     const ctx = await repoFor(req, reply, "manage"); if (!ctx) return;
     const octo = await octoFor(ctx.repo);
     const [owner, repo] = ctx.repo.full_name.split("/");
-    await octo.request("POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches", { owner, repo, workflow_id: "keel.yml", ref: ctx.repo.default_branch });
+    try {
+      await octo.request("POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches", { owner, repo, workflow_id: "keel.yml", ref: ctx.repo.default_branch });
+    } catch (e: any) {
+      if (e?.status === 404) return reply.code(409).send({ error: "The Keel workflow is not on the default branch yet. Merge the setup pull request first." });
+      throw e;
+    }
     await db.query("insert into audit_log (user_id, repo_id, action) values ($1,$2,'fix_now')", [ctx.user.id, ctx.repo.id]);
     return { ok: true };
   });
@@ -158,8 +174,13 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env): { ensureSyn
       const ctx = await repoFor(req, reply, "manage"); if (!ctx) return;
       const octo = await octoFor(ctx.repo);
       const [owner, repo] = ctx.repo.full_name.split("/");
-      await octo.request(`PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/${action === "pause" ? "disable" : "enable"}`,
-                         { owner, repo, workflow_id: "keel.yml" });
+      try {
+        await octo.request(`PUT /repos/{owner}/{repo}/actions/workflows/{workflow_id}/${action === "pause" ? "disable" : "enable"}`,
+                           { owner, repo, workflow_id: "keel.yml" });
+      } catch (e: any) {
+        if (e?.status === 404) return reply.code(409).send({ error: "The Keel workflow is not on the default branch yet. Merge the setup pull request first." });
+        throw e;
+      }
       await db.query("update repos set status = $2 where id = $1", [ctx.repo.id, action === "pause" ? "paused" : "active"]);
       await db.query("insert into audit_log (user_id, repo_id, action) values ($1,$2,$3)", [ctx.user.id, ctx.repo.id, action]);
       return { ok: true };

@@ -1,7 +1,7 @@
-import { App } from "octokit";
+import { App, Octokit } from "octokit";
 import type { Env } from "../env.js";
 
-const API = "https://api.github.com";
+let API = "https://api.github.com";
 
 export class GitHubError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -18,10 +18,17 @@ export async function userApi<T = any>(token: string, path: string, init: Reques
 
 let app: App | null = null;
 
+/** Point the clients at GitHub (or at a fake GitHub in tests). Called once when the server is built. */
+export function configureGitHub(env: Env) {
+  API = env.GITHUB_API_URL.replace(/\/$/, "");
+  app = null;
+}
+
 /** The Keel GitHub App, used to act on repositories it is installed on. */
 export function githubApp(env: Env): App {
   if (!app) app = new App({ appId: env.GITHUB_APP_ID, privateKey: env.GITHUB_PRIVATE_KEY,
-                            oauth: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET } });
+                            oauth: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET },
+                            Octokit: Octokit.defaults({ baseUrl: API }) });
   return app;
 }
 

@@ -29,7 +29,7 @@ export async function openSetupPR(octo: Octo, owner: string, repo: string, baseB
   return { number: pr.number, url: pr.html_url };
 }
 
-export function setupPRBody(appUrl: string, alpha: number, method: string, autoMerge: boolean): string {
+export function setupPRBody(appUrl: string, alpha: number, method: string, autoMerge: boolean, calibration: { n: number; source: string } | null = null): string {
   return `This pull request adds **Keel** to the repository.
 
 When CI fails (or someone with write access comments \`/keel fix\`), Keel:
@@ -42,7 +42,8 @@ When CI fails (or someone with write access comments \`/keel fix\`), Keel:
 Files added:
 - \`.github/workflows/keel.yml\`: runs Keel on your own GitHub runners
 - \`.keel.toml\`: the policy above, editable any time
-
+${calibration ? `- \`.keel/calibration.json\`: the shared calibration (${calibration.n} held-out bugs, ${calibration.source}) that sets the merge threshold\n` : ""}
+${calibration ? "" : "**Calibration:** no shared calibration has been published yet, so Keel will label fixes but will not merge any automatically. A later settings pull request adds the calibration once it is available.\n"}
 Merge this PR to activate Keel. Manage it at ${appUrl}/app.
 
 ---

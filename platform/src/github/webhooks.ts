@@ -36,8 +36,10 @@ export async function handleEvent(db: Db, event: string, p: any): Promise<void> 
       "select id, setup_pr_number from repos where github_repo_id = $1", [p.repository.id]);
     if (!repo) return;
     const pr = p.pull_request;
-    if (pr.merged && repo.setup_pr_number === pr.number) {
-      await db.query("update repos set status = 'active', activated_at = now() where id = $1", [repo.id]);
+    if (repo.setup_pr_number === pr.number) {
+      // Merged: Keel is live. Closed without merging: back to "not set up" (an active repo stays active).
+      if (pr.merged) await db.query("update repos set status = 'active', activated_at = coalesce(activated_at, now()) where id = $1", [repo.id]);
+      else await db.query("update repos set status = 'new', setup_pr_number = null where id = $1 and status = 'setup_pr_open'", [repo.id]);
       return;
     }
     if (pr.merged && (pr.head?.ref || "").startsWith("keel/fix-")) {

@@ -59,3 +59,24 @@ def test_platform_report_payload_matches_schema(demo_repo, responses):
     assert p["decision"] in ("AUTO-MERGE", "NEEDS REVIEW") and p["n_candidates"] == 10 and 0 <= p["selected_score"] <= 1
     assert len(p["candidates"]) == 10 and sum(c["selected"] for c in p["candidates"]) == 1
     assert all("diff" not in c for c in p["candidates"])  # code never leaves the runner
+
+
+def test_platform_report_fixture_is_current(demo_repo, responses):
+    """The platform's tests post this exact payload, so the Action and the API cannot drift apart.
+    Regenerate with KEEL_UPDATE_FIXTURES=1 pytest tests/test_pipeline_demo.py."""
+    import json
+    import os
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    from keel.github.platform import payload
+    rep = _pipeline(responses).run(BugTask(task_id="demo", repo_path=str(demo_repo)))
+    p = payload(rep, "workflow_run", 41, datetime(2026, 10, 29, 12, 0, tzinfo=timezone.utc))
+    p.update(commit_sha="9f2c1ab", finished_at="2026-10-29T12:06:00+00:00")
+    fixture = Path(__file__).parent.parent / "platform" / "test" / "fixtures" / "run-report.json"
+    text = json.dumps(p, indent=1, sort_keys=True) + "\n"
+    if os.environ.get("KEEL_UPDATE_FIXTURES"):
+        fixture.parent.mkdir(parents=True, exist_ok=True)
+        fixture.write_text(text)
+    assert fixture.read_text() == text, "run-report.json is stale: rerun with KEEL_UPDATE_FIXTURES=1"
+
