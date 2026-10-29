@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { many, one, type Db } from "./db/index.js";
 import { githubConfigured, type Env } from "./env.js";
-import { requireUser } from "./auth/sessions.js";
+import { requireUser, type SessionUser } from "./auth/sessions.js";
 import { canManage, installationOctokit, userApi, userPermission, type RepoPermission } from "./github/client.js";
 import { detect } from "./setup/detect.js";
 import { renderKeelToml, renderWorkflow, secretNamesFor, type RepoSettings } from "./setup/files.js";
@@ -24,10 +24,11 @@ const SetupBody = z.object({
   secrets: z.record(z.string().regex(/^KEEL_[A-Z_]+$/), z.string().max(4000)).default({}),
 });
 
-export function registerApi(app: FastifyInstance, db: Db, env: Env) {
+export function registerApi(app: FastifyInstance, db: Db, env: Env): { ensureSynced: (u: SessionUser) => Promise<void> } {
   // CSRF: state-changing browser calls must come from our origin and carry a custom header.
   app.addHook("preHandler", async (req, reply) => {
-    if (req.method === "GET" || !req.url.startsWith("/api/") || req.url.startsWith("/api/runs")) return;
+    // Exempt: GETs, and the Action's run report (POST /api/runs), which authenticates with an OIDC token instead.
+    if (req.method === "GET" || !req.url.startsWith("/api/") || req.url.split("?")[0] === "/api/runs") return;
     const origin = req.headers.origin;
     if (req.headers["x-keel"] !== "1" || (origin && origin !== env.APP_URL)) return reply.code(403).send({ error: "forbidden" });
   });
@@ -38,10 +39,10 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env) {
     installUrl: `https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new`,
   }));
 
-  app.get("/api/repos", async (req, reply) => {
-    const user = requireUser(req, reply); if (!user) return;
+  // Refresh which installed repositories this user can see, and remember it for the cross-repo pages.
+  async function syncRepos(user: SessionUser) {
     const { installations } = await userApi<{ installations: any[] }>(user.githubToken, "/user/installations?per_page=100");
-    const out: any[] = [];
+    const out: any[] = [], seen: string[] = [];
     for (const inst of installations) {
       const row = await one<{ id: string }>(db,
         `insert into installations (github_installation_id, account_login, account_type) values ($1,$2,$3)
@@ -49,17 +50,32 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env) {
         [inst.id, inst.account.login, inst.account.type]);
       const { repositories } = await userApi<{ repositories: any[] }>(user.githubToken, `/user/installations/${inst.id}/repositories?per_page=100`);
       for (const r of repositories) {
-        const rr = await one<{ status: string; alpha: string }>(db,
+        const rr = await one<{ id: string; status: string; alpha: string }>(db,
           `insert into repos (installation_id, github_repo_id, full_name, default_branch) values ($1,$2,$3,$4)
            on conflict (github_repo_id) do update set full_name = excluded.full_name, default_branch = excluded.default_branch,
              installation_id = excluded.installation_id
-           returning status, alpha`, [row!.id, r.id, r.full_name, r.default_branch || "main"]);
-        const p = r.permissions || {};
+           returning id, status, alpha`, [row!.id, r.id, r.full_name, r.default_branch || "main"]);
+        const p = r.permissions || {}, manage = Boolean(p.admin || p.maintain);
+        await db.query(`insert into user_repos (user_id, repo_id, can_manage) values ($1,$2,$3)
+                        on conflict (user_id, repo_id) do update set can_manage = excluded.can_manage`, [user.id, rr!.id, manage]);
+        seen.push(rr!.id);
         out.push({ full_name: r.full_name, private: r.private, language: r.language, status: rr!.status, alpha: Number(rr!.alpha),
-                   canManage: Boolean(p.admin || p.maintain) });
+                   canManage: manage, installation: inst.account.login });
       }
     }
-    return { repos: out };
+    await db.query("delete from user_repos where user_id = $1 and not (repo_id = any($2::bigint[]))", [user.id, seen]);
+    await db.query("update users set repos_synced_at = now() where id = $1", [user.id]);
+    return { repos: out, installations: installations.map(i => ({ id: i.id, account: i.account.login, type: i.account.type,
+      repositorySelection: i.repository_selection, manageUrl: i.html_url })) };
+  }
+  const ensureSynced = async (user: SessionUser) => {
+    const u = await one<{ fresh: boolean }>(db, "select coalesce(repos_synced_at > now() - interval '10 minutes', false) as fresh from users where id = $1", [user.id]);
+    if (!u?.fresh) await syncRepos(user);
+  };
+
+  app.get("/api/repos", async (req, reply) => {
+    const user = requireUser(req, reply); if (!user) return;
+    return syncRepos(user);
   });
 
   async function repoFor(req: FastifyRequest<{ Params: { owner: string; name: string } }>, reply: FastifyReply, need: "read" | "manage") {
@@ -149,4 +165,16 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env) {
       return { ok: true };
     });
   }
+
+  // Stop tracking a repository: its runs and activity are deleted here. The workflow file stays in the
+  // repository until someone removes it, and the GitHub App stays installed until it is uninstalled on GitHub.
+  app.post<{ Params: { owner: string; name: string } }>("/api/repos/:owner/:name/disconnect", async (req, reply) => {
+    const ctx = await repoFor(req, reply, "manage"); if (!ctx) return;
+    await db.query("delete from repos where id = $1", [ctx.repo.id]);
+    await db.query("insert into audit_log (user_id, repo_id, action, detail) values ($1, null, 'disconnect', $2)",
+                   [ctx.user.id, JSON.stringify({ repo: ctx.repo.full_name })]);
+    return { ok: true };
+  });
+
+  return { ensureSynced };
 }

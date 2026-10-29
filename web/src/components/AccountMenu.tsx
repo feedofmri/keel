@@ -18,13 +18,14 @@ export function AccountMenu() {
   return (
     <div className="who" ref={ref}>
       <button className="acct" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
-        {u.avatar_url && <img src={u.avatar_url} alt="" width={24} height={24} />}<span>{u.login}</span>
+        {u.avatar_url && <img src={u.avatar_url} alt="" width={24} height={24} />}<span className="hide-sm">{u.login}</span>
       </button>
       {open && (
         <div className="menu" role="menu" onClick={() => setOpen(false)}>
+          <div className="menu-head">Signed in as <b>{u.login}</b></div>
+          <Link role="menuitem" to="/app/settings">Account settings</Link>
+          <Link role="menuitem" to="/app/settings/github">GitHub access</Link>
           <Link role="menuitem" to="/">Keel website</Link>
-          <Link role="menuitem" to="/results">Benchmark results</Link>
-          <a role="menuitem" href="https://github.com/settings/installations" target="_blank" rel="noopener">Manage GitHub access</a>
           <button role="menuitem" onClick={async () => { navigate("/"); await signOut(); }}>Sign out</button>
         </div>
       )}

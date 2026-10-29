@@ -56,3 +56,5 @@ def test_platform_report_payload_matches_schema(demo_repo, responses):
     p = payload(rep, "workflow_run", 12, datetime.now(timezone.utc))
     assert set(p) >= {"trigger", "commit_sha", "n_candidates", "selected_score", "threshold", "decision", "pr_number", "cost_usd"}
     assert p["decision"] in ("AUTO-MERGE", "NEEDS REVIEW") and p["n_candidates"] == 10 and 0 <= p["selected_score"] <= 1
+    assert len(p["candidates"]) == 10 and sum(c["selected"] for c in p["candidates"]) == 1
+    assert all("diff" not in c for c in p["candidates"])  # code never leaves the runner

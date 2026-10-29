@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { REPO_URL } from "../lib/env";
+import { FOOTER } from "../lib/nav";
 import { GetStarted } from "./GetStarted";
 import { HalftoneCanvas } from "./HalftoneCanvas";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function SiteFooter() {
   return (
@@ -14,14 +16,17 @@ export function SiteFooter() {
           </div>
           <HalftoneCanvas className="logo-field" />
         </div>
+        <div className="foot-cols">
+          {FOOTER.map(c => (
+            <nav key={c.title} aria-label={c.title}>
+              <h4>{c.title}</h4>
+              {c.links.map(l => l.external ? <a key={l.to} href={l.to}>{l.label}</a> : <Link key={l.to} to={l.to}>{l.label}</Link>)}
+            </nav>
+          ))}
+        </div>
         <div className="foot-bottom">
           <span>Keel · MIT · built during the Meta Global AI Developer Hackathon 2026</span>
-          <nav aria-label="Footer">
-            <Link to="/results">Results</Link>
-            <Link to={{ pathname: "/", hash: "#guarantee" }}>Guarantee</Link>
-            <a href={`${REPO_URL}/blob/main/HACKATHON.md`}>What we built</a>
-            <a href={REPO_URL}>GitHub</a>
-          </nav>
+          <span className="theme-row">Theme <ThemeToggle /></span>
         </div>
       </div></footer>
     </div>

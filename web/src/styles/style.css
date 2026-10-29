@@ -218,3 +218,27 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
 .boot { min-height: 60vh; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
 .nav a.btn.primary, .nav a.btn.primary[aria-current="page"] { color: var(--page); background: var(--ink); }
 .nav a.btn.primary:hover { background: color-mix(in srgb, var(--ink) 88%, var(--sig)); }
+
+/* Public header: full links on desktop, a menu button below 960px. */
+.menu-btn { display: none; margin-left: 4px; width: 36px; height: 36px; border: 0; border-radius: 48px; background: transparent; color: var(--ink); cursor: pointer; place-items: center; }
+.menu-btn svg { width: 20px; height: 20px; }
+.menu-btn:hover { background: var(--b1); }
+@media (max-width: 960px) { .nav .hide-md { display: none; } .menu-btn { display: grid; } }
+.top.open { background: var(--page); height: auto; }
+.mobile-nav { display: grid; padding: 8px 24px 24px; border-top: 1px solid var(--b1); animation: menuIn .2s var(--ease); }
+.mobile-nav a { padding: 12px 0; font-size: 17px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--b1); }
+.mobile-nav a[aria-current="page"] { color: var(--sig); }
+@media (min-width: 961px) { .mobile-nav { display: none; } }
+
+.foot-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 96px; position: relative; }
+@media (max-width: 600px) { .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.foot-cols nav { display: grid; gap: 10px; align-content: start; }
+.foot-cols h4 { font: 400 12px var(--mono); color: var(--muted); margin-bottom: 4px; }
+.foot-cols a { color: var(--ink-2); text-decoration: none; font-size: 14.5px; }
+.foot-cols a:hover { color: var(--ink); }
+.foot-bottom { margin-top: 56px; align-items: center; }
+.theme-row { display: inline-flex; align-items: center; gap: 4px; }
+.theme-row .theme-btn { margin-left: 0; }
+.more { display: inline-flex; align-items: center; gap: 6px; margin-top: 40px; font-size: 15px; color: var(--ink); text-decoration: none; }
+.more .arrow { color: var(--sig); transition: transform .2s var(--ease); }
+.more:hover .arrow { transform: translateX(3px); }

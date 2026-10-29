@@ -24,8 +24,26 @@ def _oidc_token(audience: str) -> str | None:
     return r.json().get("value")
 
 
+def _candidate(e, selected_id: str | None) -> dict:
+    """A small, code-free summary of one candidate for the run page (no diffs or model output leave the runner)."""
+    c = e.candidate
+    top = sorted(e.contributions.items(), key=lambda kv: -abs(kv[1]))[:5]
+    return {
+        "id": c.candidate_id[:80], "model": c.generator[:40], "selected": c.candidate_id == selected_id,
+        "applied": e.applied, "score": round(e.score, 6),
+        "tests_passed": sum(e.fail_to_pass.values()), "tests_total": len(e.fail_to_pass),
+        "kept_passing": sum(e.pass_to_pass.values()), "kept_total": len(e.pass_to_pass),
+        "attacks_passed": sum(e.attack_results.values()), "attacks_total": len(e.attack_results),
+        "diff_lines": sum(1 for ln in c.diff.splitlines() if ln[:1] in "+-" and ln[:3] not in ("+++", "---")),
+        "gates": [g[:80] for g in e.gate_failures[:5]],
+        "top_factors": [[k[:40], round(v, 4)] for k, v in top],
+        "cost_usd": round(c.cost_usd, 6),
+    }
+
+
 def payload(report: RepairReport, trigger: str, pr_number: int | None, started_at: datetime) -> dict:
     d, sel = report.decision, report.selected
+    sel_id = sel.candidate.candidate_id if sel else None
     return {
         "trigger": trigger[:64],
         "commit_sha": os.environ.get("GITHUB_SHA", "")[:64] or "unknown",
@@ -41,6 +59,9 @@ def payload(report: RepairReport, trigger: str, pr_number: int | None, started_a
         "reasons": [r[:500] for r in d.reasons[:20]],
         "alpha": d.alpha,
         "method": d.method,
+        "guarantee": d.guarantee[:500],
+        "n_calibration": d.n_calibration,
+        "candidates": [_candidate(e, sel_id) for e in report.evaluations[:50]],
     }
 
 

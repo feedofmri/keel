@@ -31,6 +31,15 @@ export const ReportSchema = z.object({
   reasons: z.array(z.string().max(500)).max(20).default([]),
   alpha: z.number().optional(),
   method: z.string().optional(),
+  guarantee: z.string().max(500).optional(),
+  n_calibration: z.number().int().nonnegative().optional(),
+  candidates: z.array(z.object({
+    id: z.string().max(80), model: z.string().max(40), selected: z.boolean(), applied: z.boolean(), score: z.number(),
+    tests_passed: z.number().int(), tests_total: z.number().int(), kept_passing: z.number().int(), kept_total: z.number().int(),
+    attacks_passed: z.number().int(), attacks_total: z.number().int(), diff_lines: z.number().int(),
+    gates: z.array(z.string().max(80)).max(5), top_factors: z.array(z.tuple([z.string().max(40), z.number()])).max(5),
+    cost_usd: z.number().nonnegative(),
+  })).max(50).optional(),
 });
 
 export function registerRunReports(app: FastifyInstance, db: Db, env: Env, keys = jwks) {
@@ -54,7 +63,8 @@ export function registerRunReports(app: FastifyInstance, db: Db, env: Env, keys 
        returning id`,
       [repo.id, Number(claims.run_id), r.trigger, r.commit_sha, r.started_at ?? null, r.finished_at ?? new Date().toISOString(),
        r.n_candidates, r.selected_score, r.threshold, r.decision, r.pr_number, r.cost_usd,
-       JSON.stringify({ failing_tests: r.failing_tests, reasons: r.reasons, alpha: r.alpha, method: r.method })]);
+       JSON.stringify({ failing_tests: r.failing_tests, reasons: r.reasons, alpha: r.alpha, method: r.method,
+                       guarantee: r.guarantee, n_calibration: r.n_calibration, candidates: r.candidates })]);
     await db.query("update repos set status = 'active', activated_at = coalesce(activated_at, now()) where id = $1 and status in ('new', 'setup_pr_open')", [repo.id]);
     return reply.code(201).send({ id: Number(run!.id) });
   });

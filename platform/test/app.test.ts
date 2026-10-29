@@ -131,6 +131,75 @@ d("platform app (needs TEST_DATABASE_URL)", () => {
     expect(api.statusCode).toBe(404); expect(api.json()).toEqual({ error: "not found" });
   });
 
+  describe("platform pages", () => {
+    let sid = "", other = "";
+    const as = (url: string, method = "GET", payload?: unknown, who = () => sid) =>
+      app.inject({ method: method as any, url, payload: payload as any, cookies: { keel_session: who() }, headers: method === "GET" ? {} : { "x-keel": "1" } });
+    beforeAll(async () => {
+      // A maintainer of acme/shop whose repo list is already synced (no GitHub calls), and a user who sees nothing.
+      const u = await one<{ id: string }>(db, "insert into users (github_id, login, repos_synced_at) values (10, 'maint', now()) returning id");
+      await db.query("insert into user_repos (user_id, repo_id, can_manage) select $1, id, true from repos where github_repo_id = 501", [u!.id]);
+      sid = await createSession(db, env.SESSION_SECRET, Number(u!.id), { access_token: "ghu_m" });
+      const o = await one<{ id: string }>(db, "insert into users (github_id, login, repos_synced_at) values (11, 'stranger', now()) returning id");
+      other = await createSession(db, env.SESSION_SECRET, Number(o!.id), { access_token: "ghu_s" });
+      const tok = await oidc({ repository: "acme/shop", repository_id: "501", run_id: "9002" });
+      await app.inject({ method: "POST", url: "/api/runs", headers: { authorization: `Bearer ${tok}` }, payload: { ...report, decision: "NEEDS REVIEW", pr_number: 13,
+        guarantee: "at most 10% of bugs", n_calibration: 120,
+        candidates: [{ id: "muse-spark#0", model: "muse-spark", selected: true, applied: true, score: 0.6, tests_passed: 1, tests_total: 1, kept_passing: 3, kept_total: 3,
+                       attacks_passed: 2, attacks_total: 4, diff_lines: 4, gates: [], top_factors: [["attack_pass_rate", 0.4]], cost_usd: 0.02 }] } });
+    });
+
+    it("lists runs across visible repositories, with filters", async () => {
+      const all = (await as("/api/runs")).json();
+      expect(all.runs.map((r: any) => r.pr_number).sort()).toEqual([12, 13]);
+      expect((await as("/api/runs?decision=review")).json().runs.map((r: any) => r.pr_number)).toEqual([13]);
+      expect((await as("/api/runs?outcome=wrong")).json().runs.map((r: any) => r.pr_number)).toEqual([12]);
+      expect((await as("/api/runs?decision=bogus")).statusCode).toBe(400);
+      expect((await as("/api/runs", "GET", undefined, () => other)).json().runs).toEqual([]);
+    });
+
+    it("shows run detail with candidates only to users who can see the repo", async () => {
+      const id = (await as("/api/runs?decision=review")).json().runs[0].id;
+      const run = (await as(`/api/runs/${id}`)).json().run;
+      expect(run.report.candidates[0].model).toBe("muse-spark");
+      expect(run.report.n_calibration).toBe(120);
+      expect((await as(`/api/runs/${id}`, "GET", undefined, () => other)).statusCode).toBe(404);
+    });
+
+    it("lets a maintainer mark a run wrong, behind the CSRF check, and logs it", async () => {
+      const id = (await as("/api/runs?decision=review")).json().runs[0].id;
+      const noHeader = await app.inject({ method: "POST", url: `/api/runs/${id}/feedback`, payload: { wrong: true }, cookies: { keel_session: sid } });
+      expect(noHeader.statusCode).toBe(403);
+      expect((await as(`/api/runs/${id}/feedback`, "POST", { wrong: true })).statusCode).toBe(200);
+      expect((await as(`/api/runs/${id}/feedback`, "POST", { wrong: true }, () => other)).statusCode).toBe(404);
+      const acts = (await as("/api/activity")).json().events.map((e: any) => e.action);
+      expect(acts).toContain("marked_wrong");
+    });
+
+    it("summarises overview, usage and calibration health", async () => {
+      const ov = (await as("/api/overview")).json();
+      expect(ov.totals.runs).toBe(2); expect(ov.recent).toHaveLength(2);
+      const usage = (await as("/api/usage?days=7")).json();
+      expect(usage.daily).toHaveLength(7);
+      expect(usage.byModel).toEqual([{ model: "muse-spark", candidates: 1, cost: 0.02, selected: 1 }]);
+      const cal = (await as("/api/calibration")).json().repos[0];
+      expect(cal).toMatchObject({ repo: "acme/shop", auto_merged: 1, wrong: 1, n_calibration: "120" });
+    });
+
+    it("saves defaults, lists sessions without leaking ids, and deletes the account on confirmation", async () => {
+      expect((await as("/api/settings", "PUT", { defaults: { alpha: 0.05, method: "ltt", autoMerge: true, models: ["muse-spark"] } })).statusCode).toBe(200);
+      expect((await as("/api/settings")).json().defaults).toEqual({ alpha: 0.05, method: "ltt", autoMerge: true, models: ["muse-spark"] });
+      expect((await as("/api/settings", "PUT", { defaults: { alpha: 2 } })).statusCode).toBe(400);
+      const acct = (await as("/api/account")).json();
+      expect(acct.sessions[0].current).toBe(true); expect(acct.sessions[0].id).toHaveLength(10);
+      expect((await as("/api/account", "DELETE", { confirm: "nope" })).statusCode).toBe(400);
+      expect((await as("/api/account", "DELETE", { confirm: "maint" })).statusCode).toBe(200);
+      expect((await as("/api/me")).json().user).toBeNull();
+      expect(await one(db, "select 1 from users where login = 'maint'")).toBeNull();
+      expect((await one<{ n: number }>(db, "select count(*)::int as n from audit_log where action = 'marked_wrong'"))!.n).toBe(1);
+    });
+  });
+
   it("requires sign-in for repository data", async () => {
     expect((await app.inject("/api/repos")).statusCode).toBe(401);
     expect((await app.inject("/api/repos/acme/shop")).statusCode).toBe(401);

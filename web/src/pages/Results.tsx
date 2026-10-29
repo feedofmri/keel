@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { NextLinks, Points, Section } from "../components/Page";
 import { Chart } from "../components/Chart";
 import { Segmented } from "../components/Segmented";
 import { useTitle } from "../hooks/useTitle";
@@ -29,6 +31,7 @@ export default function Results() {
   const [method, setMethod] = useState<Method>("crc");
   const thr = data ? (method === "crc" ? crcThreshold(data.slider.cal, alpha) : lttThreshold(data.slider.cal, alpha, data.evaluation.delta || 0.1)) : NEVER;
   return (
+    <>
     <div className="page-results">
       <div className="wrap">
         <section className="band inv" data-dark-zone style={{ padding: "104px 0 56px", marginTop: -64 }}>
@@ -42,6 +45,21 @@ export default function Results() {
         {data && <Details data={data} alpha={alpha} thr={thr} />}
       </div>
     </div>
+    <Section tone="tint" eyebrow="Method" title="How these numbers are made">
+      <Points cols={4} items={[
+        { idx: "01", title: "Hidden tests", text: "Keel sees half of each bug's failing tests. A fix counts as correct only if it passes the hidden half too." },
+        { idx: "02", title: "Real harnesses", text: "QuixBugs labels are checked for all 40 programs; SWE-bench Lite runs in the official Docker harness." },
+        { idx: "03", title: "Many splits", text: "Bugs are split into fit, calibration and test sets, 200 times at random. Curves show the mean." },
+        { idx: "04", title: "Naive baselines", text: "Merge if tests pass, merge on model self-confidence, and Keel's own score without calibration." },
+      ]} />
+      <Link className="more" to="/docs/evaluation">Reproduce the evaluation <span className="arrow">→</span></Link>
+    </Section>
+    <NextLinks links={[
+      { to: "/guarantee", title: "The guarantee", text: "Why Keel's curve stays under the bound." },
+      { to: "/models", title: "Meta models", text: "What each model adds to the score." },
+      { to: "/docs", title: "Quickstart", text: "Run Keel on your own repository." },
+    ]} />
+    </>
   );
 }
 

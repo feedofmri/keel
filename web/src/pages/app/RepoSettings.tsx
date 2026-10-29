@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PageHead, RepoCrumbs, RepoTabs } from "../../components/PageHead";
 import { useAsync } from "../../hooks/useAsync";
 import { useRepoName } from "../../hooks/useRepoName";
@@ -40,12 +40,39 @@ export default function RepoSettings() {
       {repo.error ? <p className="err">{repo.error}</p>
         : !repo.data ? <p className="muted">Loading…</p>
         : <Wizard full={full} current={setupMode ? null : current!} />}
+      {!setupMode && current && <RepoDanger full={full} paused={current.status === "paused"} onChange={repo.reload} />}
     </>
+  );
+}
+
+function RepoDanger({ full, paused, onChange }: { full: string; paused: boolean; onChange: () => void }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(""), [confirm, setConfirm] = useState(""), [err, setErr] = useState("");
+  const run = async (a: "pause" | "resume" | "disconnect") => { setBusy(a); setErr("");
+    try { await api.action(full, a); if (a === "disconnect") navigate("/app/repos"); else onChange(); } catch (e) { setErr((e as Error).message); }
+    setBusy(""); };
+  return (
+    <div style={{ marginTop: 64 }}>
+      <div className="section-h"><h2>Danger zone</h2></div>
+      <div className="panel-box">
+        <h3>{paused ? "Resume Keel" : "Pause Keel"}</h3>
+        <p className="p-small">{paused ? "Turn the Keel workflow back on." : "Disables the Keel workflow on GitHub. Nothing runs until you resume. Settings and history are kept."}</p>
+        <div className="row-actions"><button className="btn" disabled={!!busy} onClick={() => run(paused ? "resume" : "pause")}>{busy === "pause" || busy === "resume" ? "Working…" : paused ? "Resume" : "Pause"}</button></div>
+      </div>
+      <div className="panel-box danger">
+        <h3>Disconnect from Keel</h3>
+        <p className="p-small">Deletes this repository's runs and activity from Keel. The workflow file stays in the repository until you remove it, and the GitHub App keeps access until you remove the repository from the installation.</p>
+        <div className="field" style={{ maxWidth: 360 }}><label htmlFor="dc">Type <b>{full}</b> to confirm</label><input id="dc" type="text" value={confirm} onChange={e => setConfirm(e.target.value)} autoComplete="off" /></div>
+        <div className="row-actions"><button className="btn danger-btn" disabled={!!busy || confirm !== full} onClick={() => run("disconnect")}>{busy === "disconnect" ? "Disconnecting…" : "Disconnect"}</button></div>
+        {err && <p className="err">{err}</p>}
+      </div>
+    </div>
   );
 }
 
 function Wizard({ full, current }: { full: string; current: RepoDetail | null }) {
   const det = useAsync(() => api.detect(full), [full]);
+  const defaults = useAsync(() => api.defaults(), []);
   const { data: results } = useResults();
   const [step, setStep] = useState(0);
   const [install, setInstall] = useState("");
@@ -59,6 +86,11 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ number: number; url: string; stored: number } | null>(null);
 
+  // A new repository starts from the account defaults (Settings → Defaults).
+  useEffect(() => {
+    if (current || !defaults.data) return;
+    setAlpha(defaults.data.alpha); setMethod(defaults.data.method); setAutoMerge(defaults.data.autoMerge); setModels(defaults.data.models);
+  }, [defaults.data, current]);
   useEffect(() => {
     if (!det.data) return;
     setInstall(det.data.installCommand);

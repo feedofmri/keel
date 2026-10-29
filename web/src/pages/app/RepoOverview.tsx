@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { PageHead, RepoCrumbs, RepoTabs } from "../../components/PageHead";
-import { DecisionPill, StatusPill } from "../../components/Pills";
+import { StatusPill } from "../../components/Pills";
+import { RunsList } from "../../components/app/RunsList";
 import { useAsync } from "../../hooks/useAsync";
 import { useRepoName } from "../../hooks/useRepoName";
 import { useTitle } from "../../hooks/useTitle";
 import { api } from "../../lib/api";
 import { DEMO } from "../../lib/env";
-import { ago, repoPath } from "../../lib/format";
+import { repoPath } from "../../lib/format";
 
 export default function RepoOverview() {
   const full = useRepoName();
   useTitle(`${full} · Keel`);
   const { data, error, reload } = useAsync(() => api.repo(full), [full]);
+  const recent = useAsync(() => api.runs({ repo: full }), [full]);
   const [flash, setFlash] = useState("");
   const [busy, setBusy] = useState<"" | "fix" | "toggle">("");
 
@@ -25,7 +27,7 @@ export default function RepoOverview() {
 
   if (error) return <><PageHead crumbs={<RepoCrumbs full={full} />} title={full} /><p className="err">{error}</p></>;
   if (!data) return <><PageHead crumbs={<RepoCrumbs full={full} />} title={full} /><p className="muted">Loading…</p></>;
-  const { repo: r, stats: s, runs } = data;
+  const { repo: r, stats: s } = data;
   if (r.status === "new" && r.canManage) return <Navigate replace to={`${repoPath(full)}/settings`} />;
 
   const paused = r.status === "paused";
@@ -36,7 +38,7 @@ export default function RepoOverview() {
       if (kind === "fix") { await api.action(full, "fix"); setFlash("Keel run started on GitHub Actions. It appears here when it finishes."); }
       else { await api.action(full, paused ? "resume" : "pause"); setFlash(paused ? "Resumed." : "Paused. Keel won't run until you resume."); }
     } catch (e) { setFlash((e as Error).message); }
-    setBusy(""); reload();
+    setBusy(""); reload(); recent.reload();
   };
 
   return (
@@ -68,21 +70,9 @@ export default function RepoOverview() {
           <div className="gauge-labels"><span>{Math.round(budget * 100)}% used</span><span>budget α = {Math.round(r.alpha * 100)}%</span></div></div>
       </div>
 
-      <div className="runs"><h2>Runs</h2>
-        {runs.length ? runs.map(x => {
-          const tests = x.report.failing_tests || [], reasons = x.report.reasons || [];
-          return (
-            <div className="run" key={x.id}>
-              <div className="hide-sm muted" style={{ fontSize: 13 }}>{ago(x.finished_at)}</div>
-              <div className="t">{tests[0] || "repair run"}{tests.length > 1 ? ` +${tests.length - 1}` : ""}
-                <small>{x.trigger.replace("_", " ")} · {String(x.commit_sha).slice(0, 7)} · {x.n_candidates ?? "–"} candidates{x.merged_at ? " · merged" : ""}{x.reverted_at ? " · reverted" : ""}</small></div>
-              <div className="score hide-sm">risk {x.selected_score == null ? "–" : Number(x.selected_score).toFixed(3)} / λ̂ {x.threshold == null ? "–" : Number(x.threshold).toFixed(3)}</div>
-              <div><DecisionPill run={x} repo={r.full_name} /></div>
-              {reasons.length > 0 && <details><summary>Why</summary><ul>{reasons.map(t => <li key={t}>{t}</li>)}</ul></details>}
-            </div>
-          );
-        }) : <p className="empty">No runs yet. Keel runs when CI fails, on <code>/keel fix</code>, or when you press Fix now.</p>}
-      </div>
+      <div className="section-h"><h2>Recent runs</h2><Link to={`${repoPath(full)}/runs`}>All runs →</Link></div>
+      {recent.data == null ? <p className="muted">Loading…</p> : recent.data.runs.length ? <RunsList runs={recent.data.runs.slice(0, 6)} showRepo={false} />
+        : <p className="empty">No runs yet. Keel runs when CI fails, on <code>/keel fix</code>, or when you press Fix now.</p>}
     </>
   );
 }

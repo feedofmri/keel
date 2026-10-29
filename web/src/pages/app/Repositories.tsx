@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Empty, Loading } from "../../components/app/Empty";
 import { PageHead } from "../../components/PageHead";
 import { StatusPill } from "../../components/Pills";
 import { useAsync } from "../../hooks/useAsync";
@@ -6,36 +8,49 @@ import { useTitle } from "../../hooks/useTitle";
 import { api } from "../../lib/api";
 import { repoPath } from "../../lib/format";
 import { useSession } from "../../lib/session";
+import type { RepoStatus } from "../../lib/types";
+
+const FILTERS: [string, string, (s: RepoStatus) => boolean][] = [
+  ["all", "All", () => true], ["active", "Active", s => s === "active"], ["setup", "Setting up", s => s === "new" || s === "setup_pr_open"], ["paused", "Paused", s => s === "paused" || s === "error"],
+];
 
 export default function Repositories() {
   useTitle("Repositories · Keel");
   const { me } = useSession();
-  const { data: repos, error } = useAsync(() => api.repos(), []);
+  const { data, error } = useAsync(() => api.repos(), []);
+  const [q, setQ] = useState(""), [f, setF] = useState("all");
   const install = me?.installUrl || "#";
+  const repos = data?.repos || [];
+  const shown = repos.filter(r => FILTERS.find(x => x[0] === f)![2](r.status) && r.full_name.toLowerCase().includes(q.toLowerCase()));
   return (
     <>
-      <PageHead crumbs={me?.user?.login} title="Repositories"
-        actions={<a className="btn" href={install} target="_blank" rel="noopener">Add repositories on GitHub</a>} />
-      {error ? <p className="err">{error}</p>
-        : !repos ? <p className="muted">Loading repositories…</p>
-        : !repos.length ? (
-          <div className="empty"><h3 className="h-panel">Install the Keel GitHub App to get started</h3>
-            <p className="p-small" style={{ marginTop: 8 }}>Choose the repositories Keel may work on. You can change this any time on GitHub.</p>
-            <div className="ctas start"><a className="btn primary" href={install}>Install Keel on GitHub</a></div></div>
-        ) : (
-          <div className="repo-list">{repos.map(r => {
+      <PageHead title="Repositories" sub="Repositories the Keel GitHub App can see. Change which ones on GitHub."
+        actions={<a className="btn primary" href={install} target="_blank" rel="noopener">Add repositories</a>} />
+      {error ? <p className="err">{error}</p> : !data ? <Loading what="repositories" /> : !repos.length ? (
+        <Empty title="Install the Keel GitHub App to get started" actions={<a className="btn primary" href={install}>Install Keel on GitHub</a>}>
+          Choose the repositories Keel may work on. You can change this any time on GitHub.
+        </Empty>
+      ) : (
+        <>
+          <div className="toolbar">
+            <div className="chips">{FILTERS.map(([k, label, fn]) => (
+              <button key={k} className="chip" aria-pressed={f === k} onClick={() => setF(k)}>{label}<span className="n">{repos.filter(r => fn(r.status)).length}</span></button>))}</div>
+            <input className="search" type="search" placeholder="Filter repositories" value={q} onChange={e => setQ(e.target.value)} aria-label="Filter repositories" />
+          </div>
+          <div className="repo-list">{shown.map(r => {
             const isNew = r.status === "new";
             const to = isNew && r.canManage ? `${repoPath(r.full_name)}/settings` : repoPath(r.full_name);
             return (
               <div className="repo-row" key={r.full_name}>
-                <div className="name">{r.full_name}<small>{r.private ? "Private" : "Public"}{r.language ? ` · ${r.language}` : ""}</small></div>
+                <div className="name"><Link to={to} style={{ textDecoration: "none" }}>{r.full_name}</Link><small>{r.private ? "Private" : "Public"}{r.language ? ` · ${r.language}` : ""}{r.canManage ? "" : " · read only"}</small></div>
                 <div className="hide-sm"><StatusPill status={r.status} /></div>
                 <div className="hide-sm muted" style={{ fontSize: 13 }}>{isNew ? "" : `α ${Math.round(r.alpha * 100)}%`}</div>
                 <Link className={`btn${isNew && r.canManage ? " primary" : ""}`} to={to}>{isNew ? (r.canManage ? "Set up" : "View") : "Open"} <span className="arrow">→</span></Link>
               </div>
             );
-          })}</div>
-        )}
+          })}{!shown.length && <p className="empty">No repositories match.</p>}</div>
+        </>
+      )}
     </>
   );
 }

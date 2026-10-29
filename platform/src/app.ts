@@ -5,7 +5,9 @@ import fstatic from "@fastify/static";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { registerAccount } from "./account.js";
 import { registerApi } from "./api.js";
+import { registerInsights } from "./insights.js";
 import { githubRefresher, registerAuth } from "./auth/github.js";
 import { COOKIE, loadSession } from "./auth/sessions.js";
 import type { Db } from "./db/index.js";
@@ -46,7 +48,9 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
   registerAuth(app, db, env);
   registerWebhooks(app, db, env);
   registerRunReports(app, db, env, opts.jwks);
-  registerApi(app, db, env);
+  const { ensureSynced } = registerApi(app, db, env);
+  registerInsights(app, db, ensureSynced);
+  registerAccount(app, db);
 
   // The web app (web/, React) is a static build; the same build in demo mode is the GitHub Pages preview.
   const pub = opts.publicDir || [join(here, "public"), join(here, "..", "..", "web", "dist")].find(p => existsSync(join(p, "index.html")));
