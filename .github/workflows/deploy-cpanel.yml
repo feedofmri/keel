@@ -51,8 +51,18 @@ jobs:
         if: steps.creds.outputs.skip != '1' && env.CPANEL_SSH_KEY == '' && env.CPANEL_FTP_PASSWORD != ''
         run: |
           sudo apt-get install -y -qq lftp >/dev/null
-          lftp -u "$CPANEL_USER","$CPANEL_FTP_PASSWORD" "ftp://$CPANEL_HOST" -e "set ftp:ssl-force true; set ssl:verify-certificate ${{ vars.CPANEL_FTP_VERIFY_TLS || 'yes' }}; \
-            mirror -R --delete --no-symlinks --parallel=8 --exclude-glob .env --exclude-glob stderr.log --exclude-glob .htaccess --exclude-glob .well-known --exclude-glob cgi-bin deploy/ $APP_DIR/; bye"
+          lf() { lftp -u "$CPANEL_USER","$CPANEL_FTP_PASSWORD" "ftp://$CPANEL_HOST" \
+                   -e "set ftp:ssl-force true; set ssl:verify-certificate ${{ vars.CPANEL_FTP_VERIFY_TLS || 'yes' }}; $1; bye"; }
+          # node_modules is most of the upload; skip it when the lockfile is unchanged since the last deploy.
+          DEPS=$(sha256sum deploy/package-lock.json | cut -c1-64)
+          SKIP=""
+          if [ "$(lf "cat $APP_DIR/.deps-sha" 2>/dev/null)" = "$DEPS" ]; then
+            SKIP="--exclude-glob node_modules/"; echo "Dependencies unchanged: node_modules is not re-uploaded."
+          fi
+          lf "mirror -R --delete --no-symlinks --parallel=8 --exclude-glob .env --exclude-glob stderr.log --exclude-glob .htaccess \
+              --exclude-glob .well-known/ --exclude-glob cgi-bin/ --exclude-glob .deps-sha $SKIP deploy/ $APP_DIR/"
+          # Recorded only after a complete upload, so an interrupted deploy re-sends node_modules next time.
+          echo "$DEPS" > deps-sha && lf "put deps-sha -o $APP_DIR/.deps-sha"
       - name: Smoke test
         if: steps.creds.outputs.skip != '1'
         run: |
