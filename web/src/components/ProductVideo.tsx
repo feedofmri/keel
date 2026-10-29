@@ -18,7 +18,7 @@ export function ProductVideo() {
       ) : (
         <button className="video-poster" onClick={() => setPlaying(true)} aria-label="Play the Keel product overview video">
           <img src={asset("media/keel-overview-poster.jpg")} alt="" />
-          <span className="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor" /></svg>Play video</span>
+          <span className="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor" /></svg></span>
         </button>
       )}
     </div>
