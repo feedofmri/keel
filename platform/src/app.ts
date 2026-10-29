@@ -87,7 +87,7 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
   if (pub) {
     await app.register(fstatic, { root: pub, index: ["index.html"], wildcard: true, cacheControl: false,
       // Built assets have content hashes in their names, so they never change; everything else revalidates.
-      setHeaders: (res, file) => res.setHeader("Cache-Control", /[\\/]assets[\\/]/.test(file) ? "public, max-age=31536000, immutable" : "no-cache") });
+      setHeaders: (res, file) => res.header("Cache-Control", /[\\/]assets[\\/]/.test(file) ? "public, max-age=31536000, immutable" : "no-cache") });
   }
   // Client-side routes (/results, /login, /app/repos/...) all load index.html; API-like paths get JSON 404s.
   const serverOnly = /^\/(api|auth|webhooks|healthz)(\/|$)/;
