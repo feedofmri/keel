@@ -83,7 +83,7 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
     .map(m => `'sha256-${createHash("sha256").update(m[1]).digest("base64")}'`) : [];
   csp = ["default-src 'self'", `script-src 'self' ${inline.join(" ")}`.trim(), "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data: https://avatars.githubusercontent.com", "media-src 'self'",
-    "connect-src 'self'", "frame-ancestors 'none'", "base-uri 'self'", `form-action 'self' ${env.GITHUB_WEB_URL}`].join("; ");
+    "connect-src 'self'", "frame-src https://www.youtube-nocookie.com", "frame-ancestors 'none'", "base-uri 'self'", `form-action 'self' ${env.GITHUB_WEB_URL}`].join("; ");
   if (pub) {
     await app.register(fstatic, { root: pub, index: ["index.html"], wildcard: true, cacheControl: false,
       // Built assets have content hashes in their names, so they never change; everything else revalidates.

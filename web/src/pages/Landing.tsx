@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { DarkStage } from "../components/DarkStage";
 import { GetStarted } from "../components/GetStarted";
 import { HeroSea } from "../components/HeroSea";
-import { ProductVideo } from "../components/ProductVideo";
+import { ProductVideo, VIDEO_URL } from "../components/ProductVideo";
 import { GlimmerArt, OpenArt, SparkArt } from "../components/ModelArt";
 import { useTitle } from "../hooks/useTitle";
 import { useResults } from "../lib/results";
@@ -46,9 +46,10 @@ export default function Landing() {
       </div>
 
       <section className="section video-sec" id="overview"><div className="wrap">
-        <div className="head"><h2 className="h-sec">Keel in 30 seconds</h2>
+        <div className="head"><h2 className="h-sec">Product overview</h2>
           <p className="p-large">How Keel repairs a failing test and decides whether the fix can be merged without review.</p></div>
         <ProductVideo />
+        <a className="more" href={VIDEO_URL} target="_blank" rel="noopener">Watch on YouTube <span className="arrow">→</span></a>
       </div></section>
 
       <section className="section" id="how"><div className="wrap">

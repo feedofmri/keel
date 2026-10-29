@@ -1,25 +1,26 @@
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { asset } from "../lib/env";
-import { reducedMotion } from "../visuals/svg";
 
-/**
- * The 30-second product overview (docs/video/overview.html, rendered by render-overview.js).
- * Plays muted while on screen and pauses when scrolled away; never autoplays with reduced motion.
- */
+// The product overview video, hosted on YouTube. The player loads only when the visitor presses play
+// (no YouTube requests or cookies before then), using the privacy-enhanced youtube-nocookie.com domain.
+export const VIDEO_ID = "1RSKHhfeah4";
+export const VIDEO_URL = `https://youtu.be/${VIDEO_ID}`;
+
 export function ProductVideo() {
-  const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const v = ref.current!; if (reducedMotion()) return;
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => undefined); else v.pause(); }, { threshold: 0.4 });
-    io.observe(v); return () => io.disconnect();
-  }, []);
+  const [playing, setPlaying] = useState(false);
   return (
     <div className="video-frame">
-      <video ref={ref} muted loop playsInline controls preload="metadata" poster={asset("media/keel-overview-poster.jpg")}
-        aria-label="A 30-second overview of Keel: a failing test, candidate patches from two Meta models, adversarial testing and scoring, the labelled pull request, and the guarantee.">
-        <source src={asset("media/keel-overview.webm")} type="video/webm" />
-        <source src={asset("media/keel-overview.mp4")} type="video/mp4" />
-      </video>
+      {playing ? (
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+          title="Keel product overview" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin" />
+      ) : (
+        <button className="video-poster" onClick={() => setPlaying(true)} aria-label="Play the Keel product overview video">
+          <img src={asset("media/keel-overview-poster.jpg")} alt="" />
+          <span className="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor" /></svg>Play video</span>
+        </button>
+      )}
     </div>
   );
 }
