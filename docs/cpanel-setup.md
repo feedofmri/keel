@@ -41,7 +41,7 @@ Then add these **Environment variables** in the same screen:
 | `SESSION_SECRET` | 64 random characters (generate with any password manager) |
 | `OIDC_AUDIENCE` | `keel.boraqs.com` |
 | `GITHUB_APP_ID` | from step 4 |
-| `GITHUB_APP_SLUG` | from step 4 (the app's URL name, e.g. `keel-ai`) |
+| `GITHUB_APP_SLUG` | from step 4 (the app's URL name, `keel-repair`) |
 | `GITHUB_CLIENT_ID` | from step 4 |
 | `GITHUB_CLIENT_SECRET` | from step 4 |
 | `GITHUB_WEBHOOK_SECRET` | the webhook secret you chose in step 4 |
@@ -55,7 +55,7 @@ GitHub → **Settings → Developer settings → GitHub Apps → New GitHub App*
 
 | Field | Value |
 |---|---|
-| GitHub App name | `Keel` (if taken: `Keel AI`; the slug becomes `keel-ai`) |
+| GitHub App name | `Keel Repair` (registered; slug `keel-repair`, App ID 5531316) |
 | Homepage URL | `https://keel.boraqs.com` |
 | Callback URL | `https://keel.boraqs.com/auth/github/callback` |
 | Expire user authorization tokens | ✅ (Keel refreshes them) |

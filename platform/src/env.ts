@@ -8,7 +8,7 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
   GITHUB_APP_ID: z.string().default(""),
-  GITHUB_APP_SLUG: z.string().default("keel-ai"),
+  GITHUB_APP_SLUG: z.string().default("keel-repair"),
   GITHUB_CLIENT_ID: z.string().default(""),
   GITHUB_CLIENT_SECRET: z.string().default(""),
   GITHUB_PRIVATE_KEY: z.string().default(""),

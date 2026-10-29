@@ -32,7 +32,7 @@ export function logDemo(action: string, repo: string | null, detail: Record<stri
 }
 
 const USER = { login: "octocat", avatar_url: "https://avatars.githubusercontent.com/u/583231?v=4" };
-export const demoMe = (): Me => ({ user: demoState().signedIn ? USER : null, configured: true, installUrl: "https://github.com/apps/keel-ai/installations/new" });
+export const demoMe = (): Me => ({ user: demoState().signedIn ? USER : null, configured: true, installUrl: "https://github.com/apps/keel-repair/installations/new" });
 
 const REPOS: Omit<RepoSummary, "status">[] = [
   { full_name: "feedofmri/keel-demo", private: false, language: "Python", alpha: 0.1, canManage: true, installation: "feedofmri" },
