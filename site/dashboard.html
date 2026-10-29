@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keel Risk Dashboard</title>
+<meta name="description" content="Drag the risk level and watch Keel's auto-merge threshold, merge rate and empirical error against the guaranteed bound.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .grid { display: grid; gap: 16px; }
+  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 860px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .tile .label { font-size: 13px; color: var(--ink-2); }
+  .tile .value { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; margin-top: 4px; }
+  .tile .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; }
+  .slider-row { flex: 1 1 340px; }
+  .slider-row label { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; padding: 3px; background: var(--surface-2); }
+  .seg button { border: 0; background: transparent; color: var(--ink-2); padding: 6px 14px; border-radius: 999px; font: 600 13px var(--font); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--ink); box-shadow: 0 0 0 1px var(--border); }
+  .two { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  @media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  .grid > * { min-width: 0; }
+  .chart-title { font-weight: 650; font-size: 15px; margin: 0 0 2px; }
+  .chart-sub { font-size: 13px; color: var(--ink-2); margin: 0 0 10px; }
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .legend i.dash { background: repeating-linear-gradient(90deg, var(--ink-2) 0 4px, transparent 4px 7px) !important; }
+  .tip {
+    position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 24px rgba(0,0,0,.18);
+    min-width: 170px; opacity: 0; transition: opacity .1s; z-index: 5;
+  }
+  .tip .row { display: flex; justify-content: space-between; gap: 12px; }
+  .tip .sw { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .tip b { font-variant-numeric: tabular-nums; }
+  .sentence { font-size: 16px; color: var(--ink); margin: 14px 0 0; }
+  details summary { cursor: pointer; color: var(--ink-2); font-size: 13.5px; margin-top: 10px; }
+  .prs { list-style: none; margin: 0; padding: 0; }
+  .prs li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--grid); flex-wrap: wrap; }
+  .prs li a { color: var(--ink); text-decoration: none; font-weight: 550; }
+  .prs li a:hover { text-decoration: underline; }
+  .prs .when { margin-left: auto; color: var(--muted); font-size: 13px; }
+  section { margin-top: 18px; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
+  <nav class="nav">
+    <a href="./#how" class="hide-sm">How it works</a>
+    <a href="dashboard.html" aria-current="page">Dashboard</a>
+    <a href="./#install" class="hide-sm">Install</a>
+    <a href="https://github.com/feedofmri/keel">GitHub</a>
+    <button class="theme-btn" id="theme" aria-label="Toggle colour theme">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap" style="padding-top:28px">
+  <div class="eyebrow">Risk dashboard</div>
+  <h1 style="font-size:clamp(28px,4vw,40px);margin:6px 0 8px">How much can Keel safely auto-merge?</h1>
+  <p class="lead" style="margin:0 0 18px">Pick the risk you're willing to accept. Keel recomputes its threshold from held-out bugs, and the chart shows the error it actually made against the bound it promised.</p>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="card controls">
+    <div class="slider-row">
+      <label for="alpha"><span>Risk level α</span><span id="alphaOut">10%</span></label>
+      <input id="alpha" type="range" min="0.01" max="0.5" step="0.01" value="0.10" aria-describedby="alphaHelp">
+      <div id="alphaHelp" class="muted" style="font-size:13px">At most this share of bugs may end up with a wrong patch auto-merged (CRC), or this share of auto-merged patches may be wrong (LTT).</div>
+    </div>
+    <div>
+      <div class="muted" style="font-size:12.5px;margin-bottom:6px">Guarantee</div>
+      <div class="seg" role="group" aria-label="Guarantee">
+        <button data-method="crc" aria-pressed="true">CRC · per bug</button>
+        <button data-method="ltt" aria-pressed="false">LTT · per merge</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid tiles" aria-live="polite">
+    <div class="card tile"><div class="label">Auto-merge threshold λ̂</div><div class="value" id="tThr">–</div><div class="sub" id="tThrSub">risk score at or below this merges</div></div>
+    <div class="card tile"><div class="label">Bugs auto-merged</div><div class="value" id="tMerge">–</div><div class="sub" id="tMergeSub">review work removed</div></div>
+    <div class="card tile"><div class="label">Wrong auto-merges</div><div class="value" id="tRisk">–</div><div class="sub" id="tRiskSub">share of all bugs</div></div>
+    <div class="card tile"><div class="label">Wrong among merged</div><div class="value" id="tFdr">–</div><div class="sub" id="tFdrSub">precision view</div></div>
+  </section>
+  <p class="sentence" id="sentence"></p>
+  <p class="muted" style="font-size:13px;margin:4px 0 0">The tiles use one fixed calibration/test split, so a single split can land above α. CRC bounds the error <i>on average</i> over splits; the charts below show that average.</p>
+
+  <section class="grid two">
+    <div class="card">
+      <p class="chart-title" id="riskTitle">Empirical error vs. the guaranteed bound</p>
+      <p class="chart-sub" id="riskSub"></p>
+      <div class="seg" role="group" aria-label="Error metric" style="margin-bottom:8px">
+        <button data-metric="risk" aria-pressed="true">Wrong merges per bug</button>
+        <button data-metric="fdr" aria-pressed="false">Wrong among merged</button>
+      </div>
+      <div class="chart" id="riskChart"></div>
+      <div class="legend" id="riskLegend"></div>
+      <details><summary>Show as table</summary><div class="table-scroll" id="riskTable"></div></details>
+    </div>
+    <div class="card">
+      <p class="chart-title">Risk scores of selected patches</p>
+      <p class="chart-sub">Held-out bugs. Patches left of the line are auto-merged.</p>
+      <div class="chart" id="histChart"></div>
+      <div class="legend"><span><i style="background:var(--series-1)"></i>Correct (passes hidden tests)</span><span><i style="background:var(--series-2)"></i>Wrong</span><span><i class="dash"></i>Threshold</span></div>
+    </div>
+  </section>
+
+  <section class="grid two">
+    <div class="card">
+      <p class="chart-title">Share of bugs auto-merged</p>
+      <p class="chart-sub">Higher is better, as long as the error stays under the bound. The oracle merges exactly the correct fixes.</p>
+      <div class="chart" id="mergeChart"></div>
+      <div class="legend" id="mergeLegend"></div>
+    </div>
+    <div class="card">
+      <p class="chart-title">Meta models compared <span class="muted" style="font-weight:400">(α = 10%)</span></p>
+      <div class="table-scroll" id="models"></div>
+      <p class="chart-title" style="margin-top:18px">What each signal is worth</p>
+      <p class="chart-sub">Auto-merge rate at α = 10% when a feature group is removed.</p>
+      <div class="table-scroll" id="ablations"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="chart-title">Recent Keel pull requests</p>
+    <p class="chart-sub" id="prSub">Live from the demo repository via the public GitHub API.</p>
+    <ul class="prs" id="prs"><li class="muted">Loading…</li></ul>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <span>Keel · built during the Meta Global AI Developer Hackathon 2026 · <a href="https://github.com/feedofmri/keel/blob/main/HACKATHON.md">what we built</a></span>
+  <span>Conformal risk control assumes exchangeable bugs; see the <a href="./#guarantee">fine print</a>.</span>
+</div></footer>
+
+<script>
+(() => {
+  // ---------- theme ----------
+  const root = document.documentElement;
+  try { const t = localStorage.getItem("keel-theme"); if (t) root.dataset.theme = t; } catch (e) {}
+  document.getElementById("theme").onclick = () => {
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("keel-theme", root.dataset.theme); } catch (e) {}
+    if (window.__redraw) window.__redraw();
+  };
+
+  // ---------- conformal maths (mirrors keel/conformal.py) ----------
+  const NEVER = -1, GATED = 1;
+  function crcThreshold(cal, alpha) {
+    const n = cal.length; if (!n || 1 / (n + 1) > alpha) return NEVER;
+    const pairs = cal.filter(p => p[0] < GATED).sort((a, b) => a[0] - b[0]);
+    let loss = 0, best = NEVER, i = 0;
+    while (i < pairs.length) {
+      const s = pairs[i][0];
+      while (i < pairs.length && pairs[i][0] === s) { loss += pairs[i][1]; i++; }
+      if ((loss + 1) / (n + 1) <= alpha) best = s; else break;
+    }
+    return best;
+  }
+  function lgamma(x) { // Lanczos
+    const g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+      -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+    x -= 1; let a = c[0]; const t = x + g + 0.5;
+    for (let i = 1; i < 9; i++) a += c[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  function binomP(w, k, p) {
+    if (k === 0 || w >= k) return 1;
+    const terms = []; for (let i = 0; i <= w; i++)
+      terms.push(lgamma(k + 1) - lgamma(i + 1) - lgamma(k - i + 1) + i * Math.log(p) + (k - i) * Math.log1p(-p));
+    const m = Math.max(...terms); return Math.exp(m + Math.log(terms.reduce((s, t) => s + Math.exp(t - m), 0)));
+  }
+  const LTT_GRID = [0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+  function stats(points, thr) {
+    let k = 0, w = 0; for (const p of points) if (p[0] <= thr && p[0] < GATED) { k++; if (p[1]) w++; }
+    const n = points.length; return { k, w, n, merge: n ? k / n : 0, risk: n ? w / n : 0, fdr: k ? w / k : 0 };
+  }
+  function lttThreshold(cal, alpha, delta) {
+    let best = NEVER; const level = delta / LTT_GRID.length;
+    for (const lam of LTT_GRID) { const s = stats(cal, lam); if (binomP(s.w, s.k, alpha) <= level) best = Math.max(best, lam); }
+    return best;
+  }
+
+  // ---------- helpers ----------
+  const $ = id => document.getElementById(id);
+  const css = v => getComputedStyle(root).getPropertyValue(v).trim();
+  const pct = (x, d = 0) => (100 * x).toFixed(d) + "%";
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs = {}, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+  const SERIES = {
+    keel_crc: { name: "Keel · CRC", color: "--series-1", width: 2.5 },
+    keel_ltt: { name: "Keel · LTT", color: "--series-2", width: 2.5 },
+    tests_pass: { name: "Merge if tests pass", color: "--series-3", width: 2 },
+    self_confidence: { name: "Model self-confidence ≥ 1−α", color: "--series-4", width: 2 },
+    uncalibrated_score: { name: "Keel score, no calibration", color: "--series-5", width: 2 },
+  };
+
+  const MODEL_NAMES = { "muse-spark": "Muse Spark", "muse-spark-open": "Muse Spark Open", "muse-glimmer": "Muse Glimmer" };
+
+  // Line chart with crosshair tooltip. series: [{key, name, color, points:[[x,y]], dash}]
+  function lineChart(host, series, opts) {
+    host.innerHTML = "";
+    const W = Math.max(300, host.clientWidth || 640), H = W < 520 ? 250 : 300, m = { l: 44, r: opts.labelRoom || 16, t: 12, b: 34 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opts.label }, host);
+    const xmax = opts.xmax, ymax = opts.ymax;
+    const X = x => m.l + (x / xmax) * (W - m.l - m.r), Y = y => H - m.b - (y / ymax) * (H - m.t - m.b);
+    const ticks = opts.yticks;
+    for (const t of ticks) {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: css(t === 0 ? "--axis" : "--grid"), "stroke-width": 1 }, svg);
+      const tx = el("text", { x: m.l - 8, y: Y(t) + 4, "text-anchor": "end", "font-size": 11, fill: css("--muted") }, svg); tx.textContent = pct(t);
+    }
+    for (const t of opts.xticks) {
+      const tx = el("text", { x: X(t), y: H - m.b + 18, "text-anchor": "middle", "font-size": 11, fill: css("--muted") }, svg); tx.textContent = pct(t);
+    }
+    const xl = el("text", { x: W - m.r, y: H - 4, "text-anchor": "end", "font-size": 11, fill: css("--muted") }, svg); xl.textContent = "risk level α →";
+    if (opts.marker != null) el("line", { x1: X(opts.marker), x2: X(opts.marker), y1: m.t, y2: H - m.b, stroke: css("--ink-2"), "stroke-width": 1, "stroke-dasharray": "2 3", opacity: .6 }, svg);
+    const labels = [];
+    for (const s of series) {
+      const d = s.points.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(Math.min(p[1], ymax)).toFixed(1)).join("");
+      el("path", { d, fill: "none", stroke: s.dash ? css("--ink-2") : css(s.color), "stroke-width": s.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round", "stroke-dasharray": s.dash || "" }, svg);
+      if (s.label) { const last = s.points[s.points.length - 1]; labels.push({ text: s.label, x: X(last[0]) + 8, y: Y(Math.min(last[1], ymax)) + 4 }); }
+    }
+    labels.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < labels.length; i++) labels[i].y = Math.max(labels[i].y, labels[i - 1].y + 14);
+    for (const lb of labels) { const t = el("text", { x: lb.x, y: lb.y, "font-size": 11.5, "font-weight": 600, fill: css("--ink") }, svg); t.textContent = lb.text; }
+    // hover
+    const tip = document.createElement("div"); tip.className = "tip"; host.appendChild(tip);
+    const cross = el("line", { y1: m.t, y2: H - m.b, stroke: css("--axis"), "stroke-width": 1, opacity: 0 }, svg);
+    const dots = series.map(s => el("circle", { r: 4.5, fill: s.dash ? css("--ink-2") : css(s.color), stroke: css("--surface-1"), "stroke-width": 2, opacity: 0 }, svg));
+    const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+    const xs = series[0].points.map(p => p[0]);
+    function move(ev) {
+      const r = svg.getBoundingClientRect(); const px = (ev.clientX - r.left) * W / r.width;
+      let i = 0, best = 1e9; xs.forEach((x, j) => { const d = Math.abs(X(x) - px); if (d < best) { best = d; i = j; } });
+      cross.setAttribute("x1", X(xs[i])); cross.setAttribute("x2", X(xs[i])); cross.setAttribute("opacity", 1);
+      series.forEach((s, k) => { dots[k].setAttribute("cx", X(s.points[i][0])); dots[k].setAttribute("cy", Y(Math.min(s.points[i][1], ymax))); dots[k].setAttribute("opacity", 1); });
+      tip.innerHTML = `<div class="muted" style="margin-bottom:4px">α = ${pct(xs[i])}</div>` + series.map(s =>
+        `<div class="row"><span><span class="sw" style="background:${s.dash ? css("--ink-2") : css(s.color)}"></span>${esc(s.name)}</span><b>${pct(s.points[i][1], 1)}</b></div>`).join("");
+      const left = (X(xs[i]) / W) * r.width; tip.style.left = Math.min(left + 14, r.width - 200) + "px"; tip.style.top = "8px"; tip.style.opacity = 1;
+    }
+    hit.addEventListener("pointermove", move);
+    hit.addEventListener("pointerleave", () => { tip.style.opacity = 0; cross.setAttribute("opacity", 0); dots.forEach(d => d.setAttribute("opacity", 0)); });
+  }
+
+  function legend(host, items) {
+    host.innerHTML = items.map(it => `<span><i class="${it.dash ? "dash" : ""}" style="background:${it.dash ? "" : `var(${it.color})`}"></i>${esc(it.name)}</span>`).join("");
+  }
+
+  function histogram(host, test, thr) {
+    host.innerHTML = "";
+    const pts = test.filter(p => !p[2]); const bins = 20;
+    const ok = new Array(bins).fill(0), bad = new Array(bins).fill(0);
+    for (const p of pts) { const b = Math.min(bins - 1, Math.floor(p[0] * bins)); (p[1] ? bad : ok)[b]++; }
+    const ymax = Math.max(1, ...ok, ...bad);
+    const W = Math.max(280, host.clientWidth || 420), H = 260, m = { l: 30, r: 8, t: 12, b: 30 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Histogram of risk scores" }, host);
+    const bw = (W - m.l - m.r) / bins, Y = v => H - m.b - (v / ymax) * (H - m.t - m.b);
+    for (let t = 0; t <= ymax; t += Math.max(1, Math.ceil(ymax / 4))) {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: css(t ? "--grid" : "--axis") }, svg);
+      const tx = el("text", { x: m.l - 6, y: Y(t) + 4, "text-anchor": "end", "font-size": 10.5, fill: css("--muted") }, svg); tx.textContent = t;
+    }
+    [0, 0.25, 0.5, 0.75, 1].forEach(v => { const tx = el("text", { x: m.l + v * (W - m.l - m.r), y: H - m.b + 16, "text-anchor": "middle", "font-size": 10.5, fill: css("--muted") }, svg); tx.textContent = v.toFixed(2); });
+    const tip = document.createElement("div"); tip.className = "tip"; host.appendChild(tip);
+    for (let b = 0; b < bins; b++) {
+      const x0 = m.l + b * bw, half = (bw - 2) / 2;
+      [[ok[b], "--series-1", 0, "Correct"], [bad[b], "--series-2", 1, "Wrong"]].forEach(([v, c, j, name]) => {
+        if (!v) return;
+        const x = x0 + 1 + j * (half + 0) + (j ? 1 : 0), w = Math.max(1, half - 1), y = Y(v), h = H - m.b - y;
+        const r = Math.min(3, w / 2, h);
+        const d = `M${x},${H - m.b}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${H - m.b}Z`;
+        const p = el("path", { d, fill: css(c) }, svg);
+        p.addEventListener("pointerenter", () => {
+          tip.innerHTML = `<div class="muted">score ${(b / bins).toFixed(2)}–${((b + 1) / bins).toFixed(2)}</div><div class="row"><span>${name}</span><b>${v}</b></div>`;
+          const r2 = svg.getBoundingClientRect(); tip.style.left = Math.min((x / W) * r2.width + 10, r2.width - 180) + "px"; tip.style.top = "8px"; tip.style.opacity = 1;
+        });
+        p.addEventListener("pointerleave", () => tip.style.opacity = 0);
+      });
+    }
+    if (thr > NEVER) {
+      const x = m.l + Math.min(1, thr) * (W - m.l - m.r);
+      el("line", { x1: x, x2: x, y1: m.t, y2: H - m.b, stroke: css("--ink"), "stroke-width": 1.5, "stroke-dasharray": "4 3" }, svg);
+      const t = el("text", { x: x + 5, y: m.t + 10, "font-size": 11, "font-weight": 600, fill: css("--ink") }, svg); t.textContent = "λ̂ " + thr.toFixed(3);
+    }
+  }
+
+  function table(host, cols, rows) {
+    host.innerHTML = `<table class="data"><thead><tr>${cols.map(c => `<th class="${c.num ? "num" : ""}">${esc(c.h)}</th>`).join("")}</tr></thead><tbody>` +
+      rows.map(r => `<tr>${cols.map(c => `<td class="${c.num ? "num" : ""}">${c.f(r)}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+  }
+
+  // ---------- main ----------
+  let state = { alpha: 0.1, method: "crc", metric: "risk" };
+  Promise.all([fetch("data/results.json").then(r => r.json()), fetch("data/site.json").then(r => r.json()).catch(() => ({}))])
+    .then(([data, site]) => { init(data, site); })
+    .catch(e => { $("banner").hidden = false; $("banner").textContent = "Could not load results: " + e; });
+
+  function init(data, site) {
+    const ev = data.evaluation, cal = data.slider.cal, test = data.slider.test, delta = ev.delta || 0.1;
+    const banner = $("banner");
+    if (data.simulated) {
+      banner.hidden = false;
+      banner.innerHTML = "<b>Preview data:</b> these numbers come from <b>simulated</b> bug records used to test the statistics. They are not benchmark results. Real QuixBugs and SWE-bench Lite runs with Muse Spark and Muse Spark Open replace them here once they finish.";
+    }
+    $("riskSub").textContent = `${data.n_bugs} bugs (${data.datasets.join(", ")}), mean over ${ev.n_splits} random calibration/test splits.`;
+
+    function redraw() {
+      const a = state.alpha, meth = state.method;
+      $("alphaOut").textContent = pct(a);
+      const thr = meth === "crc" ? crcThreshold(cal, a) : lttThreshold(cal, a, delta);
+      const st = stats(test, thr);
+      $("tThr").textContent = thr > NEVER ? thr.toFixed(3) : "none";
+      $("tThrSub").textContent = thr > NEVER ? "risk score at or below this merges" : `can't certify α with ${cal.length} calibration bugs`;
+      $("tMerge").textContent = pct(st.merge); $("tMergeSub").textContent = `${st.k} of ${st.n} held-out bugs`;
+      const near = (k, f) => { const rows = ev.methods[`keel_${meth}`] || []; let r = rows[0]; for (const x of rows) if (Math.abs(x.alpha - a) < Math.abs(r.alpha - a)) r = x; return r ? `${pct(r[f], 1)} at α = ${pct(r.alpha)}` : "–"; };
+      $("tRisk").textContent = pct(st.risk, 1);
+      $("tRiskSub").textContent = `this split · mean over splits ${near(meth, "risk")}`;
+      $("tFdr").textContent = st.k ? pct(st.fdr, 1) : "–";
+      $("tFdrSub").textContent = meth === "ltt" ? `bound α w.p. ${pct(1 - delta)} · mean ${near(meth, "fdr")}` : `this split · mean ${near(meth, "fdr")}`;
+      $("sentence").innerHTML = thr > NEVER
+        ? `On this split Keel would auto-merge <b>${st.k}</b> of ${st.n} held-out bugs, and <b>${st.w}</b> of those merges would be wrong. Everything else goes to a human with an explanation.`
+        : `At α = ${pct(a)} Keel cannot certify any threshold with ${cal.length} calibration bugs, so every fix goes to human review. That is the safe default.`;
+
+      const methods = ev.methods, metric = state.metric;
+      const order = ["keel_crc", "keel_ltt", "tests_pass", "self_confidence", "uncalibrated_score"].filter(k => methods[k]);
+      const ser = order.map(k => ({ key: k, ...SERIES[k], points: methods[k].map(r => [r.alpha, r[metric]]), label: k.startsWith("keel") ? SERIES[k].name : "" }));
+      ser.push({ key: "bound", name: "Guaranteed bound (y = α)", dash: "6 5", width: 1.5, points: ev.alphas.map(x => [x, x]) });
+      const ymax = Math.max(0.5, ...ser.flatMap(s => s.points.map(p => p[1]))) * 1.05;
+      lineChart($("riskChart"), ser, { label: "Empirical error versus risk level", xmax: 0.5, ymax: Math.min(1, ymax), marker: a, labelRoom: 84,
+        yticks: [0, 0.1, 0.2, 0.3, 0.4, 0.5].filter(t => t <= ymax), xticks: [0, 0.1, 0.2, 0.3, 0.4, 0.5] });
+      legend($("riskLegend"), ser.map(s => ({ name: s.name, color: s.color, dash: !!s.dash })));
+      $("riskTitle").textContent = metric === "risk" ? "Wrong auto-merges per bug vs. the bound" : "Wrong share among auto-merged vs. the bound";
+      table($("riskTable"), [{ h: "α", f: r => pct(r.alpha) }, ...order.map(k => ({ h: SERIES[k].name, num: true, f: r => pct(methods[k][ev.alphas.indexOf(r.alpha)][metric], 1) }))],
+        ev.alphas.map(x => ({ alpha: x })));
+
+      const mser = ["keel_crc", "keel_ltt"].filter(k => methods[k]).map(k => ({ key: k, ...SERIES[k], points: methods[k].map(r => [r.alpha, r.merge]), label: SERIES[k].name }));
+      if (methods.oracle) mser.push({ key: "oracle", name: "Oracle (merges exactly the correct fixes)", dash: "6 5", width: 1.5, points: methods.oracle.map(r => [r.alpha, r.merge]) });
+      lineChart($("mergeChart"), mser, { label: "Auto-merge rate versus risk level", xmax: 0.5, ymax: 1, marker: a, labelRoom: 84, yticks: [0, 0.25, 0.5, 0.75, 1], xticks: [0, 0.1, 0.2, 0.3, 0.4, 0.5] });
+      legend($("mergeLegend"), mser.map(s => ({ name: s.name, color: s.color, dash: !!s.dash })));
+
+      histogram($("histChart"), test, thr);
+    }
+    window.__redraw = redraw;
+
+    table($("models"), [
+      { h: "Models", f: r => r.models.includes("+") ? "All together" : esc(MODEL_NAMES[r.models] || r.models) },
+      { h: "Solve@k", num: true, f: r => pct(r.solve_at_k) },
+      { h: "Score AUROC", num: true, f: r => r.auroc == null ? "–" : r.auroc.toFixed(2) },
+      { h: "Auto-merged", num: true, f: r => pct(r.merge_rate) },
+      { h: "$ / auto-merge", num: true, f: r => r.cost_per_auto_merge == null ? "–" : "$" + r.cost_per_auto_merge.toFixed(3) },
+    ], data.models || []);
+    table($("ablations"), [
+      { h: "Removed", f: r => esc(r.removed.replaceAll("_", " ")) },
+      { h: "Auto-merged", num: true, f: r => pct(r.merge_rate) },
+      { h: "Error", num: true, f: r => pct(r.risk, 1) },
+    ], data.ablations || []);
+
+    $("alpha").addEventListener("input", e => { state.alpha = +e.target.value; redraw(); });
+    document.querySelectorAll("[data-method]").forEach(b => b.onclick = () => {
+      state.method = b.dataset.method; document.querySelectorAll("[data-method]").forEach(x => x.setAttribute("aria-pressed", x === b)); redraw(); });
+    document.querySelectorAll("[data-metric]").forEach(b => b.onclick = () => {
+      state.metric = b.dataset.metric; document.querySelectorAll("[data-metric]").forEach(x => x.setAttribute("aria-pressed", x === b)); redraw(); });
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
+    let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(redraw, 120); });
+    redraw();
+    loadPRs(site.demo_repo);
+  }
+
+  function loadPRs(repo) {
+    const ul = $("prs");
+    if (!repo) { ul.innerHTML = '<li class="muted">No demo repository configured yet.</li>'; return; }
+    $("prSub").innerHTML = `Live from <a href="https://github.com/${esc(repo)}/pulls">${esc(repo)}</a> via the public GitHub API.`;
+    fetch(`https://api.github.com/repos/${repo}/pulls?state=all&per_page=30`).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(prs => {
+      const keel = prs.filter(p => (p.head && p.head.ref || "").startsWith("keel/"));
+      if (!keel.length) { ul.innerHTML = '<li class="muted">No Keel pull requests yet.</li>'; return; }
+      ul.innerHTML = keel.slice(0, 10).map(p => {
+        const auto = p.labels.some(l => l.name === "AUTO-MERGE");
+        const pill = auto ? '<span class="pill auto"><span class="dot"></span>AUTO-MERGE</span>' : '<span class="pill review"><span class="dot"></span>NEEDS REVIEW</span>';
+        const state = p.merged_at ? "merged" : p.state;
+        return `<li>${pill}<a href="${esc(p.html_url)}">#${p.number} ${esc(p.title.replace(/^\[[^\]]+\]\s*/, ""))}</a><span class="when">${state} · ${new Date(p.created_at).toLocaleDateString()}</span></li>`;
+      }).join("");
+    }).catch(() => { ul.innerHTML = '<li class="muted">Couldn\'t reach the GitHub API right now (rate limits are 60 requests an hour per visitor).</li>'; });
+  }
+})();
+</script>
+</body>
+</html>

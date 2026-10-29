@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keel</title>
+<meta name="description" content="Keel is a code-repair agent that knows when it should not be trusted. Meta Muse models propose fixes; conformal risk control decides which are safe to auto-merge.">
+<meta property="og:title" content="Keel: the code-repair agent that knows when it should not be trusted">
+<meta property="og:description" content="Meta Muse models propose fixes. Conformal risk control decides which are safe to auto-merge, with a guarantee on how often it is wrong.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .hero { padding: 72px 0 40px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+  @media (max-width: 900px) { .hero { grid-template-columns: minmax(0, 1fr); padding-top: 40px; gap: 32px; } }
+  .hero h1 { font-size: clamp(36px, 5.6vw, 62px); margin: 14px 0 18px; font-weight: 720; letter-spacing: -0.035em; }
+  .hero .lead { font-size: clamp(17px, 2vw, 20px); max-width: 620px; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .mark { width: 52px; color: var(--ink); }
+  .pr { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: 0 10px 40px rgba(0,0,0,.07); }
+  .pr + .pr { margin-top: 14px; }
+  .pr .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pr .title { font-weight: 650; font-size: 15px; }
+  .pr ul { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+  .pr .meta { color: var(--muted); font-size: 12.5px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .section { margin-top: 88px; }
+  .section h2 { font-size: clamp(28px, 3.6vw, 40px); margin: 8px 0 14px; }
+  .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+  .cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+  @media (max-width: 860px) { .cols3, .cols2 { grid-template-columns: minmax(0, 1fr); } }
+  .big { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; }
+  .steps { counter-reset: s; display: grid; gap: 12px; margin-top: 24px; }
+  .step { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: start; background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+  .step::before { counter-increment: s; content: counter(s); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font-weight: 700; color: var(--ink-2); }
+  .step h3 { margin: 2px 0 4px; font-size: 17px; }
+  .step p { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .model { font-size: 12px; font-weight: 650; padding: 4px 10px; border-radius: 999px; background: var(--ink); color: var(--page); white-space: nowrap; }
+  .model.alt { background: var(--surface-2); color: var(--ink); border: 1px solid var(--border); }
+  @media (max-width: 600px) { .step { grid-template-columns: 40px minmax(0, 1fr); } .step .model { grid-column: 2; justify-self: start; } }
+  .formula { font-family: var(--mono); background: var(--surface-2); border-radius: 10px; padding: 12px 14px; font-size: 14px; overflow-x: auto; }
+  .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; font-size: 15px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
+  <nav class="nav">
+    <a href="#how" class="hide-sm">How it works</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="#install" class="hide-sm">Install</a>
+    <a href="https://github.com/feedofmri/keel">GitHub</a>
+    <button class="theme-btn" id="theme" aria-label="Toggle colour theme">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <svg class="mark" viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>
+      <h1>The code-repair agent that knows when it shouldn't be trusted.</h1>
+      <p class="lead">Coding agents write plausible patches faster than anyone can review them. Keel lets Meta's Muse models fix your failing tests, then uses <b>conformal risk control</b> to decide which fixes are safe to merge on their own, with a statistical guarantee on how often it's wrong.</p>
+      <div class="ctas">
+        <a class="btn primary" href="dashboard.html">Try the risk slider →</a>
+        <a class="btn" href="#install">Install the GitHub Action</a>
+      </div>
+    </div>
+    <div aria-label="Two example pull requests opened by Keel">
+      <div class="pr">
+        <div class="head"><span class="pill auto"><span class="dot"></span>AUTO-MERGE</span><span class="title">Fix discount applied backwards</span></div>
+        <ul>
+          <li>Passes all 3 failing tests, no regressions</li>
+          <li>Survives 6/6 adversarial tests written by Muse Spark</li>
+          <li>Muse Spark Open independently reached the same behaviour</li>
+        </ul>
+        <div class="meta">risk score 0.001 ≤ threshold at α = 10% · 1 file, +1 −1</div>
+      </div>
+      <div class="pr">
+        <div class="head"><span class="pill review"><span class="dot"></span>NEEDS REVIEW</span><span class="title">Rounding change in pricing</span></div>
+        <ul>
+          <li>Passes every visible test, so a naive agent would merge it</li>
+          <li>Fails 3 of 6 adversarial tests (rounds to 0.1, not cents)</li>
+          <li>Behaves differently from most other candidates</li>
+        </ul>
+        <div class="meta">risk score 0.939 &gt; threshold · routed to a human with this explanation</div>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin:10px 2px 0">Illustration from Keel's bundled demo repository.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow">The problem</div>
+    <h2>Generation isn't the bottleneck any more. Review is.</h2>
+    <div class="cols3">
+      <div class="card"><div class="big">“Tests pass”</div><p class="muted">isn't proof. Agents overfit the visible tests, special-case inputs, or quietly edit the tests themselves.</p></div>
+      <div class="card"><div class="big">Confidence</div><p class="muted">scores from the model aren't calibrated. "90% sure" is not 90% right, and you can't set a policy on it.</p></div>
+      <div class="card"><div class="big">Every PR</div><p class="muted">still lands on a human, so the time agents save in writing code comes back as review load.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="eyebrow">How it works</div>
+    <h2>Meta models propose, cross-examine, and Keel decides.</h2>
+    <p class="lead">Every step runs in a throwaway sandbox. Secrets are scrubbed from the environment of any code a model wrote.</p>
+    <div class="steps">
+      <div class="step"><div><h3>Reproduce</h3><p>Run the test suite, find the failing tests and the code their tracebacks point to.</p></div><span class="model alt">your CI</span></div>
+      <div class="step"><div><h3>Generate</h3><p>Sample several candidate patches from two Meta models for diversity. Muse Spark Open also reports token log-probabilities, a confidence signal only open weights expose.</p></div><span class="model">Muse Spark + Muse Spark Open</span></div>
+      <div class="step"><div><h3>Attack</h3><p>Muse Spark reads all the candidates and writes new tests aimed at where they disagree. Patches that only fit the visible tests fall here.</p></div><span class="model">Muse Spark</span></div>
+      <div class="step"><div><h3>Score</h3><p>A code-aware nonconformity score combines test outcomes, adversarial survival, diff size and locality, static-analysis deltas, agreement across samples and models, and model uncertainty. Edits to tests are hard-blocked.</p></div><span class="model alt">Keel</span></div>
+      <div class="step"><div><h3>Decide</h3><p>A threshold calibrated on held-out bug fixes turns the score into <b>AUTO-MERGE</b> or <b>NEEDS REVIEW</b>, at the risk level you chose. The PR explains why.</p></div><span class="model alt">conformal risk control</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="guarantee">
+    <div class="eyebrow">The guarantee</div>
+    <h2>A bound you can set as policy, not a vibe.</h2>
+    <div class="cols2">
+      <div class="card">
+        <h3 style="margin-top:0">CRC: per bug (default)</h3>
+        <p>Pick α, say 10%. Keel chooses the largest threshold λ̂ whose adjusted error on <i>n</i> held-out bugs stays under α:</p>
+        <div class="formula">λ̂ = max { λ : (Σᵢ wrongᵢ·1[sᵢ ≤ λ] + 1) / (n + 1) ≤ α }</div>
+        <p>Then, on average, <b>at most α of bugs end up with a wrong patch auto-merged</b>. No assumptions about the model or the data distribution are needed.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">LTT: per merge</h3>
+        <p>Prefer a bound on the share of <i>auto-merged</i> patches that are wrong? Learn-then-Test tests every threshold on a fixed grid with an exact binomial test, and keeps only the ones it can certify.</p>
+        <p>Then, <b>with probability at least 1 − δ, at most α of auto-merged patches are wrong</b>. It's stricter, so it needs more calibration data before it merges anything.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3 style="margin-top:0">The fine print</h3>
+      <dl class="kv">
+        <dt>Assumes</dt><dd>new bugs are exchangeable with the calibration bugs: same models, prompts and kind of repository. Keel fingerprints its configuration and refuses to auto-merge on a stale calibration.</dd>
+        <dt>Means</dt><dd>a guarantee on average over bugs, not a promise about one particular patch.</dd>
+        <dt>“Correct”</dt><dd>means passing held-out tests the agent never saw, which is stronger than “passes the tests it was given”, but still not a proof.</dd>
+        <dt>Default</dt><dd>with no calibration data, Keel never auto-merges. Everything goes to review.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow">Evaluation</div>
+    <h2>Measured, not promised.</h2>
+    <p class="lead">Keel is evaluated on <b>SWE-bench Lite</b> and <b>QuixBugs</b> with a visible/hidden test split, over hundreds of random calibration/test splits. It's compared with merging whenever tests pass, with model self-confidence, and with its own score without calibration.</p>
+    <div id="teaser" class="cols3"></div>
+    <p style="margin-top:16px"><a href="dashboard.html">Explore every number on the dashboard →</a></p>
+  </section>
+
+  <section class="section" id="install">
+    <div class="eyebrow">Install</div>
+    <h2>One workflow file.</h2>
+    <p class="lead">Keel runs as a GitHub Action on GitHub's own runners. It triggers when CI fails or when someone with write access comments <code>/keel fix</code>, then opens a labelled pull request.</p>
+    <pre class="code"><code>name: Keel
+on:
+  workflow_run: { workflows: [CI], types: [completed] }
+  issue_comment: { types: [created] }
+permissions: { contents: write, pull-requests: write, issues: write }
+jobs:
+  keel:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.workflow_run.head_sha || github.ref }}" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e . pytest
+      - uses: feedofmri/keel@v1
+        env:
+          KEEL_MUSE_SPARK_API_KEY: ${{ secrets.KEEL_MUSE_SPARK_API_KEY }}
+          KEEL_SPARK_OPEN_API_KEY: ${{ secrets.KEEL_SPARK_OPEN_API_KEY }}
+        with: { calibration: .keel/calibration.json, alpha: "0.1" }</code></pre>
+    <p class="muted" style="font-size:14px">Full example: <a href="https://github.com/feedofmri/keel/blob/main/examples/workflows/keel.yml">examples/workflows/keel.yml</a>. Or run it locally: <code>pip install git+https://github.com/feedofmri/keel &amp;&amp; keel repair --repo .</code></p>
+  </section>
+
+  <section class="section">
+    <div class="card" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+      <div><div class="eyebrow">Meta Global AI Developer Hackathon 2026 · Push the Frontier</div>
+        <div style="font-size:18px;font-weight:650;margin-top:6px">Everything here was built during the event, Oct 26 – Nov 4.</div></div>
+      <a class="btn" href="https://github.com/feedofmri/keel/blob/main/HACKATHON.md">What we built →</a>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <span>Keel · MIT license · <a href="https://github.com/feedofmri/keel">github.com/feedofmri/keel</a></span>
+  <span>Powered by Meta Muse Spark, Muse Spark Open and Muse Glimmer.</span>
+</div></footer>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  try { const t = localStorage.getItem("keel-theme"); if (t) root.dataset.theme = t; } catch (e) {}
+  document.getElementById("theme").onclick = () => {
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("keel-theme", root.dataset.theme); } catch (e) {}
+  };
+  const pct = x => (100 * x).toFixed(0) + "%";
+  fetch("data/results.json").then(r => r.json()).then(d => {
+    const m = d.evaluation.methods, at = (k, a) => (m[k] || []).find(r => Math.abs(r.alpha - a) < 1e-9);
+    const keel = at("keel_crc", 0.1), naive = at("tests_pass", 0.1), conf = at("self_confidence", 0.1);
+    if (!keel) return;
+    const sim = d.simulated ? '<div class="muted" style="font-size:12px;margin-top:6px">preview · simulated data</div>' : "";
+    document.getElementById("teaser").innerHTML = `
+      <div class="card"><div class="muted">Keel at α = 10%</div><div class="big">${(100 * keel.risk).toFixed(1)}%</div><div>wrong auto-merges per bug, under the 10% bound, while merging ${pct(keel.merge)} of bugs</div>${sim}</div>
+      <div class="card"><div class="muted">Merge if tests pass</div><div class="big">${(100 * naive.risk).toFixed(1)}%</div><div>wrong merges per bug, with no way to dial it down</div>${sim}</div>
+      <div class="card"><div class="muted">Model self-confidence ≥ 90%</div><div class="big">${(100 * conf.fdr).toFixed(0)}%</div><div>of its merges are wrong: confidence isn't calibration</div>${sim}</div>`;
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>

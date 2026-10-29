@@ -28,13 +28,14 @@ inputs:
     description: "Path (in the repo) to a Keel calibration JSON. Without one Keel never auto-merges."
     default: ""
   python-version:
-    description: "Python used to run Keel."
-    default: "3.12"
+    description: "Set up this Python first. Leave empty (default) to use the Python your workflow already set up, so Keel runs your tests with your installed dependencies."
+    default: ""
 
 runs:
   using: "composite"
   steps:
     - uses: actions/setup-python@v5
+      if: inputs.python-version != ''
       with:
         python-version: ${{ inputs.python-version }}
     - name: Install Keel
