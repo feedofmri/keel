@@ -6,7 +6,7 @@ import { SiteHeader } from "../components/SiteHeader";
 export function PublicLayout() {
   return <><a className="skip btn" href="#main">Skip to content</a><SiteHeader /><main id="main"><Outlet /></main><SiteFooter /></>;
 }
-/** Sign-in: the same header, no footer (the page fills the screen). */
+/** Sign-in: no header or footer; the page fills the screen and has its own Back button. */
 export function AuthLayout() {
-  return <><SiteHeader /><main id="main"><Outlet /></main></>;
+  return <main id="main"><Outlet /></main>;
 }

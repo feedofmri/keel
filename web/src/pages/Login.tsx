@@ -1,4 +1,5 @@
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { KeelMark } from "../components/Logo";
 import { HalftoneCanvas } from "../components/HalftoneCanvas";
 import { useTitle } from "../hooks/useTitle";
 import { api } from "../lib/api";
@@ -23,12 +24,21 @@ export default function Login() {
 
   // The server's sign-in route lives outside the SPA, so it gets the full path including the base.
   const href = `/auth/github/login?next=${encodeURIComponent(BASE.replace(/\/$/, "") + next)}`;
+  // Back returns to the previous page in this tab, or to the home page when sign-in was opened directly.
+  const back = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate("/"));
   const demoSignIn = async (e: React.MouseEvent) => { e.preventDefault(); api.demoSignIn(); await refresh(); navigate(next, { replace: true }); };
 
   return (
     <div className="page-login">
       <div className="login">
-        <section className="main"><div className="card-login">
+        <section className="main">
+          <div className="login-top">
+            <button type="button" className="back" onClick={back}>
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5" /></svg>Back
+            </button>
+            <Link className="brand" to="/" aria-label="Keel home"><KeelMark />Keel</Link>
+          </div>
+          <div className="card-login">
           <h1>Sign in to Keel</h1>
           <p className="p-large">Use your GitHub account to connect repositories and configure Keel.</p>
           <a className="btn primary gh" href={DEMO ? "#" : href} onClick={DEMO ? demoSignIn : undefined}>

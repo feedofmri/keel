@@ -1,9 +1,9 @@
-.page-login .login { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: calc(100vh - 64px); }
+.page-login .login { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 100vh; }
 @media (max-width: 900px) {
   .page-login .login { grid-template-columns: minmax(0, 1fr); }
   .page-login .login .side { display: none; }
 }
-.page-login .login .main { display: flex; align-items: center; justify-content: center; padding: 64px 24px; }
+.page-login .login .main { position: relative; display: flex; align-items: center; justify-content: center; padding: 112px 24px 64px; }
 .page-login .card-login { width: 100%; max-width: 400px; }
 .page-login .card-login h1 { font-size: 38px; line-height: 1.1; letter-spacing: -0.01em; margin-top: 18px; }
 .page-login .card-login p { margin: 14px 0 0; }
@@ -16,3 +16,10 @@
 .page-login .side .cols { position: relative; grid-template-columns: minmax(0, 1fr); gap: 28px; max-width: 420px; }
 .page-login .side h4 { font-size: 15px; }
 .page-login .field { position: absolute; left: 0; right: 0; top: 6%; height: 62%; width: 100%; }
+.page-login .login-top { position: absolute; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; }
+@media (min-width: 1024px) { .page-login .login-top { left: 48px; right: 48px; top: 28px; } }
+.page-login .back { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px 0 10px; border: 0; border-radius: 48px; cursor: pointer;
+  font: 400 14.5px var(--font); color: var(--ink-2); background: transparent; box-shadow: inset 0 0 0 1px var(--b3); transition: color .15s, background .15s; }
+.page-login .back:hover { color: var(--ink); background: var(--b1); }
+.page-login .back svg { transition: transform .2s var(--ease); }
+.page-login .back:hover svg { transform: translateX(-2px); }
