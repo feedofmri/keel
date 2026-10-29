@@ -18,7 +18,23 @@
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }),
       { rootMargin: "0px 0px -8% 0px" });
     document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    // Count-up numbers: <span data-count="65" data-suffix="%">
+    const cio = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; countUp(e.target); cio.unobserve(e.target); }));
+    document.querySelectorAll("[data-count]").forEach(el => cio.observe(el));
+    // Soft light that follows the cursor inside .glowfield elements
+    document.querySelectorAll(".glowfield").forEach(el => el.addEventListener("pointermove", ev => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", (ev.clientX - r.left) + "px"); el.style.setProperty("--my", (ev.clientY - r.top) + "px");
+    }));
   });
+  function countUp(el) {
+    const to = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0), suf = el.dataset.suffix || "";
+    if (isNaN(to)) return;
+    const t0 = performance.now(), dur = 1400;
+    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 4);
+      el.textContent = (to * e).toFixed(dec) + suf; if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
 
   // ---------- conformal maths ----------
   const NEVER = -1, GATED = 1;
@@ -57,5 +73,5 @@
     for (const lam of LTT_GRID) { const s = stats(cal, lam); if (binomP(s.w, s.k, alpha) <= level) best = Math.max(best, lam); }
     return best;
   }
-  window.Keel = { NEVER, GATED, crcThreshold, lttThreshold, stats, current };
+  window.Keel = { NEVER, GATED, crcThreshold, lttThreshold, stats, current, countUp };
 })();
