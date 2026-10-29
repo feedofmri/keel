@@ -32,9 +32,20 @@ export const retentionOf = (env: Env) =>
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const env = schema.parse(source);
-  // cPanel's env editor stores multi-line values poorly: accept "\n"-escaped PEM keys.
-  if (env.GITHUB_PRIVATE_KEY.includes("\\n")) env.GITHUB_PRIVATE_KEY = env.GITHUB_PRIVATE_KEY.replace(/\\n/g, "\n");
+  env.GITHUB_PRIVATE_KEY = normalizePem(env.GITHUB_PRIVATE_KEY);
   return env;
+}
+
+/**
+ * cPanel's environment editor is a one-line field, so a pasted PEM key arrives with its line breaks
+ * escaped as "\n", turned into spaces, or dropped. Rebuild a valid PEM from any of these.
+ */
+export function normalizePem(key: string): string {
+  const k = key.trim().replace(/\\n/g, "\n");
+  const m = k.match(/^(-----BEGIN [A-Z ]+-----)([\s\S]*?)(-----END [A-Z ]+-----)$/);
+  if (!m) return k;
+  const body = m[2].replace(/\s+/g, "");
+  return `${m[1]}\n${body.match(/.{1,64}/g)?.join("\n") ?? ""}\n${m[3]}\n`;
 }
 
 export const githubConfigured = (env: Env) =>

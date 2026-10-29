@@ -45,7 +45,7 @@ Then add these **Environment variables** in the same screen:
 | `GITHUB_CLIENT_ID` | from step 4 |
 | `GITHUB_CLIENT_SECRET` | from step 4 |
 | `GITHUB_WEBHOOK_SECRET` | the webhook secret you chose in step 4 |
-| `GITHUB_PRIVATE_KEY` | the private key from step 4. Paste the whole PEM; if the field won't take line breaks, replace them with `\n` |
+| `GITHUB_PRIVATE_KEY` | the private key from step 4: open the `.pem` in Notepad, copy everything and paste. Any form works (line breaks kept, dropped, turned into spaces or written as `\n`) |
 
 Click **Save**. Don't run *NPM install* on the server; the deploy uploads ready-built
 `node_modules`.
