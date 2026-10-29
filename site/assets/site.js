@@ -17,7 +17,7 @@
     });
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }),
       { rootMargin: "0px 0px -8% 0px" });
-    document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    document.querySelectorAll(".reveal, .stage").forEach(el => io.observe(el));
     // Count-up numbers: <span data-count="65" data-suffix="%">
     const cio = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; countUp(e.target); cio.unobserve(e.target); }));
     document.querySelectorAll("[data-count]").forEach(el => cio.observe(el));

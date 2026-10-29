@@ -52,7 +52,7 @@
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap">
+<header class="top inv"><div class="wrap">
   <a class="brand" href="./"><svg viewBox="590 568 752 792" fill="currentColor" aria-hidden="true"><path d="M678 588H906V925C762 896 678 790 678 640Z"/><path d="M1090 588H1322C1258 838 1080 990 855 1010C990 880 1060 740 1090 588Z"/><path d="M906 1026V1340H610C622 1160 742 1030 906 1026Z"/><path d="M928 1026C1160 1018 1300 1170 1322 1340H1092C1072 1200 1018 1100 928 1026Z"/></svg>Keel</a>
   <nav class="nav">
     <a href="./#how" class="hide-sm">How it works</a>
@@ -64,18 +64,17 @@
 </div></header>
 
 <main class="wrap">
-  <section class="band inv" style="padding:48px 0 40px;margin-top:0">
+  <section class="band inv" style="padding:104px 0 56px;margin-top:-64px">
   <div class="eyebrow">Risk dashboard</div>
-  <h1 style="font-size:clamp(32px,4.6vw,52px);margin:12px 0 10px;letter-spacing:-0.04em">How much can Keel safely auto-merge?</h1>
-  <p class="lead" style="margin:0 0 18px">Pick the risk you're willing to accept. Keel recomputes its threshold from held-out bugs, and the chart shows the error it actually made against the bound it promised.</p>
+  <h1 class="h-hero" style="margin:18px 0 12px">How much can Keel safely auto-merge?</h1>
+  <p class="p-large" style="margin:0 0 28px">Pick a risk level. See what Keel merges, and how often it's wrong.</p>
 
   <div id="banner" class="banner" hidden></div>
 
   <section class="card controls">
     <div class="slider-row">
       <label for="alpha"><span>Risk level α</span><span id="alphaOut">10%</span></label>
-      <input id="alpha" type="range" min="0.01" max="0.5" step="0.01" value="0.10" aria-describedby="alphaHelp">
-      <div id="alphaHelp" class="muted" style="font-size:13px">At most this share of bugs may end up with a wrong patch auto-merged (CRC), or this share of auto-merged patches may be wrong (LTT).</div>
+      <input id="alpha" type="range" min="0.01" max="0.5" step="0.01" value="0.10" aria-label="Risk level alpha">
     </div>
     <div>
       <div class="muted" style="font-size:12.5px;margin-bottom:6px">Guarantee</div>
@@ -93,7 +92,7 @@
     <div class="card tile"><div class="label">Wrong among merged</div><div class="value" id="tFdr">–</div><div class="sub" id="tFdrSub">precision view</div></div>
   </section>
   <p class="sentence" id="sentence"></p>
-  <p class="muted" style="font-size:13px;margin:4px 0 0">The tiles use one fixed calibration/test split, so a single split can land above α. CRC bounds the error <i>on average</i> over splits; the charts below show that average.</p>
+  <p class="muted" style="font-size:13px;margin:6px 0 0">One fixed split shown; the bound holds on average across splits (charts below).</p>
   </section>
 
   <section class="grid two">
@@ -307,7 +306,7 @@
     const banner = $("banner");
     if (data.simulated) {
       banner.hidden = false;
-      banner.innerHTML = "<b>Preview data:</b> these numbers come from <b>simulated</b> bug records used to test the statistics. They are not benchmark results. Real QuixBugs and SWE-bench Lite runs with Muse Spark and Muse Spark Open replace them here once they finish.";
+      banner.innerHTML = "Preview: simulated evaluation data. Real QuixBugs and SWE-bench Lite results replace it after the benchmark runs.";
     }
     $("riskSub").textContent = `${data.n_bugs} bugs (${data.datasets.join(", ")}), mean over ${ev.n_splits} random calibration/test splits.`;
 
