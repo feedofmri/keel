@@ -19,7 +19,7 @@ export default function Concepts() {
         [<strong>Calibration</strong>, "Held-out bugs with their scores and hidden-test outcomes. It turns α into λ̂."],
         [<strong>Fingerprint</strong>, "A hash of the models, prompts and scorer. A calibration with a different fingerprint is refused."],
         [<strong>AUTO-MERGE / NEEDS REVIEW</strong>, "The decision, written as a label on the pull request."],
-        [<strong>Wrong merge</strong>, "An auto-merged fix that was reverted, or that a maintainer marked wrong in the app."],
+        [<strong>Incorrect merge</strong>, "An automatically merged fix that was reverted, or that a maintainer marked as incorrect in the application."],
       ]} />
       <p>For the maths behind α and λ̂, read <Link to="/guarantee">the guarantee</Link>.</p>
     </div>

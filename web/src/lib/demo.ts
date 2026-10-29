@@ -97,7 +97,7 @@ function generated(): GenRun[] {
         labelled_wrong: wrong || null,
         report: { failing_tests: [tests[i % tests.length]], reasons: auto ? GOOD.slice(0, 2 + (i % 2)) : BAD.slice(i % 2, 2 + (i % 2)),
           alpha: repo.endsWith("billing") ? 0.05 : 0.1, method: "crc", n_calibration: 105,
-          guarantee: "Calibrated on 105 held-out bugs: on average at most 10% of bugs get a wrong fix auto-merged (conformal risk control).", candidates: cands },
+          guarantee: "Calibrated on 105 held-out bugs: on average no more than 10% of bugs receive an incorrect automatic merge (conformal risk control).", candidates: cands },
       });
     }
   }

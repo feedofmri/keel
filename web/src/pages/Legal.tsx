@@ -53,7 +53,7 @@ export function Terms() {
         <ul>
           <li>Connect only repositories that you are authorised to manage.</li>
           <li>Use model providers under their own terms, with your own keys.</li>
-          <li>Decide whether to enable auto-merge. Keel's guarantee is statistical: it bounds the rate of wrong auto-merges, not any single change.</li>
+          <li>Decide whether to enable auto-merge. Keel's guarantee is statistical: it bounds the rate of incorrect automatic merges, not any single change.</li>
         </ul>
         <h2>No warranty</h2>
         <p>The software and service are provided “as is”, without warranty of any kind, as stated in the MIT license. Review the <Link to="/guarantee">assumptions behind the guarantee</Link> before relying on it.</p>

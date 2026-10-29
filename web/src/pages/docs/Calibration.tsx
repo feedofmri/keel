@@ -29,7 +29,7 @@ keel calibrate results/quixbugs/records.jsonl --out .keel/calibration.json
       <p>With n calibration bugs, the smallest risk level Keel can certify is 1/(n + 1). For α = 10% you need at least 10 bugs; in practice a few hundred give a threshold that merges a useful share of fixes.</p>
 
       <h2>Watching it in production</h2>
-      <p>The app's <Link to="/app/calibration">Calibration</Link> page compares the observed share of wrong auto-merges in each repository with its α, counting reverts and fixes marked wrong.</p>
+      <p>The app's <Link to="/app/calibration">Calibration</Link> page compares the observed share of incorrect automatic merges in each repository with its α, counting reverts and fixes marked as incorrect.</p>
     </div>
   );
 }

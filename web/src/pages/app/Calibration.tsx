@@ -24,7 +24,7 @@ export default function Calibration() {
         </div>
         <div className="panel-box">
           <h3>How to read this</h3>
-          <p className="p-small">Per bug (CRC): wrong auto-merges divided by all runs should stay at or under α on average. Per merge (LTT): wrong divided by auto-merges. Small samples are noisy; judge after dozens of runs.</p>
+          <p className="p-small">Per bug (CRC): incorrect automatic merges divided by all runs should remain at or below α on average. Per merge (LTT): incorrect merges divided by automatic merges. Small samples vary considerably, so assess the rate after several dozen runs.</p>
         </div>
       </div>
 

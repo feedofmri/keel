@@ -65,7 +65,7 @@ export default function RepoOverview() {
         <div><div className="k">Model cost</div><div className="v">${s.cost.toFixed(2)}</div><div className="s">all runs</div></div>
       </div>
       <div className="budget">
-        <div><h3 className="h-panel">Risk budget</h3><p className="p-small" style={{ marginTop: 6 }}>Observed wrong share of auto-merges against your α of {Math.round(r.alpha * 100)}%.</p></div>
+        <div><h3 className="h-panel">Risk budget</h3><p className="p-small" style={{ marginTop: 6 }}>Observed share of incorrect automatic merges against your α of {Math.round(r.alpha * 100)}%.</p></div>
         <div><div className="gauge"><div className="fill" style={{ width: `${Math.min(100, (budget / r.alpha) * 100)}%` }} /></div>
           <div className="gauge-labels"><span>{Math.round(budget * 100)}% used</span><span>budget α = {Math.round(r.alpha * 100)}%</span></div></div>
       </div>

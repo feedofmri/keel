@@ -8,7 +8,7 @@ export default function Configuration() {
     <div className="prose">
       <DocHead group="Configure" title="Configuration" lead="Keel reads .keel.toml from the root of your repository. All keys are optional; the setup pull request writes the values selected during setup." />
       <Code lang=".keel.toml">{`[keel]
-alpha = 0.10            # accept at most 10% wrong auto-merges
+alpha = 0.10            # accept at most 10% incorrect automatic merges
 method = "crc"          # "crc" (per bug) or "ltt" (per merge)
 k = 5                   # samples per model
 models = ["muse-spark", "muse-spark-open"]
@@ -19,7 +19,7 @@ enable_auto_merge = false   # label only; true lets GitHub merge AUTO-MERGE PRs`
       <h2>Decision</h2>
       <RefTable head={["Key", "Default", "Meaning"]} rows={[
         ["alpha", "0.1", "Risk level α, between 0 and 1."],
-        ["method", "\"crc\"", "\"crc\": at most α of bugs get a wrong merge, on average. \"ltt\": at most α of merges are wrong, with probability 1 − δ."],
+        ["method", "\"crc\"", "\"crc\": on average, no more than α of bugs receive an incorrect merge. \"ltt\": no more than α of merges are incorrect, with probability 1 − δ."],
         ["delta", "0.1", "δ for Learn-then-Test."],
         ["calibration", "none", "Path to a calibration JSON in the repository. Without one, Keel never auto-merges."],
         ["enable_auto_merge", "false", "When true, AUTO-MERGE pull requests use GitHub auto-merge (required checks still apply)."],

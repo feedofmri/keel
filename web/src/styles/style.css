@@ -221,8 +221,10 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
 .menu-btn:hover { background: var(--b1); }
 @media (max-width: 960px) { .nav .hide-md { display: none; } .menu-btn { display: grid; } }
 .top.open { background: var(--page); height: auto; }
-.mobile-nav { display: grid; padding: 8px 24px 24px; border-top: 1px solid var(--b1); animation: menuIn .2s var(--ease); }
-.mobile-nav a { padding: 12px 0; font-size: 17px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--b1); }
+.top.open .wrap { height: 63px; }  /* keep the bar its closed height when the menu opens */
+.mobile-nav { display: grid; padding: 4px 24px 20px; border-top: 1px solid var(--b1); animation: menuIn .2s var(--ease); }
+.mobile-nav a { padding: 14px 0; font-size: 17px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--b1); }
+.mobile-nav a:last-child { border-bottom: 0; }
 .mobile-nav a[aria-current="page"] { color: var(--sig); }
 @media (min-width: 961px) { .mobile-nav { display: none; } }
 
