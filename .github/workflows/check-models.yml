@@ -1,0 +1,26 @@
+name: Check models
+# One short request to each configured Meta model endpoint: catches a wrong URL, key or model id
+# before a full benchmark spends credits.
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      KEEL_MUSE_SPARK_BASE_URL: ${{ secrets.KEEL_MUSE_SPARK_BASE_URL }}
+      KEEL_MUSE_SPARK_API_KEY: ${{ secrets.KEEL_MUSE_SPARK_API_KEY }}
+      KEEL_MUSE_SPARK_MODEL: ${{ secrets.KEEL_MUSE_SPARK_MODEL }}
+      KEEL_SPARK_OPEN_BASE_URL: ${{ vars.KEEL_SPARK_OPEN_BASE_URL }}
+      KEEL_SPARK_OPEN_API_KEY: ${{ secrets.KEEL_SPARK_OPEN_API_KEY }}
+      KEEL_SPARK_OPEN_MODEL: ${{ vars.KEEL_SPARK_OPEN_MODEL }}
+      KEEL_GLIMMER_BASE_URL: ${{ vars.KEEL_GLIMMER_BASE_URL }}
+      KEEL_GLIMMER_API_KEY: ${{ secrets.KEEL_GLIMMER_API_KEY }}
+      KEEL_GLIMMER_MODEL: ${{ vars.KEEL_GLIMMER_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .
+      - run: keel doctor --ping

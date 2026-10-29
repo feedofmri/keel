@@ -50,7 +50,9 @@ def profile_from_env(name: str) -> ModelProfile:
     if name not in KNOWN_PROFILES:
         raise KeyError(f"unknown model profile {name!r}; known: {sorted(KNOWN_PROFILES)}")
     prefix, default_model, default_url = KNOWN_PROFILES[name]
-    env = os.environ.get
+    # Unset GitHub variables arrive as empty strings, so empty means "use the default".
+    def env(k: str, default: str = "") -> str:
+        return os.environ.get(k) or default
     extra = env(f"{prefix}_EXTRA_BODY", "")
     return ModelProfile(
         name=name,

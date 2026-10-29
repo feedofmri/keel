@@ -82,7 +82,36 @@ def cmd_doctor(a: argparse.Namespace) -> int:
         state = "configured" if p.configured else "missing " + ", ".join(
             x for x, v in (("BASE_URL", p.base_url), ("API_KEY", p.api_key), ("MODEL", p.model)) if not v)
         print(f"{name:16s} {state:40s} model={p.model or '-'}")
-    return 0
+    if not getattr(a, "ping", False):
+        return 0
+    # --ping: one tiny uncached request per configured endpoint, to catch a wrong URL, key or model id.
+    import httpx
+    failed = 0
+    for name in KNOWN_PROFILES:
+        p = profile_from_env(name)
+        if not p.configured:
+            continue
+        body = {"model": p.model, "messages": [{"role": "user", "content": "Reply with the word OK."}],
+                "max_tokens": 16, "logprobs": True, **p.extra_body}
+        try:
+            post = lambda b, p=p: httpx.post(f"{p.base_url}/chat/completions", json=b, timeout=60,  # noqa: E731
+                                        headers={"Authorization": f"Bearer {p.api_key}"})
+            r, lp = post(body), None
+            if r.status_code == 400:  # endpoint may reject logprobs; retry without, as the generator does
+                body.pop("logprobs")
+                r, lp = post(body), "rejected"
+            if r.status_code != 200:
+                failed += 1
+                print(f"{name:16s} FAIL  HTTP {r.status_code}: {r.text[:300]}")
+                continue
+            choice = (r.json().get("choices") or [{}])[0]
+            text = ((choice.get("message") or {}).get("content") or "").strip()
+            lp = lp or ("returned" if (choice.get("logprobs") or {}).get("content") else "not returned")
+            print(f"{name:16s} OK    reply={text[:40]!r} logprobs={lp}")
+        except httpx.HTTPError as e:
+            failed += 1
+            print(f"{name:16s} FAIL  {type(e).__name__}: {e}")
+    return 1 if failed else 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -111,6 +140,7 @@ def main(argv: list[str] | None = None) -> int:
     r.set_defaults(fn=cmd_repair)
 
     d = sub.add_parser("doctor", help="show which model endpoints are configured")
+    d.add_argument("--ping", action="store_true", help="also send one short request to each configured endpoint")
     d.set_defaults(fn=cmd_doctor)
 
     from .eval.cli import add_eval_commands
