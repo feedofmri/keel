@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { DarkStage } from "../components/DarkStage";
 import { GetStarted } from "../components/GetStarted";
 import { HeroSea } from "../components/HeroSea";
+import { ProductVideo } from "../components/ProductVideo";
 import { GlimmerArt, OpenArt, SparkArt } from "../components/ModelArt";
 import { useTitle } from "../hooks/useTitle";
 import { useResults } from "../lib/results";
@@ -43,6 +44,12 @@ export default function Landing() {
           <HeroSea data={data} />
         </div></section>
       </div>
+
+      <section className="section video-sec" id="overview"><div className="wrap">
+        <div className="head"><h2 className="h-sec">Keel in 30 seconds</h2>
+          <p className="p-large">How Keel repairs a failing test and decides whether the fix can be merged without review.</p></div>
+        <ProductVideo />
+      </div></section>
 
       <section className="section" id="how"><div className="wrap">
         <div className="head"><h2 className="h-sec">How Keel works</h2></div>

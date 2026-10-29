@@ -29,6 +29,7 @@ This list is updated as components land (with commit references):
 | Keel app screens: sign-in, repositories, setup wizard, repo dashboard (with a demo mode for GitHub Pages) | `web/src/pages/app/` | Oct 29 |
 | Frontend rebuilt in React: one header per zone, layouts, route guard, shared components | `web/` | Oct 29 |
 | Public pages (how it works, guarantee, models, compare, security, about, legal) and docs | `web/src/pages/` | Oct 29 |
+| 30-second product overview video (frame-rendered motion graphics, halftone Keel mark) on the home page | `docs/video/overview.html`, `docs/video/render-overview.js`, `web/public/media/` | Oct 29 |
 | Platform pages: overview, runs and run detail, calibration health, usage, activity, account settings; their API | `web/src/pages/app/`, `platform/src/insights.ts`, `platform/src/account.ts` | Oct 29 |
 | cPanel deploy pipeline and platform CI (PostgreSQL 12 and 16) | `.github/workflows/deploy-cpanel.yml`, `platform-ci.yml` | Oct 29 |
 

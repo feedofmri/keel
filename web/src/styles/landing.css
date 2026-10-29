@@ -71,3 +71,7 @@
 @media (max-width: 900px) { .page-landing .steps4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .page-landing .steps4 { grid-template-columns: minmax(0, 1fr); } }
 .page-landing .steps4 .idx { font: 400 12px var(--mono); color: var(--muted); margin-bottom: 8px; }
+.page-landing .video-sec .head { margin-bottom: 48px; }
+.page-landing .video-frame { border-radius: 12px; overflow: hidden; background: #050909; box-shadow: inset 0 0 0 1px var(--b2), 0 24px 60px -24px rgba(5, 9, 9, .45); aspect-ratio: 16 / 9; }
+.page-landing .video-frame video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.page-landing .video-sec + .section { padding-top: 0; }
