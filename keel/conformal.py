@@ -94,7 +94,9 @@ def binom_pvalue(w: int, k: int, alpha: float) -> float:
     return math.exp(_log_binom_cdf(w, k, alpha))
 
 
-LTT_GRID = [i / 200 for i in range(200)]  # fixed in advance; 0.000 ... 0.995
+# Fixed in advance (never chosen from data). Coarse, and dense near 0 where good patches score,
+# because the Bonferroni correction pays for every grid point.
+LTT_GRID = [0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 
 def ltt_threshold(scores: list[float], wrong: list[bool], alpha: float, delta: float = 0.1,

@@ -50,7 +50,10 @@ def cmd_repair(a: argparse.Namespace) -> int:
         cfg.k = a.k
     models = a.models.split(",") if a.models else cfg.models
     attacker = None if a.no_attack else (a.attacker or cfg.attacker)
-    log = (lambda m: print(f"[keel] {m}", file=sys.stderr))
+
+    def log(m: str) -> None:
+        print(f"[keel] {m}", file=sys.stderr)
+
     pipe = build_pipeline(cfg, models, attacker, a.triage or cfg.triage, a.explainer or cfg.explainer,
                           a.calibration or cfg.calibration, a.cache, a.allow_stale, log=log)
     task = BugTask(task_id=a.task_id or repo.name, repo_path=str(repo),

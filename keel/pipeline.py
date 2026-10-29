@@ -9,16 +9,14 @@ from dataclasses import dataclass
 from . import conformal, explain
 from .attack import AttackSuite, build_attack_suite
 from .calibration import Calibration
-from .context import explain_messages, repair_messages, triage_messages
+from .context import explain_messages, repair_messages, test_files_for, triage_messages
 from .diffutil import diff_stats, normalized_diff
 from .edits import EditError, apply_edits, parse_confidence, parse_diff_blocks, parse_edits
 from .features import compute_features
 from .generators import Generator
-from .sandbox import Workspace, touches_protected
+from .sandbox import Workspace, is_protected, touches_protected
 from .scoring import Scorer
 from .static_analysis import analyze_files
-from .context import test_files_for
-from .sandbox import is_protected
 from .testing import collect_tests, extract_locations, locations_from_imports, norm_test_id, run_tests
 from .types import AUTO_MERGE, NEEDS_REVIEW, BugTask, Candidate, CandidateEvaluation, Decision, RepairReport
 
