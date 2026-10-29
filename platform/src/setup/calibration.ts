@@ -12,7 +12,8 @@ export const CALIBRATION_PATH = ".keel/calibration.json";
 export interface SharedCalibration { ref: string; n: number; source: string; fingerprint: string; json: string }
 
 const here = dirname(fileURLToPath(import.meta.url));
-const candidates = (ref: string) => [join(here, "..", "calibrations", `${ref}.json`), join(here, "..", "..", "..", "results", "quixbugs", "calibration.json")];
+const candidates = (ref: string) => [join(here, "..", "calibrations", `${ref}.json`), join(here, "calibrations", `${ref}.json`),  // dist/ or the deploy bundle
+   join(here, "..", "..", "..", "results", "quixbugs", "calibration.json")];
 
 let cached: SharedCalibration | null | undefined;
 export function sharedCalibration(file?: string): SharedCalibration | null {

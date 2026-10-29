@@ -1,5 +1,5 @@
 // Optional: prune from a cPanel cron job instead of waiting for the server's daily run.
-//   cd ~/keel-app && node dist/jobs/maintenance.js
+//   cd ~/keel-app && node maintenance.mjs   (the deploy bundles this file as maintenance.mjs)
 import { createDb } from "../db/index.js";
 import { prune } from "../db/retention.js";
 import { loadEnv, retentionOf } from "../env.js";

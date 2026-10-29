@@ -47,8 +47,8 @@ Then add these **Environment variables** in the same screen:
 | `GITHUB_WEBHOOK_SECRET` | the webhook secret you chose in step 4 |
 | `GITHUB_PRIVATE_KEY` | the private key from step 4: open the `.pem` in Notepad, copy everything and paste. Any form works (line breaks kept, dropped, turned into spaces or written as `\n`) |
 
-Click **Save**. Don't run *NPM install* on the server; the deploy uploads ready-built
-`node_modules`.
+Click **Save**. Don't run *NPM install* on the server: the deploy uploads the server already bundled
+into one file (`server.mjs`), so it needs no `node_modules` beyond the two it ships.
 
 ## 4. Register the Keel GitHub App
 GitHub → **Settings → Developer settings → GitHub Apps → New GitHub App**:
@@ -114,7 +114,7 @@ it has been idle) and once a day while it runs:
 Each run also stores at most its 10 lowest-risk candidates, so a run is a few KB. Optionally, run the
 same clean-up from cPanel → **Cron Jobs** once a day:
 ```
-cd ~/keel-app && /home/<cpanel-user>/nodevenv/keel-app/<node-version>/bin/node dist/jobs/maintenance.js
+cd ~/keel-app && /home/<cpanel-user>/nodevenv/keel-app/<node-version>/bin/node maintenance.mjs
 ```
 cPanel shows the exact `node` path at the top of the Node.js app page ("Enter to the virtual environment").
 
