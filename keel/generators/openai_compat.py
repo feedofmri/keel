@@ -46,6 +46,15 @@ KNOWN_PROFILES = {
 }
 
 
+# $ per 1M (input, output) tokens for model IDs whose price is published, used when the
+# KEEL_*_PRICE_IN / _PRICE_OUT variables are unset. Contributor variants are left out: their
+# rates differ and are not confirmed here.
+DEFAULT_PRICES = {
+    "muse-spark-1.1": (1.25, 4.25),
+    "muse-spark-1.3": (1.25, 4.25),
+}
+
+
 def profile_from_env(name: str) -> ModelProfile:
     if name not in KNOWN_PROFILES:
         raise KeyError(f"unknown model profile {name!r}; known: {sorted(KNOWN_PROFILES)}")
@@ -54,13 +63,15 @@ def profile_from_env(name: str) -> ModelProfile:
     def env(k: str, default: str = "") -> str:
         return os.environ.get(k) or default
     extra = env(f"{prefix}_EXTRA_BODY", "")
+    model = env(f"{prefix}_MODEL", default_model)
+    price_in, price_out = DEFAULT_PRICES.get(model, (0.0, 0.0))
     return ModelProfile(
         name=name,
         base_url=env(f"{prefix}_BASE_URL", default_url).rstrip("/"),
         api_key=env(f"{prefix}_API_KEY", ""),
-        model=env(f"{prefix}_MODEL", default_model),
-        price_in_per_m=float(env(f"{prefix}_PRICE_IN", "0") or 0),
-        price_out_per_m=float(env(f"{prefix}_PRICE_OUT", "0") or 0),
+        model=model,
+        price_in_per_m=float(env(f"{prefix}_PRICE_IN") or price_in),
+        price_out_per_m=float(env(f"{prefix}_PRICE_OUT") or price_out),
         logprobs=env(f"{prefix}_LOGPROBS", "1" if name != "muse-spark" else "0") == "1",
         extra_body=json.loads(extra) if extra else {},
     )

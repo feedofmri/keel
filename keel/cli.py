@@ -41,6 +41,10 @@ def build_pipeline(cfg: KeelConfig, models: list[str], attacker: str | None, tri
     if not models:
         raise RuntimeError("no configured model: add the model's API key as a repository secret "
                            "(Keel app → repository → Settings → Models)")
+    unpriced = [m for m in models if m in KNOWN_PROFILES and not profile_from_env(m).price_in_per_m]
+    if unpriced:
+        log(f"no price known for {', '.join(unpriced)}; its cost shows as $0. Set KEEL_*_PRICE_IN and "
+            "KEEL_*_PRICE_OUT ($ per 1M tokens) as repository variables to fix it")
     if attacker and not ready(attacker):
         log(f"adversarial tests disabled: {attacker} is not configured")
         attacker = None
