@@ -2,8 +2,9 @@
 //   cd ~/keel-app && node maintenance.mjs   (the deploy bundles this file as maintenance.mjs)
 import { createDb } from "../db/index.js";
 import { prune } from "../db/retention.js";
-import { loadEnv, retentionOf } from "../env.js";
+import { loadEnv, loadEnvFile, retentionOf } from "../env.js";
 
+loadEnvFile();
 const env = loadEnv();
 const db = createDb(env.DATABASE_URL);
 console.log("pruned", await prune(db, retentionOf(env)));

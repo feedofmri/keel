@@ -1,12 +1,14 @@
 import { buildApp } from "./app.js";
 import { createDb } from "./db/index.js";
 import { prune } from "./db/retention.js";
-import { loadEnv, retentionOf } from "./env.js";
+import { loadEnv, loadEnvFile, retentionOf } from "./env.js";
 import { migrate } from "./migrate.js";
 
 // Entry point for cPanel's "Setup Node.js App" (Phusion Passenger). Passenger supplies PORT.
+const envFile = loadEnvFile();
 const env = loadEnv();
 const db = createDb(env.DATABASE_URL);
+if (envFile) console.log(`[env] settings read from ${envFile}`);
 await migrate(db, m => console.log(`[migrate] ${m}`));
 const app = await buildApp(db, env);
 await app.listen({ port: env.PORT, host: "0.0.0.0" });

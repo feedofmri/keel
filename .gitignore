@@ -13,3 +13,4 @@ results/raw/
 *.pem
 results/*/work/
 results/*/harness/
+keel.env

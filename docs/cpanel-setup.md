@@ -47,6 +47,11 @@ Then add these **Environment variables** in the same screen:
 | `GITHUB_WEBHOOK_SECRET` | the webhook secret you chose in step 4 |
 | `GITHUB_PRIVATE_KEY` | the private key from step 4: open the `.pem` in Notepad, copy everything and paste. Any form works (line breaks kept, dropped, turned into spaces or written as `\n`) |
 
+**Or put them in one file instead:** create `/home/<cpanel-user>/keel.env` in File Manager (your home
+folder, outside any website folder, so it can't be downloaded) with one `NAME=value` per line, then
+Restart the app. Values set in the screen above take precedence over the file. The private key can be
+pasted as-is inside double quotes: `GITHUB_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----` … `-----END RSA PRIVATE KEY-----"`.
+
 Click **Save**. Don't run *NPM install* on the server: the deploy uploads the server already bundled
 into one file (`server.mjs`), so it needs no `node_modules` beyond the two it ships.
 

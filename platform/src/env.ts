@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { z } from "zod";
 
 // All configuration comes from environment variables (set in cPanel → Setup Node.js App).
@@ -29,6 +32,17 @@ export type Env = z.infer<typeof schema>;
 
 export const retentionOf = (env: Env) =>
   ({ runDetailDays: env.RETENTION_RUN_DETAIL_DAYS, runDays: env.RETENTION_RUN_DAYS, auditDays: env.RETENTION_ACTIVITY_DAYS });
+
+/**
+ * Optional settings file, for hosts where entering variables one by one is awkward. It lives in the
+ * account's home folder (~/keel.env), outside the website's public folder, so it can't be downloaded.
+ * Variables set in cPanel take precedence over the file.
+ */
+export function loadEnvFile(path = process.env.KEEL_ENV_FILE || join(homedir(), "keel.env")): string | null {
+  if (!existsSync(path)) return null;
+  process.loadEnvFile(path);
+  return path;
+}
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const env = schema.parse(source);
