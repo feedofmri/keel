@@ -80,6 +80,17 @@ d("platform end to end (fake GitHub)", () => {
     expect((await req("GET", "/api/me")).json().user.login).toBe("maintainer");
   });
 
+  it("handles the return from installing the App on github.com without trusting its code", async () => {
+    // GitHub starts this flow, so there is no state cookie: never a sign-in from this code.
+    const out = await app.inject("/auth/github/callback?code=ok&installation_id=900&setup_action=install");
+    expect(out.statusCode).toBe(302);
+    expect(out.headers.location).toBe("/auth/github/login?next=%2Fapp%2Frepos");
+    expect(out.headers["set-cookie"] ?? []).not.toEqual(expect.arrayContaining([expect.stringMatching(/^keel_session=[^;]/)]));
+    const signedIn = await app.inject({ url: "/auth/github/callback?code=ok&installation_id=900&setup_action=install", headers: { cookie } });
+    expect(signedIn.statusCode).toBe(302);
+    expect(signedIn.headers.location).toBe("/app/repos");
+  });
+
   it("lists repositories the user can see, with their permissions and installation", async () => {
     const r = (await req("GET", "/api/repos")).json();
     expect(r.repos.map((x: any) => [x.full_name, x.status, x.canManage])).toEqual([["acme/shop", "new", true], ["acme/docs", "new", false]]);

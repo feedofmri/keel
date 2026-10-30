@@ -39,11 +39,18 @@ export function registerAuth(app: FastifyInstance, db: Db, env: Env) {
     return reply.redirect(u.toString());
   });
 
-  app.get<{ Querystring: { code?: string; state?: string; installation_id?: string } }>("/auth/github/callback", async (req, reply) => {
+  app.get<{ Querystring: { code?: string; state?: string; installation_id?: string; setup_action?: string } }>("/auth/github/callback", async (req, reply) => {
     const { code, state } = req.query;
     const expected = req.cookies[STATE_COOKIE], next = safeNext(req.cookies[NEXT_COOKIE]);
     reply.clearCookie(STATE_COOKIE, { path: "/auth" }); reply.clearCookie(NEXT_COOKIE, { path: "/auth" });
-    // Installing the App can also land here without a sign-in code.
+    // Installing or reconfiguring the App on github.com lands here too, with no state of ours (GitHub
+    // started the flow). Never sign anyone in from that code: refresh the signed-in user's repositories,
+    // or start a normal sign-in that comes back to the Repositories page.
+    if (req.query.setup_action || (req.query.installation_id && !state)) {
+      if (!req.user) return reply.redirect("/auth/github/login?next=%2Fapp%2Frepos");
+      await db.query("update users set repos_synced_at = null where id = $1", [req.user.id]);
+      return reply.redirect("/app/repos");
+    }
     if (!code) return reply.redirect(req.user ? "/app" : "/login");
     if (!state || !expected || state !== expected) return reply.code(400).send("Invalid sign-in state. Please try again.");
 
