@@ -36,6 +36,7 @@ Then add these **Environment variables** in the same screen:
 | Name | Value |
 |---|---|
 | `NODE_ENV` | `production` |
+| `NODE_OPTIONS` | `--disable-wasm-trap-handler` (shared hosts cap memory; without it Node's `fetch` crashes the server) |
 | `APP_URL` | `https://keel.boraqs.com` |
 | `DATABASE_URL` | the connection string from step 2 |
 | `SESSION_SECRET` | 64 random characters (generate with any password manager) |

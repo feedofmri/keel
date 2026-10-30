@@ -1,4 +1,4 @@
-from keel.github.action import parse_event
+from keel.github.action import fix_branch, parse_event
 
 
 class FakeGH:
@@ -42,3 +42,11 @@ def test_comment_on_pr_targets_pr_branch():
 def test_other_comments_ignored():
     ev = {"comment": {"body": "looks good", "user": {"login": "me"}}, "issue": {"number": 1}}
     assert not parse_event("issue_comment", ev, FakeGH(), "main").should_run
+
+
+def test_fix_branch_is_unique_per_attempt():
+    assert fix_branch({"GITHUB_RUN_ID": "42"}) == "keel/fix-42"
+    assert fix_branch({"GITHUB_RUN_ID": "42", "GITHUB_RUN_ATTEMPT": "1"}) == "keel/fix-42"
+    # a re-run keeps the run ID; its branch must not collide with the first attempt's
+    assert fix_branch({"GITHUB_RUN_ID": "42", "GITHUB_RUN_ATTEMPT": "2"}) == "keel/fix-42-2"
+    assert fix_branch({}) == "keel/fix-local"

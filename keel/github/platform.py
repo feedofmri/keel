@@ -12,7 +12,12 @@ from urllib.parse import urlparse
 
 import httpx
 
+from .. import __version__
 from ..types import RepairReport
+
+# Shared hosts' firewalls (Imunify360, ModSecurity) drop requests from httpx's default
+# "python-httpx/x.y" User-Agent and then block the runner's IP for a while.
+USER_AGENT = f"keel-action/{__version__} (+https://keel.boraqs.com)"
 
 
 def _oidc_token(audience: str) -> str | None:
@@ -75,7 +80,7 @@ def report_run(report: RepairReport, trigger: str, pr_number: int | None, starte
             log("platform: no OIDC token (add `id-token: write` to the workflow); not reporting")
             return
         r = httpx.post(f"{base}/api/runs", json=payload(report, trigger, pr_number, started_at),
-                       headers={"Authorization": f"Bearer {token}"}, timeout=20)
+                       headers={"Authorization": f"Bearer {token}", "User-Agent": USER_AGENT}, timeout=20)
         log(f"platform: reported run ({r.status_code})")
     except Exception as e:  # reporting is best effort
         log(f"platform: could not report run: {e}")

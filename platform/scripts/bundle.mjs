@@ -4,20 +4,18 @@ import { build } from "esbuild";
 import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { sodiumPlugin } from "./esbuild-sodium.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = resolve(root, process.argv[2] || "../deploy");
 // pg only loads pg-native if asked to.
 const external = ["pg-native"];
 
-const sodium = sodiumPlugin(root);   // bundles libsodium too, so the deploy ships no node_modules
 rmSync(out, { recursive: true, force: true });
 for (const [entry, file] of [["src/server.ts", "server.mjs"], ["src/jobs/maintenance.ts", "maintenance.mjs"]])
   await build({
     entryPoints: [join(root, entry)], outfile: join(out, file), bundle: true, platform: "node", format: "esm",
-    target: "node22", external, plugins: [sodium], minify: true, sourcemap: false, legalComments: "none", logLevel: "warning",
-    // CommonJS dependencies call require() and read __dirname/__filename (libsodium, pino); an ES
+    target: "node22", external, minify: true, sourcemap: false, legalComments: "none", logLevel: "warning",
+    // CommonJS dependencies call require() and read __dirname/__filename (pg, pino); an ES
     // module has none of these, so the bundle defines them.
     banner: { js: [
       'import { createRequire as __keelRequire } from "node:module";',
