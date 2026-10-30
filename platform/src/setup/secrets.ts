@@ -1,14 +1,17 @@
-import { createRequire } from "node:module";
+import { blake2b } from "blakejs";
+import nacl from "tweetnacl";
 
-// The package's ESM build is broken upstream; its CommonJS build works everywhere.
-const sodium: typeof import("libsodium-wrappers") = createRequire(import.meta.url)("libsodium-wrappers");
-
-/** Encrypt a value for a GitHub repository secret (libsodium sealed box with the repo public key). */
+/** Encrypt a value for a GitHub repository secret: a libsodium sealed box for the repo public key.
+ *  Pure JavaScript (tweetnacl + blakejs) because libsodium needs WebAssembly, which fails to start
+ *  on memory-limited shared hosting and took the whole server down with it. */
 export async function sealForGitHub(value: string, publicKeyB64: string): Promise<string> {
-  await sodium.ready;
-  const key = sodium.from_base64(publicKeyB64, sodium.base64_variants.ORIGINAL);
-  const sealed = sodium.crypto_box_seal(sodium.from_string(value), key);
-  return sodium.to_base64(sealed, sodium.base64_variants.ORIGINAL);
+  const key = new Uint8Array(Buffer.from(publicKeyB64, "base64"));
+  if (key.length !== nacl.box.publicKeyLength) throw new Error("invalid repository public key");
+  const eph = nacl.box.keyPair();
+  // crypto_box_seal: nonce = BLAKE2b-192(ephemeral pk || recipient pk), output = ephemeral pk || box
+  const nonce = blake2b(new Uint8Array([...eph.publicKey, ...key]), undefined, nacl.box.nonceLength);
+  const box = nacl.box(new Uint8Array(Buffer.from(value, "utf8")), nonce, key, eph.secretKey);
+  return Buffer.concat([eph.publicKey, box]).toString("base64");
 }
 
 type Octo = { request: (route: string, params?: Record<string, unknown>) => Promise<{ data: any }> };
