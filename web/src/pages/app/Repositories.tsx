@@ -11,7 +11,7 @@ import { useSession } from "../../lib/session";
 import type { RepoStatus } from "../../lib/types";
 
 const FILTERS: [string, string, (s: RepoStatus) => boolean][] = [
-  ["all", "All", () => true], ["active", "Active", s => s === "active"], ["setup", "Setting up", s => s === "new" || s === "setup_pr_open"], ["paused", "Paused", s => s === "paused" || s === "error"],
+  ["all", "All", () => true], ["active", "Active", s => s === "active"], ["new", "Not set up", s => s === "new"], ["setup", "Setting up", s => s === "setup_pr_open"], ["paused", "Paused", s => s === "paused" || s === "error"],
 ];
 
 export default function Repositories() {
