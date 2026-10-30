@@ -17,8 +17,16 @@ for (const [entry, file] of [["src/server.ts", "server.mjs"], ["src/jobs/mainten
   await build({
     entryPoints: [join(root, entry)], outfile: join(out, file), bundle: true, platform: "node", format: "esm",
     target: "node22", external, plugins: [sodium], minify: true, sourcemap: false, legalComments: "none", logLevel: "warning",
-    // CommonJS dependencies call require(); give the ES module bundle one.
-    banner: { js: 'import { createRequire as __keelRequire } from "node:module"; const require = __keelRequire(import.meta.url);' },
+    // CommonJS dependencies call require() and read __dirname/__filename (libsodium, pino); an ES
+    // module has none of these, so the bundle defines them.
+    banner: { js: [
+      'import { createRequire as __keelRequire } from "node:module";',
+      'import { fileURLToPath as __keelPath } from "node:url";',
+      'import { dirname as __keelDir } from "node:path";',
+      "const require = __keelRequire(import.meta.url);",
+      "const __filename = __keelPath(import.meta.url);",
+      "const __dirname = __keelDir(__filename);",
+    ].join(" ") },
   });
 const copy = (from, to) => cpSync(join(root, from), join(out, to), { recursive: true, filter: f => !f.endsWith(".map") });
 copy("dist/db/migrations", "db/migrations");
