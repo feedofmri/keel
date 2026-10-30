@@ -10,11 +10,11 @@ inputs:
     description: "Token used to push the fix branch and open the pull request."
     default: ${{ github.token }}
   models:
-    description: "Comma-separated generators: muse-spark, muse-spark-open, muse-glimmer."
-    default: "muse-spark,muse-spark-open"
+    description: "Comma-separated generators (muse-spark, muse-spark-open, muse-glimmer). Empty (default) uses `models` in .keel.toml."
+    default: ""
   attacker:
-    description: "Model that writes adversarial tests ('none' to disable)."
-    default: "muse-spark"
+    description: "Model that writes adversarial tests ('none' to disable). Empty (default) uses `attacker` in .keel.toml."
+    default: ""
   alpha:
     description: "Risk level α (e.g. 0.1)."
     default: ""

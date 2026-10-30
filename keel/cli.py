@@ -29,6 +29,21 @@ def _model_id(spec: str) -> str:
 def build_pipeline(cfg: KeelConfig, models: list[str], attacker: str | None, triage: str | None,
                    explainer: str | None, calibration: str | None, cache: str | None,
                    allow_stale: bool = False, log=print) -> Pipeline:
+    def ready(spec: str) -> bool:
+        return spec.startswith("scripted:") or spec not in KNOWN_PROFILES or profile_from_env(spec).configured
+
+    # A model listed in the settings but without a key is skipped, not fatal. The calibration
+    # fingerprint then no longer matches, so Keel asks for review rather than auto-merging.
+    missing = [m for m in models if not ready(m)]
+    if missing:
+        log(f"skipping {', '.join(missing)}: no API key or endpoint configured")
+    models = [m for m in models if ready(m)]
+    if not models:
+        raise RuntimeError("no configured model: add the model's API key as a repository secret "
+                           "(Keel app → repository → Settings → Models)")
+    if attacker and not ready(attacker):
+        log(f"adversarial tests disabled: {attacker} is not configured")
+        attacker = None
     gens = [GeneratorSpec(build_generator(m, cache_dir=cache), k=cfg.k, temperature=cfg.temperature)
             for m in models]
     fp = fingerprint({g.generator.name: _model_id(m) for g, m in zip(gens, models)}, cfg.k,
