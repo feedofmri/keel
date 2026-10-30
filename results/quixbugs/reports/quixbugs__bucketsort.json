@@ -1,0 +1,191 @@
+{
+ "task": {
+  "task_id": "quixbugs/bucketsort",
+  "repo_path": "results/quixbugs/work/tasks/bucketsort",
+  "failing_tests": [
+   "tests/test_bucketsort.py::test_bucketsort[input_data1-expected1]",
+   "tests/test_bucketsort.py::test_bucketsort[input_data2-expected2]",
+   "tests/test_bucketsort.py::test_bucketsort[input_data3-expected3]",
+   "tests/test_bucketsort.py::test_bucketsort[input_data4-expected4]"
+  ],
+  "passing_tests": [
+   "tests/test_bucketsort.py::test_bucketsort[input_data0-expected0]"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FFFF                                                                     [100%]\n=================================== FAILURES ===================================\n____________________ test_bucketsort[input_data1-expected1] ____________________\n\ninput_data = [[3, 11, 2, 9, 1, 5], 12], expected = [1, 2, 3, 5, 9, 11]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_bucketsort(input_data, expected):\n>       assert bucketsort(*input_data) == expected\nE       assert [0, 0, 0, 1, 1, 1, ...] == [1, 2, 3, 5, 9, 11]\nE         \nE         At index 0 diff: 0 != 1\nE         Left contains 25 more items, first extra item: 1\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE               1,\nE               2,\nE         +     2,\nE               3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     4,\nE               5,\nE         -     9,\nE         ?     ^\nE         +     5,\nE         ?     ^\nE         -     11,\nE         ?     ^^\nE         +     5,\nE         ?     ^\nE         +     5,\nE         +     5,\nE           ]\n\ntests/test_bucketsort.py:15: AssertionError\n____________________ test_bucketsort[input_data2-expected2] ____________________\n\ninput_data = [[3, 2, 4, 2, 3, 5], 6], expected = [2, 2, 3, 3, 4, 5]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_bucketsort(input_data, expected):\n>       assert bucketsort(*input_data) == expected\nE       assert [0, 0, 0, 1, 1, 2, ...] == [2, 2, 3, 3, 4, 5]\nE         \nE         At index 0 diff: 0 != 2\nE         Left contains 13 more items, first extra item: 2\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     1,\nE         +     1,\nE         +     2,\nE         +     2,\nE               2,\nE               2,\nE               3,\nE               3,\nE               4,\nE         +     4,\nE         +     4,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE               5,\nE           ]\n\ntests/test_bucketsort.py:15: AssertionError\n____________________ test_bucketsort[input_data3-expected3] ____________________\n\ninput_data = [[20, 19, 18, 17, 16, 15, ...], 21]\nexpected = [11, 12, 13, 14, 15, 16, ...]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_bucketsort(input_data, expected):\n>       assert bucketsort(*input_data) == expected\nE       assert [0, 0, 0, 0, 0, 0, ...] == [11, 12, 13, 14, 15, 16, ...]\nE         \nE         At index 0 diff: 0 != 11\nE         Left contains 145 more items, first extra item: 0\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE         -     11,\nE         -     12,\nE         -     13,\nE         -     14,\nE         -     15,\nE         -     16,\nE         -     17,\nE         -     18,\nE         -     19,\nE         -     20,\nE         ?     -\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     2,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     3,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     6,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     8,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE         +     9,\nE           ]\n\ntests/test_bucketsort.py:15: AssertionError\n____________________ test_bucketsort[input_data4-expected4] ____________________\n\ninput_data = [[8, 5, 3, 1, 9, 6, ...], 10], expected = [0, 1, 2, 3, 4, 5, ...]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_bucketsort(input_data, expected):\n>       assert bucketsort(*input_data) == expected\nE       assert [0, 0, 0, 0, 0, 0, ...] == [0, 1, 2, 3, 4, 5, ...]\nE         \nE         At index 1 diff: 0 != 1\nE         Left contains 39 more items, first extra item: 1\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE               0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE         +     0,\nE               1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     1,\nE         +     2,\nE         +     2,\nE               2,\nE               3,\nE               4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE         +     4,\nE               5,\nE               5,\nE         -     6,\nE         ?     ^\nE         +     5,\nE         ?     ^\nE         +     5,\nE         +     5,\nE         +     5,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE         +     7,\nE               7,\nE               8,\nE         +     8,\nE         +     8,\nE         +     8,\nE               9,\nE         +     9,\nE         +     10,\nE         +     10,\nE         +     10,\nE         +     10,\nE         +     10,\nE           ]\n\ntests/test_bucketsort.py:15: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_bucketsort.py::test_bucketsort[input_data1-expected1] - assert [0, 0, 0, 1, 1, 1, ...] == [1, 2, 3, 5, 9, 11]\n  \n  At index 0 diff: 0 != 1\n  Left contains 25 more items, first extra item: 1\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n  +     0,\n  +     0,\n  +     0,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n        1,\n        2,\n  +     2,\n        3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     4,\n        5,\n  -     9,\n  ?     ^\n  +     5,\n  ?     ^\n  -     11,\n  ?     ^^\n  +     5,\n  ?     ^\n  +     5,\n  +     5,\n    ]\nFAILED tests/test_bucketsort.py::test_bucketsort[input_data2-expected2] - assert [0, 0, 0, 1, 1, 2, ...] == [2, 2, 3, 3, 4, 5]\n  \n  At index 0 diff: 0 != 2\n  Left contains 13 more items, first extra item: 2\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n  +     0,\n  +     0,\n  +     0,\n  +     1,\n  +     1,\n  +     2,\n  +     2,\n        2,\n        2,\n        3,\n        3,\n        4,\n  +     4,\n  +     4,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n        5,\n    ]\nFAILED tests/test_bucketsort.py::test_bucketsort[input_data3-expected3] - assert [0, 0, 0, 0, 0, 0, ...] == [11, 12, 13, 14, 15, 16, ...]\n  \n  At index 0 diff: 0 != 11\n  Left contains 145 more items, first extra item: 0\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n  -     11,\n  -     12,\n  -     13,\n  -     14,\n  -     15,\n  -     16,\n  -     17,\n  -     18,\n  -     19,\n  -     20,\n  ?     -\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     2,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     3,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     5,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     6,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     8,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n  +     9,\n    ]\nFAILED tests/test_bucketsort.py::test_bucketsort[input_data4-expected4] - assert [0, 0, 0, 0, 0, 0, ...] == [0, 1, 2, 3, 4, 5, ...]\n  \n  At index 1 diff: 0 != 1\n  Left contains 39 more items, first extra item: 1\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n        0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n  +     0,\n        1,\n  +     1,\n  +     1,\n  +     1,\n  +     1,\n  +     2,\n  +     2,\n        2,\n        3,\n        4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n  +     4,\n        5,\n        5,\n  -     6,\n  ?     ^\n  +     5,\n  ?     ^\n  +     5,\n  +     5,\n  +     5,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n  +     7,\n        7,\n        8,\n  +     8,\n  +     8,\n  +     8,\n        9,\n  +     9,\n  +     10,\n  +     10,\n  +     10,\n  +     10,\n  +     10,\n    ]\n4 failed in 0.04s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_bucketsort.py",
+    "line": 15
+   },
+   {
+    "path": "load_testdata.py",
+    "line": 5
+   },
+   {
+    "path": "python_programs/bucketsort.py",
+    "line": 1
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\n\nif pytest.use_correct:\n    from correct_python_programs.bucketsort import bucketsort\nelse:\n    from python_programs.bucketsort import bucketsort\n\n\ndef test_attack_1():\n    # k much larger than n, values >= n: kills enumerate(arr) and range(len(arr)) variants\n    assert bucketsort([5, 2], 10) == [2, 5]\n\n\ndef test_attack_2():\n    # k much smaller than n with duplicates\n    assert bucketsort([1, 1, 1, 1, 0, 1], 2) == [0, 1, 1, 1, 1, 1]\n\n\ndef test_attack_3():\n    # k == n permutation: enumerate(arr) gives wrong multiplicities\n    assert bucketsort([2, 0, 1], 3) == [0, 1, 2]\n\n\ndef test_attack_4():\n    # all same value, k == 1, n > k\n    assert bucketsort([0, 0, 0], 1) == [0, 0, 0]\n\n\ndef test_attack_5():\n    # empty input with k > 0 and k == 0\n    assert bucketsort([], 5) == []\n    assert bucketsort([], 0) == []\n\n\ndef test_attack_6():\n    # mixed values with gaps and duplicates, k > n\n    assert bucketsort([4, 0, 2, 4, 0, 3], 5) == [0, 0, 2, 3, 4, 4]\n\n\ndef test_attack_7():\n    # single element with large k\n    assert bucketsort([7], 8) == [7]\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/bucketsort.py b/python_programs/bucketsort.py\nindex 620e64e..b3f453a 100644\n--- a/python_programs/bucketsort.py\n+++ b/python_programs/bucketsort.py\n@@ -4,7 +4,7 @@ def bucketsort(arr, k):\n         counts[x] += 1\n \n     sorted_arr = []\n-    for i, count in enumerate(arr):\n+    for i, count in enumerate(counts):\n         sorted_arr.extend([i] * count)\n \n     return sorted_arr\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.3862943611198906,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.736572297479192,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/bucketsort.py b/python_programs/bucketsort.py\nindex 620e64e..b3f453a 100644\n--- a/python_programs/bucketsort.py\n+++ b/python_programs/bucketsort.py\n@@ -4,7 +4,7 @@ def bucketsort(arr, k):\n         counts[x] += 1\n \n     sorted_arr = []\n-    for i, count in enumerate(arr):\n+    for i, count in enumerate(counts):\n         sorted_arr.extend([i] * count)\n \n     return sorted_arr\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.3862943611198906,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.37989735354046,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/bucketsort.py b/python_programs/bucketsort.py\nindex 620e64e..b3f453a 100644\n--- a/python_programs/bucketsort.py\n+++ b/python_programs/bucketsort.py\n@@ -4,7 +4,7 @@ def bucketsort(arr, k):\n         counts[x] += 1\n \n     sorted_arr = []\n-    for i, count in enumerate(arr):\n+    for i, count in enumerate(counts):\n         sorted_arr.extend([i] * count)\n \n     return sorted_arr\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.3862943611198906,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.267858159063328,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/bucketsort.py b/python_programs/bucketsort.py\nindex 620e64e..b3f453a 100644\n--- a/python_programs/bucketsort.py\n+++ b/python_programs/bucketsort.py\n@@ -4,7 +4,7 @@ def bucketsort(arr, k):\n         counts[x] += 1\n \n     sorted_arr = []\n-    for i, count in enumerate(arr):\n+    for i, count in enumerate(counts):\n         sorted_arr.extend([i] * count)\n \n     return sorted_arr\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.3862943611198906,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.389071729816501,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/bucketsort.py b/python_programs/bucketsort.py\nindex 620e64e..b3f453a 100644\n--- a/python_programs/bucketsort.py\n+++ b/python_programs/bucketsort.py\n@@ -4,7 +4,7 @@ def bucketsort(arr, k):\n         counts[x] += 1\n \n     sorted_arr = []\n-    for i, count in enumerate(arr):\n+    for i, count in enumerate(counts):\n         sorted_arr.extend([i] * count)\n \n     return sorted_arr\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.3862943611198906,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.4116460518550396,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

@@ -1,0 +1,197 @@
+{
+ "task": {
+  "task_id": "quixbugs/depth_first_search",
+  "repo_path": "results/quixbugs/work/tasks/depth_first_search",
+  "failing_tests": [
+   "tests/test_depth_first_search.py::test5"
+  ],
+  "passing_tests": [
+   "tests/test_depth_first_search.py::test1",
+   "tests/test_depth_first_search.py::test3"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________________________________ test5 _____________________________________\n\n    def test5():\n        \"\"\"Case 5: Graph with cycles\n        Output: Path found!\n        \"\"\"\n    \n        nodef = Node(\"F\")\n        nodee = Node(\"E\")\n        noded = Node(\"D\")\n        nodec = Node(\"C\", None, [nodef])\n        nodeb = Node(\"B\", None, [nodee])\n        nodea = Node(\"A\", None, [nodeb, nodec, noded])\n    \n        nodee.successors = [nodea]\n    \n>       path_found = depth_first_search(nodea, nodef)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_depth_first_search.py:58: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \npython_programs/depth_first_search.py:14: in depth_first_search\n    return search_from(startnode)\n           ^^^^^^^^^^^^^^^^^^^^^^\npython_programs/depth_first_search.py:10: in search_from\n    return any(\npython_programs/depth_first_search.py:11: in <genexpr>\n    search_from(nextnode) for nextnode in node.successors\n    ^^^^^^^^^^^^^^^^^^^^^\npython_programs/depth_first_search.py:10: in search_from\n    return any(\npython_programs/depth_first_search.py:11: in <genexpr>\n    search_from(nextnode) for nextnode in node.successors\n    ^^^^^^^^^^^^^^^^^^^^^\npython_programs/depth_first_search.py:10: in search_from\n    return any(\npython_programs/depth_first_search.py:11: in <genexpr>\n    search_from(nextnode) for nextnode in node.successors\n    ^^^^^^^^^^^^^^^^^^^^^\npython_programs/depth_first_search.py:10: in search_from\n    return any(\nE   RecursionError: maximum recursion depth exceeded\n!!! Recursion detected (same locals & position)\n=========================== short test summary info ============================\nFAILED tests/test_depth_first_search.py::test5 - RecursionError: maximum recursion depth exceeded\n1 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_depth_first_search.py",
+    "line": 58
+   },
+   {
+    "path": "python_programs/depth_first_search.py",
+    "line": 14
+   },
+   {
+    "path": "python_programs/depth_first_search.py",
+    "line": 10
+   },
+   {
+    "path": "python_programs/depth_first_search.py",
+    "line": 11
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\nfrom node import Node\n\nif pytest.use_correct:\n    from correct_python_programs.depth_first_search import depth_first_search\nelse:\n    from python_programs.depth_first_search import depth_first_search\n\n\ndef test_attack_1():\n    \"\"\"start is goal -> reachable even with no successors\"\"\"\n    n = Node(\"A\")\n    assert depth_first_search(n, n)\n\n\ndef test_attack_2():\n    \"\"\"direct successor -> reachable\"\"\"\n    goal = Node(\"G\")\n    start = Node(\"S\")\n    start.successors = [goal]\n    assert depth_first_search(start, goal)\n\n\ndef test_attack_3():\n    \"\"\"directed graph: reverse direction not reachable\"\"\"\n    a = Node(\"A\")\n    b = Node(\"B\")\n    a.successors = [b]\n    b.successors = []\n    assert depth_first_search(a, b)\n    assert not depth_first_search(b, a)\n\n\ndef test_attack_4():\n    \"\"\"cycle with disconnected goal must return False, not hang\"\"\"\n    a = Node(\"A\")\n    b = Node(\"B\")\n    c = Node(\"C\")\n    a.successors = [b]\n    b.successors = [c]\n    c.successors",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 1.791759469228055,
+    "self_confidence": 0.99,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/depth_first_search.py b/python_programs/depth_first_search.py\nindex 72562c8..fe303d4 100644\n--- a/python_programs/depth_first_search.py\n+++ b/python_programs/depth_first_search.py\n@@ -7,6 +7,7 @@ def depth_first_search(startnode, goalnode):\n         elif node is goalnode:\n             return True\n         else:\n+            nodesvisited.add(node)\n             return any(\n                 search_from(nextnode) for nextnode in node.successors\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.955592608396297,
+    "self_confidence": 0.99,
+    "n_attack_tests": 4.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/depth_first_search.py b/python_programs/depth_first_search.py\nindex 72562c8..fe303d4 100644\n--- a/python_programs/depth_first_search.py\n+++ b/python_programs/depth_first_search.py\n@@ -7,6 +7,7 @@ def depth_first_search(startnode, goalnode):\n         elif node is goalnode:\n             return True\n         else:\n+            nodesvisited.add(node)\n             return any(\n                 search_from(nextnode) for nextnode in node.successors\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.960347729101308,
+    "self_confidence": 0.99,
+    "n_attack_tests": 4.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/depth_first_search.py b/python_programs/depth_first_search.py\nindex 72562c8..fe303d4 100644\n--- a/python_programs/depth_first_search.py\n+++ b/python_programs/depth_first_search.py\n@@ -7,6 +7,7 @@ def depth_first_search(startnode, goalnode):\n         elif node is goalnode:\n             return True\n         else:\n+            nodesvisited.add(node)\n             return any(\n                 search_from(nextnode) for nextnode in node.successors\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.017506142941256,
+    "self_confidence": 0.99,
+    "n_attack_tests": 4.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 1.791759469228055,
+    "self_confidence": 0.0,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

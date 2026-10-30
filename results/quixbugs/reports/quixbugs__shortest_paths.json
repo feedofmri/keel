@@ -1,0 +1,187 @@
+{
+ "task": {
+  "task_id": "quixbugs/shortest_paths",
+  "repo_path": "results/quixbugs/work/tasks/shortest_paths",
+  "failing_tests": [
+   "tests/test_shortest_paths.py::test1",
+   "tests/test_shortest_paths.py::test3"
+  ],
+  "passing_tests": [],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FF                                                                       [100%]\n=================================== FAILURES ===================================\n____________________________________ test1 _____________________________________\n\n    def test1():\n        \"\"\"Case 1: Graph with multiple paths\n        Output: {'A': 0, 'C': 3, 'B': 1, 'E': 5, 'D': 10, 'F': 4}\n        \"\"\"\n    \n        graph = {\n            (\"A\", \"B\"): 3,\n            (\"A\", \"C\"): 3,\n            (\"A\", \"F\"): 5,\n            (\"C\", \"B\"): -2,\n            (\"C\", \"D\"): 7,\n            (\"C\", \"E\"): 4,\n            (\"D\", \"E\"): -5,\n            (\"E\", \"F\"): -1,\n        }\n        result = shortest_paths(\"A\", graph)\n    \n        expected = {\"A\": 0, \"C\": 3, \"B\": 1, \"E\": 5, \"D\": 10, \"F\": 4}\n>       assert result == expected\nE       AssertionError: assert {'B': inf, 'C...'D': inf, ...} == {'A': 0, 'C':..., 'E': 5, ...}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'E': inf} != {'E': 5}\nE         {'B': inf} != {'B': 1}\nE         {'F': inf} != {'F': 4}\nE         {'D': inf} != {'D': 10}\nE         {'C': inf} != {'C': 3}\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           {\nE         +     'B': inf,\nE         +     'C': inf,\nE         +     'F': inf,\nE         +     'D': inf,\nE         +     'E': inf,\nE               'A': 0,\nE         -     'C': 3,\nE         -     'B': 1,\nE         -     'E': 5,\nE         -     'D': 10,\nE         -     'F': 4,\nE           }\n\ntests/test_shortest_paths.py:27: AssertionError\n____________________________________ test3 _____________________________________\n\n    def test3():\n        \"\"\"Case 3: Graph with cycle\n        Output: {'A': 0, 'C': 3, 'B': 1, 'E': 5, 'D': 6, 'F': 9}\n        \"\"\"\n    \n        graph3 = {\n            (\"A\", \"B\"): 1,\n            (\"B\", \"C\"): 2,\n            (\"C\", \"D\"): 3,\n            (\"D\", \"E\"): -1,\n            (\"E\", \"D\"): 1,\n            (\"E\", \"F\"): 4,\n        }\n        result = shortest_paths(\"A\", graph3)\n    \n        expected = {\"A\": 0, \"C\": 3, \"B\": 1, \"E\": 5, \"D\": 6, \"F\": 9}\n>       assert result == expected\nE       AssertionError: assert {'B': inf, 'C...'E': inf, ...} == {'A': 0, 'C':..., 'E': 5, ...}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'E': inf} != {'E': 5}\nE         {'B': inf} != {'B': 1}\nE         {'F': inf} != {'F': 9}\nE         {'D': inf} != {'D': 6}\nE         {'C': inf} != {'C': 3}\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           {\nE         +     'B': inf,\nE         +     'C': inf,\nE         +     'D': inf,\nE         +     'E': inf,\nE         +     'F': inf,\nE               'A': 0,\nE         -     'C': 3,\nE         -     'B': 1,\nE         -     'E': 5,\nE         -     'D': 6,\nE         -     'F': 9,\nE           }\n\ntests/test_shortest_paths.py:48: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_shortest_paths.py::test1 - AssertionError: assert {'B': inf, 'C...'D': inf, ...} == {'A': 0, 'C':..., 'E': 5, ...}\n  \n  Omitting 1 identical items, use -vv to show\n  Differing items:\n  {'E': inf} != {'E': 5}\n  {'B': inf} != {'B': 1}\n  {'F': inf} != {'F': 4}\n  {'D': inf} != {'D': 10}\n  {'C': inf} != {'C': 3}\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    {\n  +     'B': inf,\n  +     'C': inf,\n  +     'F': inf,\n  +     'D': inf,\n  +     'E': inf,\n        'A': 0,\n  -     'C': 3,\n  -     'B': 1,\n  -     'E': 5,\n  -     'D': 10,\n  -     'F': 4,\n    }\nFAILED tests/test_shortest_paths.py::test3 - AssertionError: assert {'B': inf, 'C...'E': inf, ...} == {'A': 0, 'C':..., 'E': 5, ...}\n  \n  Omitting 1 identical items, use -vv to show\n  Differing items:\n  {'E': inf} != {'E': 5}\n  {'B': inf} != {'B': 1}\n  {'F': inf} != {'F': 9}\n  {'D': inf} != {'D': 6}\n  {'C': inf} != {'C': 3}\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    {\n  +     'B': inf,\n  +     'C': inf,\n  +     'D': inf,\n  +     'E': inf,\n  +     'F': inf,\n        'A': 0,\n  -     'C': 3,\n  -     'B': 1,\n  -     'E': 5,\n  -     'D': 6,\n  -     'F': 9,\n    }\n2 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_shortest_paths.py",
+    "line": 27
+   },
+   {
+    "path": "tests/test_shortest_paths.py",
+    "line": 48
+   },
+   {
+    "path": "python_programs/shortest_paths.py",
+    "line": 2
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\n\nif pytest.use_correct:\n    from correct_python_programs.shortest_paths import shortest_paths\nelse:\n    from python_programs.shortest_paths import shortest_paths\n\n\ndef test_attack_1():\n    \"\"\"Unreachable source-only node must be present with inf.\"\"\"\n    graph = {\n        (\"A\", \"B\"): 1,\n        (\"C\", \"D\"): 10,\n    }\n    result = shortest_paths(\"A\", graph)\n    expected = {\"A\": 0, \"B\": 1, \"C\": float(\"inf\"), \"D\": float(\"inf\")}\n    assert result == expected\n\n\ndef test_attack_2():\n    \"\"\"Source not in graph: all graph nodes present with inf.\"\"\"\n    graph = {\n        (\"X\", \"Y\"): 5,\n    }\n    result = shortest_paths(\"Z\", graph)\n    expected = {\"X\": float(\"inf\"), \"Y\": float(\"inf\"), \"Z\": 0}\n    assert result == expected\n\n\ndef test_attack_3():\n    \"\"\"Source is a sink: its predecessor (source-only) must be present.\"\"\"\n    graph = {\n        (\"A\", \"B\"): 1,\n    }\n    result = shortest_paths(\"B\", graph)\n    expected = {\"A\": float(\"inf\"), \"B\": 0}\n    assert result == expected\n\n\ndef test_attack_4():\n    \"\"\"Reachable chain plus disconnected edge; source-only D must be present.\"\"\"\n    graph = {\n        (\"A\", \"B\"): 2,\n        (\"B\", \"C\"): 3,\n        (\"D\", \"E\"): 1,\n    }\n    result = shortest_paths(\"A\", graph)\n    expected = {\n        \"A\": 0,\n        \"B\": 2,\n        \"C\": 5,\n        \"D\": float(\"inf\"),\n        \"E\": float(\"inf\"),\n    }\n    assert result == expected\n\n\ndef test_attack_5():\n    \"\"\"Negative edge with unreachable source-only node.\"\"\"\n    graph = {\n        (\"A\", \"B\"): 4,\n        (\"A\", \"C\"): 3,\n        (\"C\", \"B\"): -2,\n        (\"D\", \"E\"): -5,\n    }\n    result = shortest_paths(\"A\", graph)\n    expected = {\n        \"A\": 0,\n        \"B\": 1,\n        \"C\": 3,\n        \"D\": float(\"inf\"),\n        \"E\": float(\"inf\"),\n    }\n    assert result == expected\n\n\ndef test_attack_6():\n    \"\"\"Long chain plus disconnected component; source-only X must be present.\"\"\"\n    graph = {\n        (\"A\", \"B\"): 1,\n        (\"B\", \"C\"): 2,\n        (\"C\", \"D\"): 3,\n        (\"X\", \"Y\"): 1,\n    }\n    result = shortest_paths(\"A\", graph)\n    expected = {\n        \"A\": 0,\n        \"B\": 1,\n        \"C\": 3,\n        \"D\": 6,\n        \"X\": float(\"inf\"),\n        \"Y\": float(\"inf\"),\n    }\n    assert result == expected\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/shortest_paths.py b/python_programs/shortest_paths.py\nindex 1097b07..cb2b940 100644\n--- a/python_programs/shortest_paths.py\n+++ b/python_programs/shortest_paths.py\n@@ -7,7 +7,7 @@ def shortest_paths(source, weight_by_edge):\n \n     for i in range(len(weight_by_node) - 1):\n         for (u, v), weight in weight_by_edge.items():\n-            weight_by_edge[u, v] = min(\n+            weight_by_node[v] = min(\n                 weight_by_node[u] + weight,\n                 weight_by_node[v]\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.791759469228055,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 0.75,
+    "mean_jaccard": 0.8712121212121212,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.25,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.154615356913663,
+    "self_confidence": 0.99,
+    "n_attack_tests": 6.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/shortest_paths.py b/python_programs/shortest_paths.py\nindex 1097b07..cb2b940 100644\n--- a/python_programs/shortest_paths.py\n+++ b/python_programs/shortest_paths.py\n@@ -7,7 +7,7 @@ def shortest_paths(source, weight_by_edge):\n \n     for i in range(len(weight_by_node) - 1):\n         for (u, v), weight in weight_by_edge.items():\n-            weight_by_edge[u, v] = min(\n+            weight_by_node[v] = min(\n                 weight_by_node[u] + weight,\n                 weight_by_node[v]\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.791759469228055,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 0.75,
+    "mean_jaccard": 0.8712121212121212,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.25,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.369900982828227,
+    "self_confidence": 1.0,
+    "n_attack_tests": 6.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/shortest_paths.py b/python_programs/shortest_paths.py\nindex 1097b07..cb2b940 100644\n--- a/python_programs/shortest_paths.py\n+++ b/python_programs/shortest_paths.py\n@@ -7,7 +7,7 @@ def shortest_paths(source, weight_by_edge):\n \n     for i in range(len(weight_by_node) - 1):\n         for (u, v), weight in weight_by_edge.items():\n-            weight_by_edge[u, v] = min(\n+            weight_by_node[v] = min(\n                 weight_by_node[u] + weight,\n                 weight_by_node[v]\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.791759469228055,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 0.75,
+    "mean_jaccard": 0.8712121212121212,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.25,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.598509028614515,
+    "self_confidence": 1.0,
+    "n_attack_tests": 6.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/shortest_paths.py b/python_programs/shortest_paths.py\nindex 1097b07..cb2b940 100644\n--- a/python_programs/shortest_paths.py\n+++ b/python_programs/shortest_paths.py\n@@ -7,7 +7,7 @@ def shortest_paths(source, weight_by_edge):\n \n     for i in range(len(weight_by_node) - 1):\n         for (u, v), weight in weight_by_edge.items():\n-            weight_by_edge[u, v] = min(\n+            weight_by_node[v] = min(\n                 weight_by_node[u] + weight,\n                 weight_by_node[v]\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.791759469228055,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 0.75,
+    "mean_jaccard": 0.8712121212121212,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.25,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.838405200847344,
+    "self_confidence": 1.0,
+    "n_attack_tests": 6.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/shortest_paths.py b/python_programs/shortest_paths.py\nindex 1097b07..f90a7c7 100644\n--- a/python_programs/shortest_paths.py\n+++ b/python_programs/shortest_paths.py\n@@ -1,13 +1,13 @@\n \n def shortest_paths(source, weight_by_edge):\n     weight_by_node = {\n-        v: float('inf') for u, v in weight_by_edge\n+        node: float('inf') for edge in weight_by_edge for node in edge\n     }\n     weight_by_node[source] = 0\n \n     for i in range(len(weight_by_node) - 1):\n         for (u, v), weight in weight_by_edge.items():\n-            weight_by_edge[u, v] = min(\n+            weight_by_node[v] = min(\n                 weight_by_node[u] + weight,\n                 weight_by_node[v]\n             )\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 1.0,
+    "log_diff_size": 1.6094379124341003,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.48484848484848486,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.261927092702751,
+    "self_confidence": 0.99,
+    "n_attack_tests": 6.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

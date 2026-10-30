@@ -1,0 +1,188 @@
+{
+ "task": {
+  "task_id": "quixbugs/is_valid_parenthesization",
+  "repo_path": "results/quixbugs/work/tasks/is_valid_parenthesization",
+  "failing_tests": [
+   "tests/test_is_valid_parenthesization.py::test_is_valid_parenthesization[input_data1-False]"
+  ],
+  "passing_tests": [
+   "tests/test_is_valid_parenthesization.py::test_is_valid_parenthesization[input_data0-True]"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n______________ test_is_valid_parenthesization[input_data1-False] _______________\n\ninput_data = ['(('], expected = False\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_is_valid_parenthesization(input_data, expected):\n>       assert is_valid_parenthesization(*input_data) == expected\nE       AssertionError: assert True == False\nE        +  where True = is_valid_parenthesization(*['(('])\n\ntests/test_is_valid_parenthesization.py:15: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_is_valid_parenthesization.py::test_is_valid_parenthesization[input_data1-False] - AssertionError: assert True == False\n +  where True = is_valid_parenthesization(*['(('])\n1 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_is_valid_parenthesization.py",
+    "line": 15
+   },
+   {
+    "path": "load_testdata.py",
+    "line": 5
+   },
+   {
+    "path": "python_programs/is_valid_parenthesization.py",
+    "line": 2
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\n\nif pytest.use_correct:\n    from correct_python_programs.is_valid_parenthesization import is_valid_parenthesization\nelse:\n    from python_programs.is_valid_parenthesization import is_valid_parenthesization\n\n\ndef test_attack_1():\n    # empty string is balanced (depth 0, never negative)\n    assert is_valid_parenthesization(\"\") == True\n\n\ndef test_attack_2():\n    # single character can never be balanced\n    assert is_valid_parenthesization(\"(\") == False\n    assert is_valid_parenthesization(\")\") == False\n\n\ndef test_attack_3():\n    # balanced prefix followed by extra opens -> final depth > 0\n    # buggy version returns True here because it never checks final depth\n    assert is_valid_parenthesization(\"((\") == False\n    assert is_valid_parenthesization(\"()(\") == False\n    assert is_valid_parenthesization(\"()()(\") == False\n    assert is_valid_parenthesization(\"(())(\") == False\n\n\ndef test_attack_4():\n    # unclosed nesting -> final depth > 0\n    assert is_valid_parenthesization(\"(()\") == False\n    assert is_valid_parenthesization(\"((()\") == False\n    assert is_valid_parenthesization(\"((())\") == False\n    assert is_valid_parenthesization(\"(((\") == False\n\n\ndef test_attack_5():\n    # properly nested strings must stay True\n    assert is_valid_parenthesization(\"()\") == True\n    assert is_valid_parenthesization(\"(())\") == True\n    assert is_valid_parenthesization(\"()()\") == True\n    assert is_valid_parenthesization(\"(()())\") == True\n    assert is_valid_parenthesization(\"((()()))()\") == True\n\n\ndef test_attack_6():\n    # equal numbers of '(' and ')' but wrong order -> invalid\n    # catches count-only fixes that ignore prefix condition\n    assert is_valid_parenthesization(\")(\") == False\n    assert is_valid_parenthesization(\"))(( \") == False or is_valid_parenthesization(\"))((\") == False\n    assert is_valid_parenthesization(\")()(\") == False\n    assert is_valid_parenthesization(\"())(()\") == False\n\n\ndef test_attack_7():\n    # examples from the docstring\n    assert is_valid_parenthesization(\"((()()))()\") == True\n    assert is_valid_parenthesization(\")()(\") == False\n\n\ndef test_attack_8():\n    # larger balanced vs off-by-one unbalanced\n    assert is_valid_parenthesization(\"(\" * 50 + \")\" * 50) == True\n    assert is_valid_parenthesization(\"()\" * 50) == True\n    assert is_valid_parenthesization(\"(\" * 50 + \")\" * 49) == False\n    assert is_valid_parenthesization(\"(\" * 50) == False\n    assert is_valid_parenthesization(\")\" * 50) == False\n    assert is_valid_parenthesization(\")(\" * 50) == False\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/is_valid_parenthesization.py b/python_programs/is_valid_parenthesization.py\nindex a339ac2..580b2a2 100644\n--- a/python_programs/is_valid_parenthesization.py\n+++ b/python_programs/is_valid_parenthesization.py\n@@ -9,7 +9,7 @@ def is_valid_parenthesization(parens):\n             if depth < 0:\n                 return False\n \n-    return True\n+    return depth == 0\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.978885764901122,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/is_valid_parenthesization.py b/python_programs/is_valid_parenthesization.py\nindex a339ac2..580b2a2 100644\n--- a/python_programs/is_valid_parenthesization.py\n+++ b/python_programs/is_valid_parenthesization.py\n@@ -9,7 +9,7 @@ def is_valid_parenthesization(parens):\n             if depth < 0:\n                 return False\n \n-    return True\n+    return depth == 0\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.246106765481563,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/is_valid_parenthesization.py b/python_programs/is_valid_parenthesization.py\nindex a339ac2..580b2a2 100644\n--- a/python_programs/is_valid_parenthesization.py\n+++ b/python_programs/is_valid_parenthesization.py\n@@ -9,7 +9,7 @@ def is_valid_parenthesization(parens):\n             if depth < 0:\n                 return False\n \n-    return True\n+    return depth == 0\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.363028103540465,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/is_valid_parenthesization.py b/python_programs/is_valid_parenthesization.py\nindex a339ac2..580b2a2 100644\n--- a/python_programs/is_valid_parenthesization.py\n+++ b/python_programs/is_valid_parenthesization.py\n@@ -9,7 +9,7 @@ def is_valid_parenthesization(parens):\n             if depth < 0:\n                 return False\n \n-    return True\n+    return depth == 0\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.8888779583328805,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/is_valid_parenthesization.py b/python_programs/is_valid_parenthesization.py\nindex a339ac2..580b2a2 100644\n--- a/python_programs/is_valid_parenthesization.py\n+++ b/python_programs/is_valid_parenthesization.py\n@@ -9,7 +9,7 @@ def is_valid_parenthesization(parens):\n             if depth < 0:\n                 return False\n \n-    return True\n+    return depth == 0\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.771441123130016,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

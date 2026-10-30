@@ -1,0 +1,190 @@
+{
+ "task": {
+  "task_id": "quixbugs/sieve",
+  "repo_path": "results/quixbugs/work/tasks/sieve",
+  "failing_tests": [
+   "tests/test_sieve.py::test_sieve[input_data1-expected1]",
+   "tests/test_sieve.py::test_sieve[input_data2-expected2]",
+   "tests/test_sieve.py::test_sieve[input_data3-expected3]"
+  ],
+  "passing_tests": [
+   "tests/test_sieve.py::test_sieve[input_data0-expected0]"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FFF                                                                      [100%]\n=================================== FAILURES ===================================\n______________________ test_sieve[input_data1-expected1] _______________________\n\ninput_data = [2], expected = [2]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_sieve(input_data, expected):\n>       assert sieve(*input_data) == expected\nE       assert [] == [2]\nE         \nE         Right contains one more item: 2\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE         + []\nE         - [\nE         -     2,\nE         - ]\n\ntests/test_sieve.py:15: AssertionError\n______________________ test_sieve[input_data2-expected2] _______________________\n\ninput_data = [4], expected = [2, 3]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_sieve(input_data, expected):\n>       assert sieve(*input_data) == expected\nE       assert [] == [2, 3]\nE         \nE         Right contains 2 more items, first extra item: 2\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE         + []\nE         - [\nE         -     2,\nE         -     3,\nE         - ]\n\ntests/test_sieve.py:15: AssertionError\n______________________ test_sieve[input_data3-expected3] _______________________\n\ninput_data = [20], expected = [2, 3, 5, 7, 11, 13, ...]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_sieve(input_data, expected):\n>       assert sieve(*input_data) == expected\nE       assert [] == [2, 3, 5, 7, 11, 13, ...]\nE         \nE         Right contains 8 more items, first extra item: 2\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE         + []\nE         - [\nE         -     2,\nE         -     3,\nE         -     5,\nE         -     7,\nE         -     11,\nE         -     13,\nE         -     17,\nE         -     19,\nE         - ]\n\ntests/test_sieve.py:15: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_sieve.py::test_sieve[input_data1-expected1] - assert [] == [2]\n  \n  Right contains one more item: 2\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n  + []\n  - [\n  -     2,\n  - ]\nFAILED tests/test_sieve.py::test_sieve[input_data2-expected2] - assert [] == [2, 3]\n  \n  Right contains 2 more items, first extra item: 2\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n  + []\n  - [\n  -     2,\n  -     3,\n  - ]\nFAILED tests/test_sieve.py::test_sieve[input_data3-expected3] - assert [] == [2, 3, 5, 7, 11, 13, ...]\n  \n  Right contains 8 more items, first extra item: 2\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n  + []\n  - [\n  -     2,\n  -     3,\n  -     5,\n  -     7,\n  -     11,\n  -     13,\n  -     17,\n  -     19,\n  - ]\n3 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_sieve.py",
+    "line": 15
+   },
+   {
+    "path": "load_testdata.py",
+    "line": 5
+   },
+   {
+    "path": "python_programs/sieve.py",
+    "line": 1
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\n\nif pytest.use_correct:\n    from correct_python_programs.sieve import sieve\nelse:\n    from python_programs.sieve import sieve\n\n\ndef test_attack_1():\n    # smallest prime bound must be included (all([]) is True, any([]) is False)\n    assert sieve(2) == [2]\n\n\ndef test_attack_2():\n    # 4 is composite (2*2) and must not be included; distinguishes any vs all\n    assert sieve(4) == [2, 3]\n\n\ndef test_attack_3():\n    # 9 = 3*3 must be excluded; catches trial-division with any instead of all\n    assert sieve(9) == [2, 3, 5, 7]\n\n\ndef test_attack_4():\n    # upper bound is inclusive\n    assert sieve(10) == [2, 3, 5, 7]\n    assert sieve(11) == [2, 3, 5, 7, 11]\n\n\ndef test_attack_5():\n    # below first prime -> empty list\n    assert sieve(1) == []\n\n\ndef test_attack_6():\n    # mixed evens, multiples of 3/5, and prime squares up to 30\n    assert sieve(20) == [2, 3, 5, 7, 11, 13, 17, 19]\n    assert sieve(30) == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]\n\n\ndef test_attack_7():\n    # larger comprehensive check including 25, 27, 49, 77, 91 composites\n    assert sieve(100) == [\n        2, 3, 5, 7, 11, 13, 17, 19, 23, 29,\n        31, 37, 41, 43, 47, 53, 59, 61, 67, 71,\n        73, 79, 83, 89, 97,\n    ]\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/sieve.py b/python_programs/sieve.py\nindex f267cc9..a51998b 100644\n--- a/python_programs/sieve.py\n+++ b/python_programs/sieve.py\n@@ -1,7 +1,7 @@\n def sieve(max):\n     primes = []\n     for n in range(2, max + 1):\n-        if any(n % p > 0 for p in primes):\n+        if all(n % p > 0 for p in primes):\n             primes.append(n)\n     return primes\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 0.9732142857142857,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.349138991379798,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/sieve.py b/python_programs/sieve.py\nindex f267cc9..a51998b 100644\n--- a/python_programs/sieve.py\n+++ b/python_programs/sieve.py\n@@ -1,7 +1,7 @@\n def sieve(max):\n     primes = []\n     for n in range(2, max + 1):\n-        if any(n % p > 0 for p in primes):\n+        if all(n % p > 0 for p in primes):\n             primes.append(n)\n     return primes\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 0.9732142857142857,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.253828811575473,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/sieve.py b/python_programs/sieve.py\nindex f267cc9..cd39db3 100644\n--- a/python_programs/sieve.py\n+++ b/python_programs/sieve.py\n@@ -1,7 +1,7 @@\n def sieve(max):\n     primes = []\n     for n in range(2, max + 1):\n-        if any(n % p > 0 for p in primes):\n+        if all(n % p != 0 for p in primes):\n             primes.append(n)\n     return primes\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 0.8928571428571429,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.091309882077698,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/sieve.py b/python_programs/sieve.py\nindex f267cc9..a51998b 100644\n--- a/python_programs/sieve.py\n+++ b/python_programs/sieve.py\n@@ -1,7 +1,7 @@\n def sieve(max):\n     primes = []\n     for n in range(2, max + 1):\n-        if any(n % p > 0 for p in primes):\n+        if all(n % p > 0 for p in primes):\n             primes.append(n)\n     return primes\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 0.9732142857142857,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.8664680569332965,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/sieve.py b/python_programs/sieve.py\nindex f267cc9..a51998b 100644\n--- a/python_programs/sieve.py\n+++ b/python_programs/sieve.py\n@@ -1,7 +1,7 @@\n def sieve(max):\n     primes = []\n     for n in range(2, max + 1):\n-        if any(n % p > 0 for p in primes):\n+        if all(n % p > 0 for p in primes):\n             primes.append(n)\n     return primes\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 0.75,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 0.9732142857142857,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.1903154058531475,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

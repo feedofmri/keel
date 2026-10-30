@@ -1,0 +1,186 @@
+{
+ "task": {
+  "task_id": "quixbugs/gcd",
+  "repo_path": "results/quixbugs/work/tasks/gcd",
+  "failing_tests": [
+   "tests/test_gcd.py::test_gcd[input_data1-13]",
+   "tests/test_gcd.py::test_gcd[input_data2-1]",
+   "tests/test_gcd.py::test_gcd[input_data3-18913]"
+  ],
+  "passing_tests": [
+   "tests/test_gcd.py::test_gcd[input_data0-17]"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FFF                                                                      [100%]\n=================================== FAILURES ===================================\n___________________________ test_gcd[input_data1-13] ___________________________\n\ninput_data = [13, 13], expected = 13\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_gcd(input_data, expected):\n>       assert gcd(*input_data) == expected\n               ^^^^^^^^^^^^^^^^\n\ntests/test_gcd.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \npython_programs/gcd.py:5: in gcd\n    return gcd(a % b, b)\n           ^^^^^^^^^^^^^\npython_programs/gcd.py:5: in gcd\n    return gcd(a % b, b)\n           ^^^^^^^^^^^^^\npython_programs/gcd.py:5: in gcd\n    return gcd(a % b, b)\n           ^^^^^^^^^^^^^\nE   RecursionError: maximum recursion depth exceeded\n!!! Recursion detected (same locals & position)\n___________________________ test_gcd[input_data2-1] ____________________________\n\ninput_data = [37, 600], expected = 1\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_gcd(input_data, expected):\n>       assert gcd(*input_data) == expected\n               ^^^^^^^^^^^^^^^^\n\ntests/test_gcd.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \npython_programs/gcd.py:5: in gcd\n    return gcd(a % b, b)\n           ^^^^^^^^^^^^^\npython_programs/gcd.py:5: in gcd\n    return gcd(a % b, b)\n           ^^^^^^^^^^^^^\nE   RecursionError: maximum recursion depth exceeded\n!!! Recursion detected (same locals & position)\n_________________________ test_gcd[input_data3-18913] __________________________\n\ninput_data = [624129, 2061517], expected = 18913\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_gcd(input_data, expected):\n>       assert gcd(*input_data) == expected\n               ^^^^^^^^^^^^^^^^\n\ntests/test_gcd.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \npython_programs/gcd.py:5: in gcd\n    return gcd(a % b, b)\n           ^^^^^^^^^^^^^\npython_programs/gcd.py:5: in gcd\n    return gcd(a % b, b)\n           ^^^^^^^^^^^^^\nE   RecursionError: maximum recursion depth exceeded\n!!! Recursion detected (same locals & position)\n=========================== short test summary info ============================\nFAILED tests/test_gcd.py::test_gcd[input_data1-13] - RecursionError: maximum recursion depth exceeded\nFAILED tests/test_gcd.py::test_gcd[input_data2-1] - RecursionError: maximum recursion depth exceeded\nFAILED tests/test_gcd.py::test_gcd[input_data3-18913] - RecursionError: maximum recursion depth exceeded\n3 failed in 0.04s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_gcd.py",
+    "line": 15
+   },
+   {
+    "path": "python_programs/gcd.py",
+    "line": 5
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\nimport math\n\nif pytest.use_correct:\n    from correct_python_programs.gcd import gcd\nelse:\n    from python_programs.gcd import gcd\n\n\ndef test_attack_1():\n    # docstring example + classic Euclidean values\n    assert gcd(35, 21) == 7\n    assert gcd(48, 18) == 6\n    assert gcd(1071, 462) == 21\n\n\ndef test_attack_2():\n    # zero and one edge cases\n    assert gcd(0, 5) == 5\n    assert gcd(5, 0) == 5\n    assert gcd(0, 1) == 1\n    assert gcd(1, 0) == 1\n    assert gcd(1, 1) == 1\n    assert gcd(0, 0) == 0\n\n\ndef test_attack_3():\n    # second argument larger + commutativity\n    assert gcd(21, 35) == 7\n    assert gcd(5, 10) == 5\n    assert gcd(18, 48) == 6\n    assert gcd(27, 81) == 27\n    for a, b in [(35, 21), (48, 18), (1071, 462), (13, 17), (100, 80)]:\n        assert gcd(a, b) == gcd(b, a)\n\n\ndef test_attack_4():\n    # same number, coprime, divisor cases\n    assert gcd(13, 13) == 13\n    assert gcd(13, 17) == 1\n    assert gcd(101, 103) == 1\n    assert gcd(100, 80) == 20\n    assert gcd(81, 27) == 27\n    assert gcd(48, 180) == 12\n\n\ndef test_attack_5():\n    # oracle comparison for non-negative inputs\n    pairs = [\n        (0, 5),\n        (5, 0),\n        (35, 21),\n        (21, 35),\n        (48, 18),\n        (1071, 462),\n        (270, 192),\n        (123456, 7890),\n        (13, 17),\n        (100, 80),\n    ]\n    for a, b in pairs:\n        assert gcd(a, b) == math.gcd(a, b)\n\n\ndef test_attack_6():\n    # result divides both and is greatest\n    for a, b in [(35, 21), (48, 18), (100, 80), (13, 17), (81, 27), (270, 192)]:\n        g = gcd(a, b)\n        assert g > 0\n        assert a % g == 0\n        assert b % g == 0\n        for d in range(g + 1, max(a, b) + 1):\n            assert not (a % d == 0 and b % d == 0)\n\n\ndef test_attack_7():\n    # larger values and termination when a < b\n    assert gcd(123456, 7890) == 6\n    assert gcd(270, 192) == 6\n    assert gcd(17, 31) == 1\n    assert gcd(10, 5) == 5\n    assert gcd(5, 10) == 5\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/gcd.py b/python_programs/gcd.py\nindex d0a6618..c1cebd7 100644\n--- a/python_programs/gcd.py\n+++ b/python_programs/gcd.py\n@@ -2,7 +2,7 @@ def gcd(a, b):\n     if b == 0:\n         return a\n     else:\n-        return gcd(a % b, b)\n+        return gcd(b, a % b)\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.634789603169249,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/gcd.py b/python_programs/gcd.py\nindex d0a6618..c1cebd7 100644\n--- a/python_programs/gcd.py\n+++ b/python_programs/gcd.py\n@@ -2,7 +2,7 @@ def gcd(a, b):\n     if b == 0:\n         return a\n     else:\n-        return gcd(a % b, b)\n+        return gcd(b, a % b)\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.6131281063880705,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/gcd.py b/python_programs/gcd.py\nindex d0a6618..c1cebd7 100644\n--- a/python_programs/gcd.py\n+++ b/python_programs/gcd.py\n@@ -2,7 +2,7 @@ def gcd(a, b):\n     if b == 0:\n         return a\n     else:\n-        return gcd(a % b, b)\n+        return gcd(b, a % b)\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.998936561946683,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/gcd.py b/python_programs/gcd.py\nindex d0a6618..c1cebd7 100644\n--- a/python_programs/gcd.py\n+++ b/python_programs/gcd.py\n@@ -2,7 +2,7 @@ def gcd(a, b):\n     if b == 0:\n         return a\n     else:\n-        return gcd(a % b, b)\n+        return gcd(b, a % b)\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.627621113690637,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/gcd.py b/python_programs/gcd.py\nindex d0a6618..c1cebd7 100644\n--- a/python_programs/gcd.py\n+++ b/python_programs/gcd.py\n@@ -2,7 +2,7 @@ def gcd(a, b):\n     if b == 0:\n         return a\n     else:\n-        return gcd(a % b, b)\n+        return gcd(b, a % b)\n \n \n \"\"\"\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.488937726156687,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

@@ -1,0 +1,190 @@
+{
+ "task": {
+  "task_id": "quixbugs/detect_cycle",
+  "repo_path": "results/quixbugs/work/tasks/detect_cycle",
+  "failing_tests": [
+   "tests/test_detect_cycle.py::test4"
+  ],
+  "passing_tests": [
+   "tests/test_detect_cycle.py::test1",
+   "tests/test_detect_cycle.py::test3",
+   "tests/test_detect_cycle.py::test5"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________________________________ test4 _____________________________________\n\n    def test4():\n        \"\"\"Case 4: 2-node list with no cycle\n        Expected Output: Cycle not detected!\n        \"\"\"\n    \n        node6 = Node(6)\n        node7 = Node(7, node6)\n    \n>       detected = detect_cycle(node7)\n                   ^^^^^^^^^^^^^^^^^^^\n\ntests/test_detect_cycle.py:49: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nnode = <node.Node object at 0x7fd620070590>\n\n    def detect_cycle(node):\n        hare = tortoise = node\n    \n        while True:\n>           if hare.successor is None:\n               ^^^^^^^^^^^^^^\nE           AttributeError: 'NoneType' object has no attribute 'successor'\n\npython_programs/detect_cycle.py:5: AttributeError\n=========================== short test summary info ============================\nFAILED tests/test_detect_cycle.py::test4 - AttributeError: 'NoneType' object has no attribute 'successor'\n1 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_detect_cycle.py",
+    "line": 49
+   },
+   {
+    "path": "python_programs/detect_cycle.py",
+    "line": 5
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\nfrom node import Node\n\nif pytest.use_correct:\n    from correct_python_programs.detect_cycle import detect_cycle\nelse:\n    from python_programs.detect_cycle import detect_cycle\n\n\ndef test_attack_1():\n    \"\"\"Empty list (None head) must report no cycle, not crash.\"\"\"\n    assert not detect_cycle(None)\n\n\ndef test_attack_2():\n    \"\"\"Single node self-loop must be detected as cycle.\"\"\"\n    n = Node(0)\n    n.successor = n\n    assert detect_cycle(n)\n\n\ndef test_attack_3():\n    \"\"\"Even-length acyclic list must report no cycle, not crash.\"\"\"\n    n1 = Node(1)\n    n2 = Node(2, n1)\n    n3 = Node(3, n2)\n    n4 = Node(4, n3)\n    assert not detect_cycle(n4)\n\n\ndef test_attack_4():\n    \"\"\"Duplicate values but no cycle must not be reported as cycle (is vs ==).\"\"\"\n    n1 = Node(1)\n    n2 = Node(1, n1)\n    n3 = Node(1, n2)\n    assert not detect_cycle(n3)\n\n\ndef test_attack_5():\n    \"\"\"Tail pointing back to middle node must be detected.\"\"\"\n    n1 = Node(1)\n    n2 = Node(2, n1)\n    n3 = Node(3, n2)\n    n4 = Node(4, n3)\n    n5 = Node(5, n4)\n    n1.successor = n3\n    assert detect_cycle(n5)\n\n\ndef test_attack_6():\n    \"\"\"Tail pointing back to head (full cycle) must be detected.\"\"\"\n    n1 = Node(1)\n    n2 = Node(2, n1)\n    n3 = Node(3, n2)\n    n1.successor = n3\n    assert detect_cycle(n3)\n\n\ndef test_attack_7():\n    \"\"\"Chain leading into a self-loop at tail must be detected.\"\"\"\n    n1 = Node(1)\n    n1.successor = n1\n    n2 = Node(2, n1)\n    n3 = Node(3, n2)\n    assert detect_cycle(n3)\n\n\ndef test_attack_8():\n    \"\"\"Longer even-length acyclic list must report no cycle, not crash.\"\"\"\n    n1 = Node(1)\n    n2 = Node(2, n1)\n    n3 = Node(3, n2)\n    n4 = Node(4, n3)\n    n5 = Node(5, n4)\n    n6 = Node(6, n5)\n    assert not detect_cycle(n6)\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.728855823852543,
+    "self_confidence": 0.95,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/detect_cycle.py b/python_programs/detect_cycle.py\nindex c2fb38b..5507f16 100644\n--- a/python_programs/detect_cycle.py\n+++ b/python_programs/detect_cycle.py\n@@ -2,7 +2,7 @@ def detect_cycle(node):\n     hare = tortoise = node\n \n     while True:\n-        if hare.successor is None:\n+        if hare is None or hare.successor is None:\n             return False\n \n         tortoise = tortoise.successor\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.007600613951853,
+    "self_confidence": 0.99,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/detect_cycle.py b/python_programs/detect_cycle.py\nindex c2fb38b..5507f16 100644\n--- a/python_programs/detect_cycle.py\n+++ b/python_programs/detect_cycle.py\n@@ -2,7 +2,7 @@ def detect_cycle(node):\n     hare = tortoise = node\n \n     while True:\n-        if hare.successor is None:\n+        if hare is None or hare.successor is None:\n             return False\n \n         tortoise = tortoise.successor\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.469654172932128,
+    "self_confidence": 0.95,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.726233402358747,
+    "self_confidence": 0.95,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/detect_cycle.py b/python_programs/detect_cycle.py\nindex c2fb38b..5507f16 100644\n--- a/python_programs/detect_cycle.py\n+++ b/python_programs/detect_cycle.py\n@@ -2,7 +2,7 @@ def detect_cycle(node):\n     hare = tortoise = node\n \n     while True:\n-        if hare.successor is None:\n+        if hare is None or hare.successor is None:\n             return False\n \n         tortoise = tortoise.successor\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.407924322559599,
+    "self_confidence": 0.95,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}
