@@ -16,3 +16,16 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: ruff check keel tests
       - run: python -m pytest -q
+
+  # Repositories run `uses: feedofmri/keel@stable`. Move that branch to main only when the tests pass.
+  promote:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Fast-forward stable to this commit
+        run: git push origin "HEAD:refs/heads/stable"

@@ -17,7 +17,7 @@ const schema = z.object({
   GITHUB_PRIVATE_KEY: z.string().default(""),
   GITHUB_WEBHOOK_SECRET: z.string().default(""),
   OIDC_AUDIENCE: z.string().default("keel.boraqs.com"),
-  KEEL_ACTION_REF: z.string().default("feedofmri/keel@v1"),
+  KEEL_ACTION_REF: z.string().default("feedofmri/keel@stable"),   // the branch CI advances after tests pass on main
   // Overridable for tests against a fake GitHub; leave unset in production.
   GITHUB_API_URL: z.string().url().default("https://api.github.com"),
   GITHUB_WEB_URL: z.string().url().default("https://github.com"),

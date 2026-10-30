@@ -40,12 +40,12 @@ describe("setup files", () => {
   const s = { alpha: 0.1, method: "crc" as const, autoMerge: false, models: ["muse-spark", "muse-spark-open"], ciWorkflow: "CI",
               installCommand: "pip install -e . pytest", testCommand: "{python} -m pytest -q {tests} --junitxml={junit}" };
   it("workflow triggers on the CI workflow and passes only the needed secrets", () => {
-    const y = renderWorkflow(s, "feedofmri/keel@v1", "https://keel.boraqs.com");
+    const y = renderWorkflow(s, "feedofmri/keel@stable", "https://keel.boraqs.com");
     expect(y).toContain('workflows: ["CI"]');
     expect(y).toContain("id-token: write");
     expect(y).toContain("KEEL_MUSE_SPARK_API_KEY: ${{ secrets.KEEL_MUSE_SPARK_API_KEY }}");
     expect(y).not.toContain("GLIMMER");
-    expect(y).toContain("uses: feedofmri/keel@v1");
+    expect(y).toContain("uses: feedofmri/keel@stable");
   });
   it("toml carries the policy", () => {
     const t = renderKeelToml(s);

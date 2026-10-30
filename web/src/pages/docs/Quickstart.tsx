@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -e . pytest
-      - uses: feedofmri/keel@v1
+      - uses: feedofmri/keel@stable
         env:
           KEEL_MUSE_SPARK_BASE_URL: \${{ secrets.KEEL_MUSE_SPARK_BASE_URL }}
           KEEL_MUSE_SPARK_API_KEY: \${{ secrets.KEEL_MUSE_SPARK_API_KEY }}

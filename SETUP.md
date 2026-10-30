@@ -47,8 +47,9 @@ Generation uses the model APIs; the official harness then runs in up to 10 paral
 6. Apply `bugs/01-discount-backwards.patch`, push, and watch a Keel PR appear.
 
 ## 5. Publish the Action
-Create a release tag `v1` on this repository (Releases → Draft a new release → tag `v1`), so
-`uses: feedofmri/keel@v1` works. Optional: tick *Publish this Action to the GitHub Marketplace*.
+Repositories run `uses: feedofmri/keel@stable`. CI moves the `stable` branch to `main` after the
+tests pass, so a fix reaches every repository without a new release. (A `v1` tag also exists for
+anyone who wants a fixed version.)
 
 ## 6. Submission (by Wed Nov 4, 9:00 PM ET)
 - Repo public ✅ (already)
