@@ -45,8 +45,15 @@ def reasons(ev: CandidateEvaluation | None, top: int = 4) -> list[str]:
         return [f"Blocked: {GATE_TEXT.get(g, g)}" for g in ev.gate_failures]
     out = []
     items = sorted(ev.contributions.items(), key=lambda kv: abs(kv[1]), reverse=True)
+    absent = set()
+    if not ev.features.get("n_attack_tests"):
+        absent |= {"attack_survival", "attack_minority"}   # no adversarial tests were run
+    if not ev.features.get("n_cross_model"):
+        absent.add("cross_model_agreement")                 # only one model produced candidates
+    if ev.candidate.mean_logprob is None:
+        absent.add("mean_logprob")
     for name, c in items:
-        if name not in FEATURE_TEXT or abs(c) < 0.05:
+        if name not in FEATURE_TEXT or name in absent or abs(c) < 0.05:
             continue
         raw = ev.features.get(name, 0.0)
         good, bad = FEATURE_TEXT[name]

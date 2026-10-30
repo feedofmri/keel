@@ -16,7 +16,8 @@ from .context import attack_messages, test_files_for
 from .generators import Generator
 from .types import BugTask
 
-_PY_FENCE = re.compile(r"```(?:python|py)?\n(.*?)```", re.DOTALL)
+# A reply cut off by the token limit can lose its closing fence, so the end of the text also closes a block.
+_PY_FENCE = re.compile(r"```(?:python|py)?[ \t]*\n(.*?)(?:```|\Z)", re.DOTALL)
 
 
 @dataclass
@@ -43,23 +44,34 @@ def extract_tests(text: str) -> str | None:
 
 
 def test_names(src: str) -> list[str]:
-    tree = ast.parse(src)
-    return [n.name for n in tree.body if isinstance(n, ast.FunctionDef) and n.name.startswith("test")]
+    """pytest node names: top-level test functions and test methods of Test* classes."""
+    names: list[str] = []
+    for n in ast.parse(src).body:
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name.startswith("test"):
+            names.append(n.name)
+        elif isinstance(n, ast.ClassDef) and n.name.startswith("Test"):
+            names += [f"{n.name}::{m.name}" for m in n.body
+                      if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef)) and m.name.startswith("test")]
+    return names
 
 
 def build_attack_suite(task: BugTask, root: Path, diffs: list[str], generator: Generator,
-                       seed: int = 0) -> AttackSuite | None:
+                       seed: int = 0, log=lambda m: None) -> AttackSuite | None:
     unique = list(dict.fromkeys(d for d in diffs if d.strip()))
     if not unique:
         return None
-    comps = generator.complete(attack_messages(task, root, unique), n=1, temperature=0.2, seed=seed)
+    comps = generator.complete(attack_messages(task, root, unique), n=1, temperature=0.2, seed=seed,
+                               max_tokens=8192)
     if not comps or comps[0].error:
+        log(f"attack: the model call failed ({comps[0].error if comps else 'no reply'})")
         return None
     src = extract_tests(comps[0].text)
     if not src:
+        log(f"attack: the reply had no valid Python test code ({len(comps[0].text)} characters)")
         return None
     names = test_names(src)
     if not names:
+        log("attack: the reply's code defined no test functions")
         return None
     tfs = test_files_for(task)
     folder = str(Path(tfs[0]).parent) if tfs else "tests"

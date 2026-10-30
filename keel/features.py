@@ -121,4 +121,8 @@ def compute_features(task: BugTask, evals: list[CandidateEvaluation]) -> None:
             "min_logprob": max(c.min_logprob, -20.0) if c.min_logprob is not None else 0.0,
             "log_reasoning_tokens": math.log1p(c.reasoning_tokens),
             "self_confidence": c.self_confidence if c.self_confidence is not None else 0.5,
+            # Not scored (outside FEATURE_NAMES): whether a signal exists at all, so explanations
+            # don't present the neutral defaults above as findings.
+            "n_attack_tests": float(len(useful_tests)) if e.applied else 0.0,
+            "n_cross_model": float(len(cross)) if (e.applied and others) else 0.0,
         }

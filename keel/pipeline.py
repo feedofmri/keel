@@ -124,7 +124,8 @@ class Pipeline:
         if not self.attacker:
             return None
         with Workspace(task.repo_path) as ws:
-            suite = build_attack_suite(task, ws.root, [c.diff for c in cands], self.attacker, seed=self.seed)
+            suite = build_attack_suite(task, ws.root, [c.diff for c in cands], self.attacker, seed=self.seed,
+                                       log=self.log)
         self.log(f"attack: {len(suite.test_ids) if suite else 0} adversarial tests written")
         return suite
 
