@@ -16,7 +16,7 @@
 .side-nav .side-foot { margin-top: auto; }
 .side-nav .ext { margin-left: auto; width: 12px; height: 12px; }
 main.app { padding: 40px 48px 120px; min-width: 0; }
-main.app > * { max-width: 1120px; }
+main.app > * { max-width: 1200px; margin-left: auto; margin-right: auto; }  /* centred beside the sidebar on wide screens */
 @media (max-width: 900px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
   .side-nav { position: sticky; top: 56px; z-index: 40; height: auto; flex-direction: row; gap: 4px; padding: 8px 12px; overflow-x: auto; border-right: 0;
