@@ -1,0 +1,189 @@
+{
+ "task": {
+  "task_id": "quixbugs/shunting_yard",
+  "repo_path": "results/quixbugs/work/tasks/shunting_yard",
+  "failing_tests": [
+   "tests/test_shunting_yard.py::test_shunting_yard[input_data1-expected1]",
+   "tests/test_shunting_yard.py::test_shunting_yard[input_data2-expected2]"
+  ],
+  "passing_tests": [
+   "tests/test_shunting_yard.py::test_shunting_yard[input_data0-expected0]"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FF                                                                       [100%]\n=================================== FAILURES ===================================\n__________________ test_shunting_yard[input_data1-expected1] ___________________\n\ninput_data = [[10, '-', 5, '-', 2]], expected = [10, 5, '-', 2, '-']\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_shunting_yard(input_data, expected):\n>       assert shunting_yard(*input_data) == expected\nE       AssertionError: assert [10, 5, 2] == [10, 5, '-', 2, '-']\nE         \nE         At index 2 diff: 2 != '-'\nE         Right contains 2 more items, first extra item: 2\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE               10,\nE               5,\nE         -     '-',\nE               2,\nE         -     '-',\nE           ]\n\ntests/test_shunting_yard.py:15: AssertionError\n__________________ test_shunting_yard[input_data2-expected2] ___________________\n\ninput_data = [[4, '+', 9, '*', 9, '-', ...]]\nexpected = [4, 9, 9, '*', '+', 10, ...]\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_shunting_yard(input_data, expected):\n>       assert shunting_yard(*input_data) == expected\nE       AssertionError: assert [4, 9, 9, 10, 13] == [4, 9, 9, '*', '+', 10, ...]\nE         \nE         At index 3 diff: 10 != '*'\nE         Right contains 4 more items, first extra item: 10\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE               4,\nE               9,\nE               9,\nE         -     '*',\nE         -     '+',\nE               10,\nE         -     '-',\nE               13,\nE         -     '+',\nE           ]\n\ntests/test_shunting_yard.py:15: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_shunting_yard.py::test_shunting_yard[input_data1-expected1] - AssertionError: assert [10, 5, 2] == [10, 5, '-', 2, '-']\n  \n  At index 2 diff: 2 != '-'\n  Right contains 2 more items, first extra item: 2\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n        10,\n        5,\n  -     '-',\n        2,\n  -     '-',\n    ]\nFAILED tests/test_shunting_yard.py::test_shunting_yard[input_data2-expected2] - AssertionError: assert [4, 9, 9, 10, 13] == [4, 9, 9, '*', '+', 10, ...]\n  \n  At index 3 diff: 10 != '*'\n  Right contains 4 more items, first extra item: 10\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n        4,\n        9,\n        9,\n  -     '*',\n  -     '+',\n        10,\n  -     '-',\n        13,\n  -     '+',\n    ]\n2 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_shunting_yard.py",
+    "line": 15
+   },
+   {
+    "path": "load_testdata.py",
+    "line": 5
+   },
+   {
+    "path": "python_programs/shunting_yard.py",
+    "line": 2
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\nif pytest.use_correct:\n    from correct_python_programs.shunting_yard import shunting_yard\nelse:\n    from python_programs.shunting_yard import shunting_yard\n\n\ndef test_attack_1():\n    # left-associativity of same low precedence: (10-5)-2\n    assert shunting_yard([10, '-', 5, '-', 2]) == [10, 5, '-', 2, '-']\n\n\ndef test_attack_2():\n    # precedence: * binds tighter than + : 2+(3*4)\n    assert shunting_yard([2, '+', 3, '*', 4]) == [2, 3, 4, '*', '+']\n\n\ndef test_attack_3():\n    # higher precedence first, then lower: (2*3)+4\n    assert shunting_yard([2, '*', 3, '+', 4]) == [2, 3, '*', 4, '+']\n\n\ndef test_attack_4():\n    # left-associativity of same high precedence: (20/2)*3 and (8/4)/2\n    assert shunting_yard([20, '/', 2, '*', 3]) == [20, 2, '/', 3, '*']\n    assert shunting_yard([8, '/', 4, '/', 2]) == [8, 4, '/', 2, '/']\n    assert shunting_yard([2, '*', 3, '*', 4]) == [2, 3, '*', 4, '*']\n\n\ndef test_attack_5():\n    # docstring long mixed chain\n    assert shunting_yard([4, '+', 9, '*', 9, '-', 10, '+', 13]) == [4, 9, 9, '*', '+', 10, '-', 13, '+']\n\n\ndef test_attack_6():\n    # docstring: division before subtraction + mixed +- chain\n    assert shunting_yard([34, '-', 12, '/', 5]) == [34, 12, 5, '/', '-']\n    assert shunting_yard([5, '+', 6, '-', 7, '+', 8]) == [5, 6, '+', 7, '-', 8, '+']\n\n\ndef test_attack_7():\n    # trivial cases: empty, single number, single operator\n    assert shunting_yard([]) == []\n    assert shunting_yard([42]) == [42]\n    assert shunting_yard([7, '+', 8]) == [7, 8, '+']\n    assert shunting_yard([7, '-', 8]) == [7, 8, '-']\n    assert shunting_yard([7, '*', 8]) == [7, 8, '*']\n    assert shunting_yard([7, '/', 8]) == [7, 8, '/']\n\n\ndef test_attack_8():\n    # negative ints and zero are numbers, not operators\n    assert shunting_yard([0, '*', -5, '+', 10]) == [0, -5, '*', 10, '+']\n    assert shunting_yard([-3, '+', 4]) == [-3, 4, '+']\n    assert shunting_yard([10, '-', -5]) == [10, -5, '-']\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/shunting_yard.py b/python_programs/shunting_yard.py\nindex 174ac91..5af7773 100644\n--- a/python_programs/shunting_yard.py\n+++ b/python_programs/shunting_yard.py\n@@ -15,6 +15,7 @@ def shunting_yard(tokens):\n         else:\n             while opstack and precedence[token] <= precedence[opstack[-1]]:\n                 rpntokens.append(opstack.pop())\n+            opstack.append(token)\n \n     while opstack:\n         rpntokens.append(opstack.pop())\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.639057329615259,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.104793232414985,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/shunting_yard.py b/python_programs/shunting_yard.py\nindex 174ac91..5af7773 100644\n--- a/python_programs/shunting_yard.py\n+++ b/python_programs/shunting_yard.py\n@@ -15,6 +15,7 @@ def shunting_yard(tokens):\n         else:\n             while opstack and precedence[token] <= precedence[opstack[-1]]:\n                 rpntokens.append(opstack.pop())\n+            opstack.append(token)\n \n     while opstack:\n         rpntokens.append(opstack.pop())\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.639057329615259,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.822197390620491,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/shunting_yard.py b/python_programs/shunting_yard.py\nindex 174ac91..5af7773 100644\n--- a/python_programs/shunting_yard.py\n+++ b/python_programs/shunting_yard.py\n@@ -15,6 +15,7 @@ def shunting_yard(tokens):\n         else:\n             while opstack and precedence[token] <= precedence[opstack[-1]]:\n                 rpntokens.append(opstack.pop())\n+            opstack.append(token)\n \n     while opstack:\n         rpntokens.append(opstack.pop())\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.639057329615259,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.3578422665081,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/shunting_yard.py b/python_programs/shunting_yard.py\nindex 174ac91..5af7773 100644\n--- a/python_programs/shunting_yard.py\n+++ b/python_programs/shunting_yard.py\n@@ -15,6 +15,7 @@ def shunting_yard(tokens):\n         else:\n             while opstack and precedence[token] <= precedence[opstack[-1]]:\n                 rpntokens.append(opstack.pop())\n+            opstack.append(token)\n \n     while opstack:\n         rpntokens.append(opstack.pop())\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.639057329615259,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.363028103540465,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/shunting_yard.py b/python_programs/shunting_yard.py\nindex 174ac91..5af7773 100644\n--- a/python_programs/shunting_yard.py\n+++ b/python_programs/shunting_yard.py\n@@ -15,6 +15,7 @@ def shunting_yard(tokens):\n         else:\n             while opstack and precedence[token] <= precedence[opstack[-1]]:\n                 rpntokens.append(opstack.pop())\n+            opstack.append(token)\n \n     while opstack:\n         rpntokens.append(opstack.pop())\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.639057329615259,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.192362489474872,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

@@ -1,0 +1,188 @@
+{
+ "task": {
+  "task_id": "quixbugs/reverse_linked_list",
+  "repo_path": "results/quixbugs/work/tasks/reverse_linked_list",
+  "failing_tests": [
+   "tests/test_reverse_linked_list.py::test1"
+  ],
+  "passing_tests": [
+   "tests/test_reverse_linked_list.py::test3"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________________________________ test1 _____________________________________\n\n    def test1():\n        \"\"\"Case 1: 5-node list input\n        Expected Output: 1 2 3 4 5\n        \"\"\"\n    \n        node1 = Node(1)\n        node2 = Node(2, node1)\n        node3 = Node(3, node2)\n        node4 = Node(4, node3)\n        node5 = Node(5, node4)\n    \n        result = reverse_linked_list(node5)\n>       assert result == node1\nE       assert None == <node.Node object at 0x7f0f6ebb4ec0>\n\ntests/test_reverse_linked_list.py:22: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_reverse_linked_list.py::test1 - assert None == <node.Node object at 0x7f0f6ebb4ec0>\n1 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_reverse_linked_list.py",
+    "line": 22
+   },
+   {
+    "path": "node.py",
+    "line": 1
+   },
+   {
+    "path": "python_programs/reverse_linked_list.py",
+    "line": 1
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\nfrom node import Node\n\nif pytest.use_correct:\n    from correct_python_programs.reverse_linked_list import reverse_linked_list\nelse:\n    from python_programs.reverse_linked_list import reverse_linked_list\n\n\ndef test_attack_1():\n    \"\"\"Single-node list must return the same node object.\"\"\"\n    n = Node(42)\n    result = reverse_linked_list(n)\n    assert result is n\n    assert result.value == 42\n    assert result.successor is None\n    output = []\n    cur = result\n    while cur:\n        output.append(cur.value)\n        cur = cur.successor\n    assert output == [42]\n\n\ndef test_attack_2():\n    \"\"\"Two-node list reversal, including mutation of old head.\"\"\"\n    tail = Node(2)\n    head = Node(1, tail)\n    result = reverse_linked_list(head)\n    assert result is tail\n    assert result.value == 2\n    assert result.successor is head\n    assert head.successor is None\n    output = []\n    cur = result\n    while cur:\n        output.append(cur.value)\n        cur = cur.successor\n    assert output == [2, 1]\n\n\ndef test_attack_3():\n    \"\"\"Falsy head value (0) must still be reversed; catches `while node.value` bugs.\"\"\"\n    n3 = Node(2)\n    n2 = Node(1, n3)\n    n1 = Node(0, n2)\n    result = reverse_linked_list(n1)\n    assert result is n3\n    vals = []\n    cur = result\n    count = 0\n    while cur:\n        vals.append(cur.value)\n        cur = cur.successor\n        count += 1\n        assert count <= 3\n    assert vals == [2, 1, 0]\n    assert n1.successor is None\n\n\ndef test_attack_4():\n    \"\"\"Reversal must reuse the same node objects, no copies, no cycle.\"\"\"\n    n4 = Node(4)\n    n3 = Node(3, n4)\n    n2 = Node(2, n3)\n    n1 = Node(1, n2)\n    original_ids = {id(n) for n in [n1, n2, n3, n4]}\n    result = reverse_linked_list(n1)\n    assert result is n4\n    seen = []\n    cur = result\n    count = 0\n    while cur:\n        assert id(cur) in original_ids\n        seen.append(cur)\n        cur = cur.successor\n        count += 1\n        assert count <= 4, \"cycle or extra nodes detected\"\n    assert count == 4\n    assert seen == [n4, n3, n2, n1]\n    assert [n.value for n in seen] == [4, 3, 2, 1]\n\n\ndef test_attack_5():\n    \"\"\"Double reversal restores original order and head identity.\"\"\"\n    n3 = Node(3)\n    n2 = Node(2, n3)\n    n1 = Node(1, n2)\n    r1 = reverse_linked_list(n1)\n    vals1 = []\n    cur = r1\n    while cur:\n        vals1.append(cur.value)\n        cur = cur.successor\n    assert vals1 == [3, 2, 1]\n    assert r1 is n3\n    r2 = reverse_linked_list(r1)\n    assert r2 is n1\n    vals2 = []\n    cur = r2\n    while cur:\n        vals2.append(cur.value)\n        cur = cur.successor\n    assert vals2 == [1, 2, 3]\n\n\ndef test_attack_6():\n    \"\"\"Longer 10-node list fully reversed.\"\"\"\n    tail = Node(10)\n    cur = tail\n    for v in range(9, 0, -1):\n        cur = Node(v, cur)\n    head = cur\n    assert head.value == 1\n    result = reverse_linked_list(head)\n    assert result is tail\n    vals = []\n    cur = result\n    steps = 0\n    while cur:\n        vals.append(cur.value)\n        cur = cur.successor\n        steps += 1\n        assert steps <= 10, \"cycle or too many nodes\"\n    assert vals == list(range(10, 0, -1))\n    assert head.successor is None\n\n\ndef test_attack_7():\n    \"\"\"All-None values must still reverse 3 nodes; catches value-based loop conditions.\"\"\"\n    n3 = Node(None)\n    n2 = Node(None, n3)\n    n1 = Node(None, n2)\n    result = reverse_linked_list(n1)\n    assert result is n3\n    count = 0\n    cur = result\n    while cur:\n        assert cur.value is None\n        cur = cur.successor\n        count += 1\n        assert count <= 3\n    assert count == 3\n    assert n1.successor is None\n    assert n2.successor is n1\n    assert n3.successor is n2\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/reverse_linked_list.py b/python_programs/reverse_linked_list.py\nindex 0793d0f..ebf8f6c 100644\n--- a/python_programs/reverse_linked_list.py\n+++ b/python_programs/reverse_linked_list.py\n@@ -3,6 +3,7 @@ def reverse_linked_list(node):\n     while node:\n         nextnode = node.successor\n         node.successor = prevnode\n+        prevnode = node\n         node = nextnode\n     return prevnode\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.206575926724928,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/reverse_linked_list.py b/python_programs/reverse_linked_list.py\nindex 0793d0f..ebf8f6c 100644\n--- a/python_programs/reverse_linked_list.py\n+++ b/python_programs/reverse_linked_list.py\n@@ -3,6 +3,7 @@ def reverse_linked_list(node):\n     while node:\n         nextnode = node.successor\n         node.successor = prevnode\n+        prevnode = node\n         node = nextnode\n     return prevnode\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.432940092739179,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/reverse_linked_list.py b/python_programs/reverse_linked_list.py\nindex 0793d0f..ebf8f6c 100644\n--- a/python_programs/reverse_linked_list.py\n+++ b/python_programs/reverse_linked_list.py\n@@ -3,6 +3,7 @@ def reverse_linked_list(node):\n     while node:\n         nextnode = node.successor\n         node.successor = prevnode\n+        prevnode = node\n         node = nextnode\n     return prevnode\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.61472560020376,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/reverse_linked_list.py b/python_programs/reverse_linked_list.py\nindex 0793d0f..ebf8f6c 100644\n--- a/python_programs/reverse_linked_list.py\n+++ b/python_programs/reverse_linked_list.py\n@@ -3,6 +3,7 @@ def reverse_linked_list(node):\n     while node:\n         nextnode = node.successor\n         node.successor = prevnode\n+        prevnode = node\n         node = nextnode\n     return prevnode\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.565264970035361,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/reverse_linked_list.py b/python_programs/reverse_linked_list.py\nindex 0793d0f..ebf8f6c 100644\n--- a/python_programs/reverse_linked_list.py\n+++ b/python_programs/reverse_linked_list.py\n@@ -3,6 +3,7 @@ def reverse_linked_list(node):\n     while node:\n         nextnode = node.successor\n         node.successor = prevnode\n+        prevnode = node\n         node = nextnode\n     return prevnode\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.6931471805599453,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.733401891837359,
+    "self_confidence": 1.0,
+    "n_attack_tests": 7.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

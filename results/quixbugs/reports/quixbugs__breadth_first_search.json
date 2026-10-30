@@ -1,0 +1,185 @@
+{
+ "task": {
+  "task_id": "quixbugs/breadth_first_search",
+  "repo_path": "results/quixbugs/work/tasks/breadth_first_search",
+  "failing_tests": [
+   "tests/test_breadth_first_search.py::test3"
+  ],
+  "passing_tests": [
+   "tests/test_breadth_first_search.py::test1",
+   "tests/test_breadth_first_search.py::test5"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n____________________________________ test3 _____________________________________\n\n    def test3():\n        \"\"\"Case 3: Two unconnected nodes in graph\n        Output: Path not found\n        \"\"\"\n    \n        nodef = Node(\"F\")\n        nodee = Node(\"E\")\n    \n>       path_found = breadth_first_search(nodef, nodee)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/test_breadth_first_search.py:37: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nstartnode = <node.Node object at 0x7f18c1da9940>\ngoalnode = <node.Node object at 0x7f18c1da9a30>\n\n    def breadth_first_search(startnode, goalnode):\n        queue = Queue()\n        queue.append(startnode)\n    \n        nodesseen = set()\n        nodesseen.add(startnode)\n    \n        while True:\n>           node = queue.popleft()\n                   ^^^^^^^^^^^^^^^\nE           IndexError: pop from an empty deque\n\npython_programs/breadth_first_search.py:12: IndexError\n=========================== short test summary info ============================\nFAILED tests/test_breadth_first_search.py::test3 - IndexError: pop from an empty deque\n1 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_breadth_first_search.py",
+    "line": 37
+   },
+   {
+    "path": "python_programs/breadth_first_search.py",
+    "line": 12
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\nfrom node import Node\n\nif pytest.use_correct:\n    from correct_python_programs.breadth_first_search import breadth_first_search\nelse:\n    from python_programs.breadth_first_search import breadth_first_search\n\n\ndef test_attack_1():\n    \"\"\"start is goal with no successors must be reachable.\"\"\"\n    a = Node(\"A\")\n    a.successors = []\n    assert breadth_first_search(a, a) is True\n\n\ndef test_attack_2():\n    \"\"\"direct edge start -> goal must be reachable.\"\"\"\n    goal = Node(\"GOAL\")\n    goal.successors = []\n    start = Node(\"START\")\n    start.successors = [goal]\n    assert breadth_first_search(start, goal) is True\n\n\ndef test_attack_3():\n    \"\"\"multi-hop chain that does not contain goal must return False, not raise.\"\"\"\n    c = Node(\"C\")\n    c.successors = []\n    b = Node(\"B\")\n    b.successors = [c]\n    start = Node(\"START\")\n    start.successors = [b]\n    goal = Node(\"GOAL\")\n    goal.successors = []\n    assert breadth_first_search(start, goal) is False\n\n\ndef test_attack_4():\n    \"\"\"cycle with no path to goal must return False, not hang or raise.\"\"\"\n    a = Node(\"A\")\n    b = Node(\"B\")\n    a.successors = [b]\n    b.successors = [a]\n    goal = Node(\"GOAL\")\n    goal.successors = []\n    assert breadth_first_search(a, goal) is False\n\n\ndef test_attack_5():\n    \"\"\"dead-end branch popped first must not cause premature False.\"\"\"\n    goal = Node(\"GOAL\")\n    goal.successors = []\n    dead = Node(\"DEAD\")\n    dead.successors = []\n    mid = Node(\"MID\")\n    mid.successors = [goal]\n    start = Node(\"START\")\n    # dead first in queue order\n    start.successors = [dead, mid]\n    assert breadth_first_search(start, goal) is True\n\n\ndef test_attack_6():\n    \"\"\"distinct objects with same value must not match (identity, not equality).\"\"\"\n    inner = Node(\"X\")\n    inner.successors = []\n    start = Node(\"START\")\n    start.successors = [inner]\n    goal = Node(\"X\")\n    goal.successors = []\n    # inner and goal have same name but are different objects, unconnected\n    assert inner is not goal\n    assert breadth_first_search(start, goal) is False\n\n\ndef test_attack_7():\n    \"\"\"diamond with self-loop on intermediate must still find goal.\"\"\"\n    goal = Node(\"GOAL\")\n    goal.successors = []\n    d = Node(\"D\")\n    d.successors = []  # filled below to include self-loop + goal\n    b = Node(\"B\")\n    b.successors = [d]\n    c = Node(\"C\")\n    c.successors = [d]\n    start = Node(\"START\")\n    start.successors = [b, c]\n    d.successors = [d, goal]\n    assert breadth_first_search(start, goal) is True\n\n\ndef test_attack_8():\n    \"\"\"self-loop only, goal unreachable, must return False without hanging.\"\"\"\n    start = Node(\"START\")\n    start.successors = [start]\n    goal = Node(\"GOAL\")\n    goal.successors = []\n    assert breadth_first_search(start, goal) is False\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/breadth_first_search.py b/python_programs/breadth_first_search.py\nindex cd02a7f..d0bdd24 100644\n--- a/python_programs/breadth_first_search.py\n+++ b/python_programs/breadth_first_search.py\n@@ -8,7 +8,7 @@ def breadth_first_search(startnode, goalnode):\n     nodesseen = set()\n     nodesseen.add(startnode)\n \n-    while True:\n+    while queue:\n         node = queue.popleft()\n \n         if node is goalnode:\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.420534999272286,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/breadth_first_search.py b/python_programs/breadth_first_search.py\nindex cd02a7f..d0bdd24 100644\n--- a/python_programs/breadth_first_search.py\n+++ b/python_programs/breadth_first_search.py\n@@ -8,7 +8,7 @@ def breadth_first_search(startnode, goalnode):\n     nodesseen = set()\n     nodesseen.add(startnode)\n \n-    while True:\n+    while queue:\n         node = queue.popleft()\n \n         if node is goalnode:\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.234410725718371,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/breadth_first_search.py b/python_programs/breadth_first_search.py\nindex cd02a7f..d0bdd24 100644\n--- a/python_programs/breadth_first_search.py\n+++ b/python_programs/breadth_first_search.py\n@@ -8,7 +8,7 @@ def breadth_first_search(startnode, goalnode):\n     nodesseen = set()\n     nodesseen.add(startnode)\n \n-    while True:\n+    while queue:\n         node = queue.popleft()\n \n         if node is goalnode:\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.713732805509369,
+    "self_confidence": 0.99,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/breadth_first_search.py b/python_programs/breadth_first_search.py\nindex cd02a7f..d0bdd24 100644\n--- a/python_programs/breadth_first_search.py\n+++ b/python_programs/breadth_first_search.py\n@@ -8,7 +8,7 @@ def breadth_first_search(startnode, goalnode):\n     nodesseen = set()\n     nodesseen.add(startnode)\n \n-    while True:\n+    while queue:\n         node = queue.popleft()\n \n         if node is goalnode:\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.572154032177765,
+    "self_confidence": 0.99,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/breadth_first_search.py b/python_programs/breadth_first_search.py\nindex cd02a7f..d0bdd24 100644\n--- a/python_programs/breadth_first_search.py\n+++ b/python_programs/breadth_first_search.py\n@@ -8,7 +8,7 @@ def breadth_first_search(startnode, goalnode):\n     nodesseen = set()\n     nodesseen.add(startnode)\n \n-    while True:\n+    while queue:\n         node = queue.popleft()\n \n         if node is goalnode:\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.560681631015528,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

@@ -1,0 +1,192 @@
+{
+ "task": {
+  "task_id": "quixbugs/knapsack",
+  "repo_path": "results/quixbugs/work/tasks/knapsack",
+  "failing_tests": [
+   "tests/test_knapsack.py::test_knapsack[input_data1-30]",
+   "tests/test_knapsack.py::test_knapsack[input_data3-107]",
+   "tests/test_knapsack.py::test_knapsack[input_data4-900]"
+  ],
+  "passing_tests": [
+   "tests/test_knapsack.py::test_knapsack[input_data0-19]",
+   "tests/test_knapsack.py::test_knapsack[input_data2-1458]",
+   "tests/test_knapsack.py::test_knapsack[input_data5-1735]"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FFF                                                                      [100%]\n=================================== FAILURES ===================================\n________________________ test_knapsack[input_data1-30] _________________________\n\ninput_data = [40, [[30, 10], [50, 5], [10, 20], [40, 25]]], expected = 30\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_knapsack(input_data, expected):\n        if not pytest.run_slow and input_data == [\n            6404180,\n            [\n                [382745, 825594],\n                [799601, 1677009],\n                [909247, 1676628],\n                [729069, 1523970],\n                [467902, 943972],\n                [44328, 97426],\n                [34610, 69666],\n                [698150, 1296457],\n                [823460, 1679693],\n                [903959, 1902996],\n                [853665, 1844992],\n                [551830, 1049289],\n                [610856, 1252836],\n                [670702, 1319836],\n                [488960, 953277],\n                [951111, 2067538],\n                [323046, 675367],\n                [446298, 853655],\n                [931161, 1826027],\n                [31385, 65731],\n                [496951, 901489],\n                [264724, 577243],\n                [224916, 466257],\n                [169684, 369261],\n            ],\n        ]:\n            pytest.skip(\"Takes about 4 mins to pass!\")\n>       assert knapsack(*input_data) == expected\nE       assert 20 == 30\nE        +  where 20 = knapsack(*[40, [[30, 10], [50, 5], [10, 20], [40, 25]]])\n\ntests/test_knapsack.py:45: AssertionError\n________________________ test_knapsack[input_data3-107] ________________________\n\ninput_data = [50, [[31, 70], [10, 20], [20, 39], [19, 37], [4, 7], [3, 5], ...]]\nexpected = 107\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_knapsack(input_data, expected):\n        if not pytest.run_slow and input_data == [\n            6404180,\n            [\n                [382745, 825594],\n                [799601, 1677009],\n                [909247, 1676628],\n                [729069, 1523970],\n                [467902, 943972],\n                [44328, 97426],\n                [34610, 69666],\n                [698150, 1296457],\n                [823460, 1679693],\n                [903959, 1902996],\n                [853665, 1844992],\n                [551830, 1049289],\n                [610856, 1252836],\n                [670702, 1319836],\n                [488960, 953277],\n                [951111, 2067538],\n                [323046, 675367],\n                [446298, 853655],\n                [931161, 1826027],\n                [31385, 65731],\n                [496951, 901489],\n                [264724, 577243],\n                [224916, 466257],\n                [169684, 369261],\n            ],\n        ]:\n            pytest.skip(\"Takes about 4 mins to pass!\")\n>       assert knapsack(*input_data) == expected\nE       assert 102 == 107\nE        +  where 102 = knapsack(*[50, [[31, 70], [10, 20], [20, 39], [19, 37], [4, 7], [3, 5], ...]])\n\ntests/test_knapsack.py:45: AssertionError\n________________________ test_knapsack[input_data4-900] ________________________\n\ninput_data = [104, [[25, 350], [35, 400], [45, 450], [5, 20], [25, 70], [3, 8], ...]]\nexpected = 900\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_knapsack(input_data, expected):\n        if not pytest.run_slow and input_data == [\n            6404180,\n            [\n                [382745, 825594],\n                [799601, 1677009],\n                [909247, 1676628],\n                [729069, 1523970],\n                [467902, 943972],\n                [44328, 97426],\n                [34610, 69666],\n                [698150, 1296457],\n                [823460, 1679693],\n                [903959, 1902996],\n                [853665, 1844992],\n                [551830, 1049289],\n                [610856, 1252836],\n                [670702, 1319836],\n                [488960, 953277],\n                [951111, 2067538],\n                [323046, 675367],\n                [446298, 853655],\n                [931161, 1826027],\n                [31385, 65731],\n                [496951, 901489],\n                [264724, 577243],\n                [224916, 466257],\n                [169684, 369261],\n            ],\n        ]:\n            pytest.skip(\"Takes about 4 mins to pass!\")\n>       assert knapsack(*input_data) == expected\nE       assert 898 == 900\nE        +  where 898 = knapsack(*[104, [[25, 350], [35, 400], [45, 450], [5, 20], [25, 70], [3, 8], ...]])\n\ntests/test_knapsack.py:45: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_knapsack.py::test_knapsack[input_data1-30] - assert 20 == 30\n +  where 20 = knapsack(*[40, [[30, 10], [50, 5], [10, 20], [40, 25]]])\nFAILED tests/test_knapsack.py::test_knapsack[input_data3-107] - assert 102 == 107\n +  where 102 = knapsack(*[50, [[31, 70], [10, 20], [20, 39], [19, 37], [4, 7], [3, 5], ...]])\nFAILED tests/test_knapsack.py::test_knapsack[input_data4-900] - assert 898 == 900\n +  where 898 = knapsack(*[104, [[25, 350], [35, 400], [45, 450], [5, 20], [25, 70], [3, 8], ...]])\n3 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_knapsack.py",
+    "line": 45
+   },
+   {
+    "path": "load_testdata.py",
+    "line": 5
+   },
+   {
+    "path": "python_programs/knapsack.py",
+    "line": 2
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\n\nif pytest.use_correct:\n    from correct_python_programs.knapsack import knapsack\nelse:\n    from python_programs.knapsack import knapsack\n\n\ndef test_attack_1():\n    # single item that fits exactly: weight == capacity\n    assert knapsack(5, [(5, 10)]) == 10\n\n\ndef test_attack_2():\n    # two items whose sum fits exactly\n    assert knapsack(10, [(5, 10), (5, 10)]) == 20\n\n\ndef test_attack_3():\n    # best solution requires an exact intermediate fit\n    assert knapsack(6, [(5, 10), (1, 5)]) == 15\n\n\ndef test_attack_4():\n    # overweight items must be excluded (catches off-by-one in the other direction)\n    assert knapsack(5, [(6, 100)]) == 0\n    assert knapsack(5, [(6, 100), (5, 10)]) == 10\n\n\ndef test_attack_5():\n    # 0/1 knapsack must not reuse an item (catches unbounded-knapsack fix)\n    assert knapsack(10, [(5, 10)]) == 10\n    assert knapsack(6, [(2, 3)]) == 3\n\n\ndef test_attack_6():\n    # docstring example\n    assert knapsack(100, [(60, 10), (50, 8), (20, 4), (20, 4), (8, 3), (3, 2)]) == 19\n\n\ndef test_attack_7():\n    # edge cases: empty list and zero capacity\n    assert knapsack(10, []) == 0\n    assert knapsack(0, []) == 0\n    assert knapsack(0, [(1, 10), (2, 20)]) == 0\n\n\ndef test_attack_8():\n    # exact final weight is optimal: 6+4=10 -> 46\n    assert knapsack(10, [(6, 30), (3, 14), (4, 16), (2, 9)]) == 46\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/knapsack.py b/python_programs/knapsack.py\nindex 493c2d3..9bbe72e 100644\n--- a/python_programs/knapsack.py\n+++ b/python_programs/knapsack.py\n@@ -9,7 +9,7 @@ def knapsack(capacity, items):\n         for j in range(1, capacity + 1):\n             memo[i, j] = memo[i - 1, j]\n \n-            if weight < j:\n+            if weight <= j:\n                 memo[i, j] = max(\n                     memo[i, j],\n                     value + memo[i - 1, j - weight]\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.3473892096560105,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/knapsack.py b/python_programs/knapsack.py\nindex 493c2d3..9bbe72e 100644\n--- a/python_programs/knapsack.py\n+++ b/python_programs/knapsack.py\n@@ -9,7 +9,7 @@ def knapsack(capacity, items):\n         for j in range(1, capacity + 1):\n             memo[i, j] = memo[i - 1, j]\n \n-            if weight < j:\n+            if weight <= j:\n                 memo[i, j] = max(\n                     memo[i, j],\n                     value + memo[i - 1, j - weight]\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.777652323222656,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/knapsack.py b/python_programs/knapsack.py\nindex 493c2d3..9bbe72e 100644\n--- a/python_programs/knapsack.py\n+++ b/python_programs/knapsack.py\n@@ -9,7 +9,7 @@ def knapsack(capacity, items):\n         for j in range(1, capacity + 1):\n             memo[i, j] = memo[i - 1, j]\n \n-            if weight < j:\n+            if weight <= j:\n                 memo[i, j] = max(\n                     memo[i, j],\n                     value + memo[i - 1, j - weight]\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.453624998892692,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/knapsack.py b/python_programs/knapsack.py\nindex 493c2d3..9bbe72e 100644\n--- a/python_programs/knapsack.py\n+++ b/python_programs/knapsack.py\n@@ -9,7 +9,7 @@ def knapsack(capacity, items):\n         for j in range(1, capacity + 1):\n             memo[i, j] = memo[i - 1, j]\n \n-            if weight < j:\n+            if weight <= j:\n                 memo[i, j] = max(\n                     memo[i, j],\n                     value + memo[i - 1, j - weight]\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.628041376179533,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/knapsack.py b/python_programs/knapsack.py\nindex 493c2d3..9bbe72e 100644\n--- a/python_programs/knapsack.py\n+++ b/python_programs/knapsack.py\n@@ -9,7 +9,7 @@ def knapsack(capacity, items):\n         for j in range(1, capacity + 1):\n             memo[i, j] = memo[i - 1, j]\n \n-            if weight < j:\n+            if weight <= j:\n                 memo[i, j] = max(\n                     memo[i, j],\n                     value + memo[i - 1, j - weight]\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 2.0794415416798357,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.522092798170152,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

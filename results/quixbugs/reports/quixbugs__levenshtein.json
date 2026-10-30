@@ -1,0 +1,189 @@
+{
+ "task": {
+  "task_id": "quixbugs/levenshtein",
+  "repo_path": "results/quixbugs/work/tasks/levenshtein",
+  "failing_tests": [
+   "tests/test_levenshtein.py::test_levenshtein[input_data0-3]",
+   "tests/test_levenshtein.py::test_levenshtein[input_data1-8]"
+  ],
+  "passing_tests": [
+   "tests/test_levenshtein.py::test_levenshtein[input_data2-0]"
+  ],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FF                                                                       [100%]\n=================================== FAILURES ===================================\n_______________________ test_levenshtein[input_data0-3] ________________________\n\ninput_data = ['electron', 'neutron'], expected = 3\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_levenshtein(input_data, expected):\n        if input_data == [\n            \"amanaplanacanalpanama\",\n            \"docnoteidissentafastneverpreventsafatnessidietoncod\",\n        ]:\n            pytest.skip(\"Takes too long to pass!\")\n    \n>       assert levenshtein(*input_data) == expected\nE       AssertionError: assert 8 == 3\nE        +  where 8 = levenshtein(*['electron', 'neutron'])\n\ntests/test_levenshtein.py:21: AssertionError\n_______________________ test_levenshtein[input_data1-8] ________________________\n\ninput_data = ['rosettacode', 'raisethysword'], expected = 8\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_levenshtein(input_data, expected):\n        if input_data == [\n            \"amanaplanacanalpanama\",\n            \"docnoteidissentafastneverpreventsafatnessidietoncod\",\n        ]:\n            pytest.skip(\"Takes too long to pass!\")\n    \n>       assert levenshtein(*input_data) == expected\nE       AssertionError: assert 13 == 8\nE        +  where 13 = levenshtein(*['rosettacode', 'raisethysword'])\n\ntests/test_levenshtein.py:21: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_levenshtein.py::test_levenshtein[input_data0-3] - AssertionError: assert 8 == 3\n +  where 8 = levenshtein(*['electron', 'neutron'])\nFAILED tests/test_levenshtein.py::test_levenshtein[input_data1-8] - AssertionError: assert 13 == 8\n +  where 13 = levenshtein(*['rosettacode', 'raisethysword'])\n2 failed in 1.99s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_levenshtein.py",
+    "line": 21
+   },
+   {
+    "path": "load_testdata.py",
+    "line": 5
+   },
+   {
+    "path": "python_programs/levenshtein.py",
+    "line": 1
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": "import pytest\n\nif pytest.use_correct:\n    from correct_python_programs.levenshtein import levenshtein\nelse:\n    from python_programs.levenshtein import levenshtein\n\n\ndef test_attack_1_identical_is_zero():\n    # Equal strings must cost 0; buggy version returns len.\n    assert levenshtein(\"\", \"\") == 0\n    assert levenshtein(\"a\", \"a\") == 0\n    assert levenshtein(\"abc\", \"abc\") == 0\n    assert levenshtein(\"hello\", \"hello\") == 0\n\n\ndef test_attack_2_empty_vs_nonempty():\n    assert levenshtein(\"\", \"\") == 0\n    assert levenshtein(\"\", \"a\") == 1\n    assert levenshtein(\"a\", \"\") == 1\n    assert levenshtein(\"\", \"abc\") == 3\n    assert levenshtein(\"abc\", \"\") == 3\n\n\ndef test_attack_3_single_substitution_costs_one():\n    assert levenshtein(\"a\", \"b\") == 1\n    assert levenshtein(\"cat\", \"bat\") == 1\n    assert levenshtein(\"cat\", \"cut\") == 1\n    assert levenshtein(\"kitten\", \"sitten\") == 1\n\n\ndef test_attack_4_insertion_deletion_and_symmetry():\n    assert levenshtein(\"abc\", \"abcd\") == 1\n    assert levenshtein(\"abcd\", \"abc\") == 1\n    assert levenshtein(\"ab\", \"abc\") == 1\n    assert levenshtein(\"abc\", \"ab\") == 1\n    assert levenshtein(\"abc\", \"abcd\") == levenshtein(\"abcd\", \"abc\")\n    assert levenshtein(\"abc\", \"abcde\") == 2\n\n\ndef test_attack_5_shared_prefix_costs_zero():\n    # Equal prefix must be free; buggy adds 1 per equal char.\n    assert levenshtein(\"abc\", \"abd\") == 1\n    assert levenshtein(\"ab\", \"ac\") == 1\n    assert levenshtein(\"aaaa\", \"aaab\") == 1\n    assert levenshtein(\"prefixX\", \"prefixY\") == 1\n\n\ndef test_attack_6_transposition_is_two_edits():\n    # No transposition operation: swap needs 2 edits, not 1.\n    assert levenshtein(\"ab\", \"ba\") == 2\n    assert levenshtein(\"abc\", \"acb\") == 2\n    assert levenshtein(\"abcd\", \"abdc\") == 2\n\n\ndef test_attack_7_classic_multi_edit():\n    assert levenshtein(\"flaw\", \"lawn\") == 2\n    assert levenshtein(\"gumbo\", \"gambol\") == 2\n    assert levenshtein(\"book\", \"back\") == 2\n\n\ndef test_attack_8_case_sensitive():\n    assert levenshtein(\"A\", \"a\") == 1\n    assert levenshtein(\"Hello\", \"hello\") == 1\n    assert levenshtein(\"ABC\", \"abc\") == 3\n",
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/levenshtein.py b/python_programs/levenshtein.py\nindex ba5c682..bb9875e 100644\n--- a/python_programs/levenshtein.py\n+++ b/python_programs/levenshtein.py\n@@ -3,7 +3,7 @@ def levenshtein(source, target):\n         return len(source) or len(target)\n \n     elif source[0] == target[0]:\n-        return 1 + levenshtein(source[1:], target[1:])\n+        return levenshtein(source[1:], target[1:])\n \n     else:\n         return 1 + min(\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.849324779946859,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/levenshtein.py b/python_programs/levenshtein.py\nindex ba5c682..bb9875e 100644\n--- a/python_programs/levenshtein.py\n+++ b/python_programs/levenshtein.py\n@@ -3,7 +3,7 @@ def levenshtein(source, target):\n         return len(source) or len(target)\n \n     elif source[0] == target[0]:\n-        return 1 + levenshtein(source[1:], target[1:])\n+        return levenshtein(source[1:], target[1:])\n \n     else:\n         return 1 + min(\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.327936783729195,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/levenshtein.py b/python_programs/levenshtein.py\nindex ba5c682..bb9875e 100644\n--- a/python_programs/levenshtein.py\n+++ b/python_programs/levenshtein.py\n@@ -3,7 +3,7 @@ def levenshtein(source, target):\n         return len(source) or len(target)\n \n     elif source[0] == target[0]:\n-        return 1 + levenshtein(source[1:], target[1:])\n+        return levenshtein(source[1:], target[1:])\n \n     else:\n         return 1 + min(\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.3578422665081,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/levenshtein.py b/python_programs/levenshtein.py\nindex ba5c682..bb9875e 100644\n--- a/python_programs/levenshtein.py\n+++ b/python_programs/levenshtein.py\n@@ -3,7 +3,7 @@ def levenshtein(source, target):\n         return len(source) or len(target)\n \n     elif source[0] == target[0]:\n-        return 1 + levenshtein(source[1:], target[1:])\n+        return levenshtein(source[1:], target[1:])\n \n     else:\n         return 1 + min(\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.602118820879701,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/levenshtein.py b/python_programs/levenshtein.py\nindex ba5c682..bb9875e 100644\n--- a/python_programs/levenshtein.py\n+++ b/python_programs/levenshtein.py\n@@ -3,7 +3,7 @@ def levenshtein(source, target):\n         return len(source) or len(target)\n \n     elif source[0] == target[0]:\n-        return 1 + levenshtein(source[1:], target[1:])\n+        return levenshtein(source[1:], target[1:])\n \n     else:\n         return 1 + min(\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 1.0,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 5.808142489980444,
+    "self_confidence": 1.0,
+    "n_attack_tests": 8.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

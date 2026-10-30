@@ -20,7 +20,7 @@ Settings → Secrets and variables → Actions.
 | `KEEL_SPARK_OPEN_BASE_URL` | variable | only if not Baseten's `https://inference.baseten.co/v1` |
 | `KEEL_GLIMMER_BASE_URL`, `KEEL_GLIMMER_MODEL` | variables | optional: Muse Glimmer endpoint |
 | `KEEL_GLIMMER_API_KEY` | secret | optional |
-| `KEEL_*_PRICE_IN`, `KEEL_*_PRICE_OUT` | variables | $ per 1M input/output tokens, for the cost table |
+| `KEEL_*_PRICE_IN`, `KEEL_*_PRICE_OUT` | variables | $ per 1M input/output tokens. Optional for `muse-spark-1.1` and `muse-spark-1.3` ($1.25 / $4.25 built in); needed for other models, or their cost shows as $0 |
 
 Check locally with `keel doctor` (it never prints keys).
 

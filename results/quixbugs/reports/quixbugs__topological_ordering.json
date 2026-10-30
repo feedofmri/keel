@@ -1,0 +1,191 @@
+{
+ "task": {
+  "task_id": "quixbugs/topological_ordering",
+  "repo_path": "results/quixbugs/work/tasks/topological_ordering",
+  "failing_tests": [
+   "tests/test_topological_ordering.py::test1",
+   "tests/test_topological_ordering.py::test3"
+  ],
+  "passing_tests": [],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FF                                                                       [100%]\n=================================== FAILURES ===================================\n____________________________________ test1 _____________________________________\n\n    def test1():\n        \"\"\"Case 1: Wikipedia graph\n        Output: 5 7 3 11 8 10 2 9\n        \"\"\"\n    \n        five = Node(5)\n        seven = Node(7)\n        three = Node(3)\n        eleven = Node(11)\n        eight = Node(8)\n        two = Node(2)\n        nine = Node(9)\n        ten = Node(10)\n    \n        five.outgoing_nodes = [eleven]\n        seven.outgoing_nodes = [eleven, eight]\n        three.outgoing_nodes = [eight, ten]\n        eleven.incoming_nodes = [five, seven]\n        eleven.outgoing_nodes = [two, nine, ten]\n        eight.incoming_nodes = [seven, three]\n        eight.outgoing_nodes = [nine]\n        two.incoming_nodes = [eleven]\n        nine.incoming_nodes = [eleven, eight]\n        ten.incoming_nodes = [eleven, three]\n    \n        result = [\n            x.value\n            for x in topological_ordering(\n                [five, seven, three, eleven, eight, two, nine, ten]\n            )\n        ]\n    \n>       assert result == [5, 7, 3, 11, 8, 10, 2, 9]\nE       assert [5, 7, 3, 10] == [5, 7, 3, 11, 8, 10, ...]\nE         \nE         At index 3 diff: 10 != 11\nE         Right contains 4 more items, first extra item: 8\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE               5,\nE               7,\nE               3,\nE         -     11,\nE         -     8,\nE               10,\nE         -     2,\nE         -     9,\nE           ]\n\ntests/test_topological_ordering.py:42: AssertionError\n____________________________________ test3 _____________________________________\n\n    def test3():\n        \"\"\"Case 3: Cooking with InteractivePython\"\"\"\n    \n        milk = Node(\"3/4 cup milk\")\n        egg = Node(\"1 egg\")\n        oil = Node(\"1 Tbl oil\")\n        mix = Node(\"1 cup mix\")\n        syrup = Node(\"heat syrup\")\n        griddle = Node(\"heat griddle\")\n        pour = Node(\"pour 1/4 cup\")\n        turn = Node(\"turn when bubbly\")\n        eat = Node(\"eat\")\n    \n        milk.outgoing_nodes = [mix]\n        egg.outgoing_nodes = [mix]\n        oil.outgoing_nodes = [mix]\n        mix.incoming_nodes = [milk, egg, oil]\n        mix.outgoing_nodes = [syrup, pour]\n        griddle.outgoing_nodes = [pour]\n        pour.incoming_nodes = [mix, griddle]\n        pour.outgoing_nodes = [turn]\n        turn.incoming_nodes = [pour]\n        turn.outgoing_nodes = [eat]\n        syrup.incoming_nodes = [mix]\n        syrup.outgoing_nodes = [eat]\n        eat.incoming_nodes = [syrup, turn]\n    \n        result = [\n            x.value\n            for x in topological_ordering(\n                [milk, egg, oil, mix, syrup, griddle, pour, turn, eat]\n            )\n        ]\n    \n        expected = [\n            \"3/4 cup milk\",\n            \"1 egg\",\n            \"1 Tbl oil\",\n            \"heat griddle\",\n            \"1 cup mix\",\n            \"pour 1/4 cup\",\n            \"heat syrup\",\n            \"turn when bubbly\",\n            \"eat\",\n        ]\n>       assert result == expected\nE       AssertionError: assert ['3/4 cup mil...heat griddle'] == ['3/4 cup mil...1/4 cup', ...]\nE         \nE         Right contains 5 more items, first extra item: '1 cup mix'\nE         \nE         Full diff: (-: missing in left side, +: extra in left side)\nE           [\nE               '3/4 cup milk',\nE               '1 egg',\nE               '1 Tbl oil',\nE               'heat griddle',\nE         -     '1 cup mix',\nE         -     'pour 1/4 cup',\nE         -     'heat syrup',\nE         -     'turn when bubbly',\nE         -     'eat',\nE           ]\n\ntests/test_topological_ordering.py:92: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_topological_ordering.py::test1 - assert [5, 7, 3, 10] == [5, 7, 3, 11, 8, 10, ...]\n  \n  At index 3 diff: 10 != 11\n  Right contains 4 more items, first extra item: 8\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n        5,\n        7,\n        3,\n  -     11,\n  -     8,\n        10,\n  -     2,\n  -     9,\n    ]\nFAILED tests/test_topological_ordering.py::test3 - AssertionError: assert ['3/4 cup mil...heat griddle'] == ['3/4 cup mil...1/4 cup', ...]\n  \n  Right contains 5 more items, first extra item: '1 cup mix'\n  \n  Full diff: (-: missing in left side, +: extra in left side)\n    [\n        '3/4 cup milk',\n        '1 egg',\n        '1 Tbl oil',\n        'heat griddle',\n  -     '1 cup mix',\n  -     'pour 1/4 cup',\n  -     'heat syrup',\n  -     'turn when bubbly',\n  -     'eat',\n    ]\n2 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_topological_ordering.py",
+    "line": 42
+   },
+   {
+    "path": "tests/test_topological_ordering.py",
+    "line": 92
+   },
+   {
+    "path": "node.py",
+    "line": 1
+   },
+   {
+    "path": "python_programs/topological_ordering.py",
+    "line": 1
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": null,
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/topological_ordering.py b/python_programs/topological_ordering.py\nindex e304be7..950191a 100644\n--- a/python_programs/topological_ordering.py\n+++ b/python_programs/topological_ordering.py\n@@ -3,7 +3,7 @@ def topological_ordering(nodes):\n \n     for node in ordered_nodes:\n         for nextnode in node.outgoing_nodes:\n-            if set(ordered_nodes).issuperset(nextnode.outgoing_nodes) and nextnode not in ordered_nodes:\n+            if set(ordered_nodes).issuperset(nextnode.incoming_nodes) and nextnode not in ordered_nodes:\n                 ordered_nodes.append(nextnode)\n \n     return ordered_nodes\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.362645270417825,
+    "self_confidence": 0.95,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "diff --git a/python_programs/topological_ordering.py b/python_programs/topological_ordering.py\nindex e304be7..950191a 100644\n--- a/python_programs/topological_ordering.py\n+++ b/python_programs/topological_ordering.py\n@@ -3,7 +3,7 @@ def topological_ordering(nodes):\n \n     for node in ordered_nodes:\n         for nextnode in node.outgoing_nodes:\n-            if set(ordered_nodes).issuperset(nextnode.outgoing_nodes) and nextnode not in ordered_nodes:\n+            if set(ordered_nodes).issuperset(nextnode.incoming_nodes) and nextnode not in ordered_nodes:\n                 ordered_nodes.append(nextnode)\n \n     return ordered_nodes\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.57095858316901,
+    "self_confidence": 0.95,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/topological_ordering.py b/python_programs/topological_ordering.py\nindex e304be7..950191a 100644\n--- a/python_programs/topological_ordering.py\n+++ b/python_programs/topological_ordering.py\n@@ -3,7 +3,7 @@ def topological_ordering(nodes):\n \n     for node in ordered_nodes:\n         for nextnode in node.outgoing_nodes:\n-            if set(ordered_nodes).issuperset(nextnode.outgoing_nodes) and nextnode not in ordered_nodes:\n+            if set(ordered_nodes).issuperset(nextnode.incoming_nodes) and nextnode not in ordered_nodes:\n                 ordered_nodes.append(nextnode)\n \n     return ordered_nodes\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.456454555176209,
+    "self_confidence": 0.99,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/topological_ordering.py b/python_programs/topological_ordering.py\nindex e304be7..950191a 100644\n--- a/python_programs/topological_ordering.py\n+++ b/python_programs/topological_ordering.py\n@@ -3,7 +3,7 @@ def topological_ordering(nodes):\n \n     for node in ordered_nodes:\n         for nextnode in node.outgoing_nodes:\n-            if set(ordered_nodes).issuperset(nextnode.outgoing_nodes) and nextnode not in ordered_nodes:\n+            if set(ordered_nodes).issuperset(nextnode.incoming_nodes) and nextnode not in ordered_nodes:\n                 ordered_nodes.append(nextnode)\n \n     return ordered_nodes\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.400009517162692,
+    "self_confidence": 0.95,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/topological_ordering.py b/python_programs/topological_ordering.py\nindex e304be7..950191a 100644\n--- a/python_programs/topological_ordering.py\n+++ b/python_programs/topological_ordering.py\n@@ -3,7 +3,7 @@ def topological_ordering(nodes):\n \n     for node in ordered_nodes:\n         for nextnode in node.outgoing_nodes:\n-            if set(ordered_nodes).issuperset(nextnode.outgoing_nodes) and nextnode not in ordered_nodes:\n+            if set(ordered_nodes).issuperset(nextnode.incoming_nodes) and nextnode not in ordered_nodes:\n                 ordered_nodes.append(nextnode)\n \n     return ordered_nodes\n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 1.0986122886681096,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.58629630715272,
+    "self_confidence": 0.95,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

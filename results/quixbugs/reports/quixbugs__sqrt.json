@@ -1,0 +1,187 @@
+{
+ "task": {
+  "task_id": "quixbugs/sqrt",
+  "repo_path": "results/quixbugs/work/tasks/sqrt",
+  "failing_tests": [
+   "tests/test_sqrt.py::test_sqrt[input_data0-1.4166666666666665]",
+   "tests/test_sqrt.py::test_sqrt[input_data1-1.5]",
+   "tests/test_sqrt.py::test_sqrt[input_data2-5.196164639727311]",
+   "tests/test_sqrt.py::test_sqrt[input_data3-13.038404876679632]"
+  ],
+  "passing_tests": [],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FFFF                                                                     [100%]\n=================================== FAILURES ===================================\n__________________ test_sqrt[input_data0-1.4166666666666665] ___________________\n\ninput_data = [2, 0.01], expected = 1.4166666666666665\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_sqrt(input_data, expected):\n>       assert sqrt(*input_data) == pytest.approx(expected, abs=input_data[-1])\n               ^^^^^^^^^^^^^^^^^\n\ntests/test_sqrt.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nx = 2, epsilon = 0.01\n\n    def sqrt(x, epsilon):\n        approx = x / 2\n>       while abs(x - approx) > epsilon:\n              ^^^^^^^^^^^^^^^\nE       Failed: Timeout (>3.0s) from pytest-timeout.\n\npython_programs/sqrt.py:4: Failed\n__________________________ test_sqrt[input_data1-1.5] __________________________\n\ninput_data = [2, 0.3], expected = 1.5\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_sqrt(input_data, expected):\n>       assert sqrt(*input_data) == pytest.approx(expected, abs=input_data[-1])\n               ^^^^^^^^^^^^^^^^^\n\ntests/test_sqrt.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nx = 2, epsilon = 0.3\n\n    def sqrt(x, epsilon):\n        approx = x / 2\n>       while abs(x - approx) > epsilon:\n              ^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: Timeout (>3.0s) from pytest-timeout.\n\npython_programs/sqrt.py:4: Failed\n___________________ test_sqrt[input_data2-5.196164639727311] ___________________\n\ninput_data = [27, 0.01], expected = 5.196164639727311\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_sqrt(input_data, expected):\n>       assert sqrt(*input_data) == pytest.approx(expected, abs=input_data[-1])\n               ^^^^^^^^^^^^^^^^^\n\ntests/test_sqrt.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nx = 27, epsilon = 0.01\n\n    def sqrt(x, epsilon):\n        approx = x / 2\n>       while abs(x - approx) > epsilon:\n              ^^^^^^^^^^^^^^^\nE       Failed: Timeout (>3.0s) from pytest-timeout.\n\npython_programs/sqrt.py:4: Failed\n__________________ test_sqrt[input_data3-13.038404876679632] ___________________\n\ninput_data = [170, 0.03], expected = 13.038404876679632\n\n    @pytest.mark.parametrize(\"input_data,expected\", testdata)\n    def test_sqrt(input_data, expected):\n>       assert sqrt(*input_data) == pytest.approx(expected, abs=input_data[-1])\n               ^^^^^^^^^^^^^^^^^\n\ntests/test_sqrt.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nx = 170, epsilon = 0.03\n\n    def sqrt(x, epsilon):\n        approx = x / 2\n>       while abs(x - approx) > epsilon:\n              ^^^^^^^^^^^^^^^\nE       Failed: Timeout (>3.0s) from pytest-timeout.\n\npython_programs/sqrt.py:4: Failed\n=========================== short test summary info ============================\nFAILED tests/test_sqrt.py::test_sqrt[input_data0-1.4166666666666665] - Failed: Timeout (>3.0s) from pytest-timeout.\nFAILED tests/test_sqrt.py::test_sqrt[input_data1-1.5] - Failed: Timeout (>3.0s) from pytest-timeout.\nFAILED tests/test_sqrt.py::test_sqrt[input_data2-5.196164639727311] - Failed: Timeout (>3.0s) from pytest-timeout.\nFAILED tests/test_sqrt.py::test_sqrt[input_data3-13.038404876679632] - Failed: Timeout (>3.0s) from pytest-timeout.\n4 failed in 12.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_sqrt.py",
+    "line": 15
+   },
+   {
+    "path": "python_programs/sqrt.py",
+    "line": 4
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": null,
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "diff --git a/python_programs/sqrt.py b/python_programs/sqrt.py\nindex c79dfa8..01682c0 100644\n--- a/python_programs/sqrt.py\n+++ b/python_programs/sqrt.py\n@@ -1,7 +1,7 @@\n \n def sqrt(x, epsilon):\n     approx = x / 2\n-    while abs(x - approx) > epsilon:\n+    while abs(x - approx * approx) > epsilon:\n         approx = 0.5 * (approx + x / approx)\n     return approx\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 6.913737350659685,
+    "self_confidence": 0.99,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 8.31752199628717,
+    "self_confidence": 0.5,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "diff --git a/python_programs/sqrt.py b/python_programs/sqrt.py\nindex c79dfa8..01682c0 100644\n--- a/python_programs/sqrt.py\n+++ b/python_programs/sqrt.py\n@@ -1,7 +1,7 @@\n \n def sqrt(x, epsilon):\n     approx = x / 2\n-    while abs(x - approx) > epsilon:\n+    while abs(x - approx * approx) > epsilon:\n         approx = 0.5 * (approx + x / approx)\n     return approx\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.613324979540639,
+    "self_confidence": 0.98,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/sqrt.py b/python_programs/sqrt.py\nindex c79dfa8..01682c0 100644\n--- a/python_programs/sqrt.py\n+++ b/python_programs/sqrt.py\n@@ -1,7 +1,7 @@\n \n def sqrt(x, epsilon):\n     approx = x / 2\n-    while abs(x - approx) > epsilon:\n+    while abs(x - approx * approx) > epsilon:\n         approx = 0.5 * (approx + x / approx)\n     return approx\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.160069207596127,
+    "self_confidence": 0.99,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "diff --git a/python_programs/sqrt.py b/python_programs/sqrt.py\nindex c79dfa8..01682c0 100644\n--- a/python_programs/sqrt.py\n+++ b/python_programs/sqrt.py\n@@ -1,7 +1,7 @@\n \n def sqrt(x, epsilon):\n     approx = x / 2\n-    while abs(x - approx) > epsilon:\n+    while abs(x - approx * approx) > epsilon:\n         approx = 0.5 * (approx + x / approx)\n     return approx\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.0986122886681096,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 1.0,
+    "behavior_agreement": 1.0,
+    "mean_jaccard": 1.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 7.575584651557793,
+    "self_confidence": 0.99,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}

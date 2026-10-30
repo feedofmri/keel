@@ -1,0 +1,195 @@
+{
+ "task": {
+  "task_id": "quixbugs/minimum_spanning_tree",
+  "repo_path": "results/quixbugs/work/tasks/minimum_spanning_tree",
+  "failing_tests": [
+   "tests/test_minimum_spanning_tree.py::test1",
+   "tests/test_minimum_spanning_tree.py::test3"
+  ],
+  "passing_tests": [],
+  "test_command": "{python} -m pytest -q -p no:cacheprovider --timeout=3 {tests} --junitxml={junit}",
+  "problem_statement": "",
+  "failure_output": "FF                                                                       [100%]\n=================================== FAILURES ===================================\n____________________________________ test1 _____________________________________\n\n    def test1():\n        \"\"\"Case 1: Simple tree input.\n        Output: (1, 2) (3, 4) (1, 4)\n        \"\"\"\n    \n>       result = minimum_spanning_tree(\n            {\n                (1, 2): 10,\n                (2, 3): 15,\n                (3, 4): 10,\n                (1, 4): 10,\n            }\n        )\n\ntests/test_minimum_spanning_tree.py:14: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nweight_by_edge = {(1, 2): 10, (2, 3): 15, (3, 4): 10, (1, 4): 10}\n\n    def minimum_spanning_tree(weight_by_edge):\n        group_by_node = {}\n        mst_edges = set()\n    \n        for edge in sorted(weight_by_edge, key=weight_by_edge.__getitem__):\n            u, v = edge\n            if group_by_node.setdefault(u, {u}) != group_by_node.setdefault(v, {v}):\n                mst_edges.add(edge)\n                group_by_node[u].update(group_by_node[v])\n>               for node in group_by_node[v]:\n                            ^^^^^^^^^^^^^^^^\nE               RuntimeError: Set changed size during iteration\n\npython_programs/minimum_spanning_tree.py:11: RuntimeError\n____________________________________ test3 _____________________________________\n\n    def test3():\n        \"\"\"Case 3: Minimum spanning tree input.\n        Output: (1, 2) (1, 3) (2, 4)\n        \"\"\"\n    \n>       result = minimum_spanning_tree(\n            {\n                (1, 2): 6,\n                (1, 3): 1,\n                (2, 4): 2,\n            }\n        )\n\ntests/test_minimum_spanning_tree.py:33: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nweight_by_edge = {(1, 2): 6, (1, 3): 1, (2, 4): 2}\n\n    def minimum_spanning_tree(weight_by_edge):\n        group_by_node = {}\n        mst_edges = set()\n    \n        for edge in sorted(weight_by_edge, key=weight_by_edge.__getitem__):\n            u, v = edge\n            if group_by_node.setdefault(u, {u}) != group_by_node.setdefault(v, {v}):\n                mst_edges.add(edge)\n                group_by_node[u].update(group_by_node[v])\n>               for node in group_by_node[v]:\n                            ^^^^^^^^^^^^^^^^\nE               RuntimeError: Set changed size during iteration\n\npython_programs/minimum_spanning_tree.py:11: RuntimeError\n=========================== short test summary info ============================\nFAILED tests/test_minimum_spanning_tree.py::test1 - RuntimeError: Set changed size during iteration\nFAILED tests/test_minimum_spanning_tree.py::test3 - RuntimeError: Set changed size during iteration\n2 failed in 0.03s\n",
+  "suspicious_locations": [
+   {
+    "path": "tests/test_minimum_spanning_tree.py",
+    "line": 14
+   },
+   {
+    "path": "python_programs/minimum_spanning_tree.py",
+    "line": 11
+   },
+   {
+    "path": "tests/test_minimum_spanning_tree.py",
+    "line": 33
+   }
+  ],
+  "protected_globs": [
+   "tests/*",
+   "test/*",
+   "*/tests/*",
+   "test_*.py",
+   "*_test.py",
+   "conftest.py",
+   ".github/*",
+   ".keel.toml"
+  ],
+  "test_timeout": 120
+ },
+ "attack_tests": null,
+ "candidates": [
+  {
+   "id": "muse-spark-0",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 8.31752199628717,
+    "self_confidence": 0.5,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-1",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 8.31752199628717,
+    "self_confidence": 0.5,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-2",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 8.31752199628717,
+    "self_confidence": 0.5,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-3",
+   "diff": "diff --git a/python_programs/minimum_spanning_tree.py b/python_programs/minimum_spanning_tree.py\nindex 8c04afd..f426755 100644\n--- a/python_programs/minimum_spanning_tree.py\n+++ b/python_programs/minimum_spanning_tree.py\n@@ -8,8 +8,8 @@ def minimum_spanning_tree(weight_by_edge):\n         if group_by_node.setdefault(u, {u}) != group_by_node.setdefault(v, {v}):\n             mst_edges.add(edge)\n             group_by_node[u].update(group_by_node[v])\n-            for node in group_by_node[v]:\n-                group_by_node[node].update(group_by_node[u])\n+            for node in list(group_by_node[u]):\n+                group_by_node[node] = group_by_node[u]\n \n     return mst_edges\n \n",
+   "gates": [],
+   "features": {
+    "f2p_rate": 1.0,
+    "p2p_rate": 1.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 1.6094379124341003,
+    "n_files": 1.0,
+    "n_hunks": 1.0,
+    "frac_files_in_traceback": 1.0,
+    "log_line_distance": 0.0,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 1.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 8.08271113423758,
+    "self_confidence": 0.95,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  },
+  {
+   "id": "muse-spark-4",
+   "diff": "",
+   "gates": [
+    "patch_did_not_apply"
+   ],
+   "features": {
+    "f2p_rate": 0.0,
+    "p2p_rate": 0.0,
+    "attack_survival": 0.5,
+    "attack_minority": 0.0,
+    "log_diff_size": 0.0,
+    "n_files": 0.0,
+    "n_hunks": 0.0,
+    "frac_files_in_traceback": 0.0,
+    "log_line_distance": 6.90875477931522,
+    "static_delta": 0.0,
+    "exact_agreement": 0.0,
+    "behavior_agreement": 0.0,
+    "mean_jaccard": 0.0,
+    "cross_model_agreement": 0.0,
+    "consensus_score": 0.0,
+    "has_logprob": 0.0,
+    "mean_logprob": 0.0,
+    "min_logprob": 0.0,
+    "log_reasoning_tokens": 8.31752199628717,
+    "self_confidence": 0.5,
+    "n_attack_tests": 0.0,
+    "n_cross_model": 0.0
+   }
+  }
+ ]
+}
