@@ -45,9 +45,33 @@ export function loadEnvFile(path = process.env.KEEL_ENV_FILE || join(homedir(), 
 }
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const env = schema.parse(source);
+  const parsed = schema.safeParse(source);
+  if (!parsed.success) {
+    // One readable line per setting in the host's error log, never the values.
+    const lines = parsed.error.issues.map(i => `  ${i.path.join(".")}: ${source[String(i.path[0])] === undefined ? "not set" : i.message}`);
+    throw new Error(`Keel cannot start: fix these settings (cPanel → Setup Node.js App → Environment variables), then Restart.\n${lines.join("\n")}`);
+  }
+  const env = parsed.data;
+  env.DATABASE_URL = normalizeDatabaseUrl(env.DATABASE_URL);
   env.GITHUB_PRIVATE_KEY = normalizePem(env.GITHUB_PRIVATE_KEY);
   return env;
+}
+
+/**
+ * Accept a DATABASE_URL as people actually type it: a password with characters such as ; @ # / ?
+ * is encoded, surrounding quotes are dropped, and localhost becomes 127.0.0.1 (cPanel's PostgreSQL
+ * often accepts IPv4 only, while "localhost" may resolve to ::1). Errors name the problem, not the value.
+ */
+export function normalizeDatabaseUrl(raw: string): string {
+  const url = raw.trim().replace(/^(["'])(.*)\1$/s, "$2");
+  if (url.includes("host=/")) return url;   // a Unix-socket URL; leave it alone
+  const m = url.match(/^(postgres(?:ql)?):\/\/([^:@/]+)(?::(.*))?@([^@/?:]+)(?::(\d+))?\/([^?#]+)(\?.*)?$/s);
+  if (!m) throw new Error("Keel cannot start: DATABASE_URL must look like postgres://USER:PASSWORD@127.0.0.1:5432/DATABASE?sslmode=disable");
+  const [, scheme, user, password, host, port, database, query] = m;
+  if (/[<>]/.test(user + database)) throw new Error("Keel cannot start: DATABASE_URL still contains a <placeholder>; put in the real user and database name");
+  const enc = (v: string) => { try { return encodeURIComponent(decodeURIComponent(v)); } catch { return encodeURIComponent(v); } };
+  const h = host.toLowerCase() === "localhost" ? "127.0.0.1" : host;
+  return `${scheme}://${enc(user)}${password === undefined ? "" : ":" + enc(password)}@${h}${port ? ":" + port : ""}/${enc(database)}${query ?? ""}`;
 }
 
 /**
