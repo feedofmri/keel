@@ -26,15 +26,16 @@ jobs:
                         headers={"Authorization": "Bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]}).json()["value"]
           body = {"trigger": "probe", "commit_sha": "0" * 40, "n_candidates": 0, "selected_score": None, "threshold": None,
                   "decision": "NEEDS REVIEW", "pr_number": None, "cost_usd": 0}
-          for label, auth in [("fake token", "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYyJ9.e30.c2ln"), ("real token", "Bearer " + t)]:
+          ua = {"User-Agent": "keel-action/0.1 (+https://keel.boraqs.com)"}
+          def go(label, fn):
               try:
-                  r = httpx.post("https://keel.boraqs.com/api/runs", json=body, headers={"Authorization": auth}, timeout=30)
-                  print(label, r.status_code, r.headers.get("server"), r.text[:300])
+                  r = fn(); print(label, r.status_code, r.text[:200])
               except Exception as e:
                   print(label, "FAILED:", type(e).__name__, e)
               time.sleep(2)
-          try:
-              print("healthz after:", httpx.get("https://keel.boraqs.com/healthz", timeout=30).text)
-          except Exception as e:
-              print("healthz after FAILED:", e)
+          # custom User-Agent first, so a block triggered by the default one cannot spoil these
+          go("keel UA healthz", lambda: httpx.get("https://keel.boraqs.com/healthz", headers=ua, timeout=30))
+          go("keel UA fake token", lambda: httpx.post("https://keel.boraqs.com/api/runs", json=body, headers={**ua, "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYyJ9.e30.c2ln"}, timeout=30))
+          go("keel UA real token", lambda: httpx.post("https://keel.boraqs.com/api/runs", json=body, headers={**ua, "Authorization": "Bearer " + t}, timeout=30))
+          go("default UA healthz", lambda: httpx.get("https://keel.boraqs.com/healthz", timeout=30))
           PY
