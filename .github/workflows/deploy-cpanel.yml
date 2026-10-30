@@ -52,7 +52,9 @@ jobs:
           lf() { lftp -u "$CPANEL_USER","$CPANEL_FTP_PASSWORD" "ftp://$CPANEL_HOST" \
                    -e "set ftp:ssl-force true; set ssl:verify-certificate ${{ vars.CPANEL_FTP_VERIFY_TLS || 'yes' }}; $1; bye"; }
           lf "mirror -R --delete --no-symlinks --parallel=4 --exclude-glob .env --exclude-glob stderr.log --exclude-glob .htaccess \
-              --exclude-glob .well-known/ --exclude-glob cgi-bin/ deploy/ $APP_DIR/"
+              --exclude-glob .well-known/ --exclude-glob cgi-bin/ --exclude-glob tmp/ deploy/ $APP_DIR/"
+          # Restart only once every file is in place, so the app never starts on a half-uploaded file.
+          lf "mkdir -p $APP_DIR/tmp; put deploy/tmp/restart.txt -o $APP_DIR/tmp/restart.txt"
       - name: Smoke test
         if: steps.creds.outputs.skip != '1'
         run: |
