@@ -12,9 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: GET /healthz
-        run: curl -sS -w ' [%{http_code}]\n' https://keel.boraqs.com/healthz || true
+        run: |
+          curl -sS -w ' [%{http_code}]\n' https://keel.boraqs.com/healthz || true
       - name: POST /api/runs with a fake token (curl)
-        run: curl -sS -w ' [%{http_code}]\n' -X POST https://keel.boraqs.com/api/runs -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYyJ9.e30.c2ln' -H 'content-type: application/json' -d '{}' || true
+        run: |
+          curl -sS -w ' [%{http_code}]\n' -X POST https://keel.boraqs.com/api/runs -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYyJ9.e30.c2ln' -H 'content-type: application/json' -d '{}' || true
       - name: POST /api/runs with a real OIDC token (httpx, as Keel does)
         run: |
           pip install -q httpx
