@@ -24,8 +24,12 @@ export function detect(paths: string[], files: Record<string, string>): Detectio
   const language = py ? "python" : "unknown";
   if (!py) notes.push("Keel v1 supports Python repositories; this one doesn't look like Python.");
 
+  // A pyproject.toml is only installable when it declares a package or a build system; many hold
+  // nothing but tool settings ([tool.pytest] and the like), and `pip install -e .` fails on those.
+  const pyproject = files["pyproject.toml"] ?? "";
+  const installable = has("setup.py") || has("setup.cfg") || /^\[(project|build-system)\]/m.test(pyproject);
   let installCommand = "pip install pytest";
-  if (has("pyproject.toml") || has("setup.py")) installCommand = "pip install -e . pytest";
+  if (installable) installCommand = "pip install -e . pytest";
   else if (has("requirements.txt")) installCommand = "pip install -r requirements.txt pytest";
   if (has("requirements-dev.txt")) installCommand += " -r requirements-dev.txt";
 

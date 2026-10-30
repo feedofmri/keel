@@ -33,7 +33,7 @@ d("platform end to end (fake GitHub)", () => {
     repos: [{ id: 501, full_name: "acme/shop", default_branch: "main", private: true, language: "Python", perm: "admin" },
             { id: 502, full_name: "acme/docs", default_branch: "main", private: false, language: "Python", perm: "read" }],
     tree: ["pyproject.toml", "src/shop/pricing.py", "tests/test_pricing.py", ".github/workflows/ci.yml"],
-    files: { ".github/workflows/ci.yml": "name: CI\non: push\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pytest -q\n" },
+    files: { "pyproject.toml": "[project]\nname = \"shop\"\n", ".github/workflows/ci.yml": "name: CI\non: push\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pytest -q\n" },
     publicKey: { key: "", key_id: "kid-1" }, secrets: {}, written: {}, refs: [], pulls: [], dispatches: [], workflowState: [],
     workflowOnMain: false, expiredTokens: new Set(), tokenCounter: 0,
   };

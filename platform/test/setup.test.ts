@@ -12,6 +12,7 @@ describe("detect", () => {
     const d = detect(["pyproject.toml", "src/a.py", "tests/test_a.py", ".github/workflows/ci.yml", ".github/workflows/release.yml"], {
       ".github/workflows/ci.yml": "name: CI\non: push\njobs:\n  t:\n    steps:\n      - run: pytest -q\n",
       ".github/workflows/release.yml": "name: Release\non: push\n",
+      "pyproject.toml": "[project]\nname = \"a\"\n",
     });
     expect(d.language).toBe("python");
     expect(d.installCommand).toBe("pip install -e . pytest");
@@ -23,6 +24,14 @@ describe("detect", () => {
     expect(d.language).toBe("unknown");
     expect(d.ciWorkflow).toBeNull();
     expect(d.notes.length).toBeGreaterThan(1);
+  });
+  it("does not pip-install a pyproject.toml that only configures tools", () => {
+    const tools = "[tool.pytest.ini_options]\npythonpath = [\".\"]\n";
+    expect(detect(["pyproject.toml", "tests/test_a.py"], { "pyproject.toml": tools }).installCommand).toBe("pip install pytest");
+    expect(detect(["pyproject.toml", "requirements.txt", "tests/test_a.py"], { "pyproject.toml": tools }).installCommand)
+      .toBe("pip install -r requirements.txt pytest");
+    expect(detect(["pyproject.toml", "tests/test_a.py"], { "pyproject.toml": "[build-system]\nrequires = []\n" }).installCommand)
+      .toBe("pip install -e . pytest");
   });
   it("reads quoted workflow names", () => expect(workflowName('name: "Tests"\n', "x")).toBe("Tests"));
 });

@@ -120,9 +120,9 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env): { ensureSyn
     const { data: tree } = await octo.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", { owner, repo, tree_sha: ctx.repo.default_branch, recursive: "1" });
     const paths: string[] = tree.tree.filter((t: any) => t.type === "blob").map((t: any) => t.path);
     const files: Record<string, string> = {};
-    for (const p of paths.filter(p => p.startsWith(".github/workflows/")).slice(0, 20)) {
-      const { data } = await octo.request("GET /repos/{owner}/{repo}/contents/{path}", { owner, repo, path: p });
-      if (!Array.isArray(data) && "content" in data && data.content) files[p] = Buffer.from(data.content, "base64").toString("utf8");
+    for (const p of [...paths.filter(p => p.startsWith(".github/workflows/")).slice(0, 20), ...paths.filter(p => p === "pyproject.toml")]) {
+      const data = await octo.request("GET /repos/{owner}/{repo}/contents/{path}", { owner, repo, path: p }).then(r => r.data, () => null);
+      if (data && !Array.isArray(data) && "content" in data && data.content) files[p] = Buffer.from(data.content, "base64").toString("utf8");
     }
     return { detection: detect(paths, files), secretNames: secretNamesFor([...MODELS]) };
   });
