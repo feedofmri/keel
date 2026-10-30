@@ -140,7 +140,7 @@ def cmd_action(a: argparse.Namespace) -> int:
         return 0
 
     label = report.decision.label
-    branch = f"keel/fix-{os.environ.get('GITHUB_RUN_ID', 'local')}"
+    branch = fix_branch(os.environ)
     git(ws, "checkout", "-q", "-b", branch)
     r = git(ws, "apply", "-", check=False, input=sel.candidate.diff)
     if r.returncode != 0:
@@ -153,7 +153,10 @@ def cmd_action(a: argparse.Namespace) -> int:
         _log(f"dry run: would push {branch} and open a {label} PR into {trig.base_branch}")
         print(body)
         return 0
-    git(ws, "push", "-q", "origin", branch)
+    r = git(ws, "push", "-q", "origin", branch, check=False)
+    if r.returncode != 0:
+        _log(f"could not push {branch}: {r.stderr.strip()}")
+        return 1
     for name, color in cfg.labels.items():
         gh.ensure_label(name, color, "Set by Keel (conformal risk control)")
     title = f"[{label}] Keel fix for {len(report.task.failing_tests)} failing test(s)"
@@ -170,6 +173,13 @@ def cmd_action(a: argparse.Namespace) -> int:
         gh.comment(trig.issue_number, f"Keel opened {pr['html_url']} ({label}).")
     report_run(report, event_name, pr["number"], started, log=_log)
     return 0
+
+
+def fix_branch(env) -> str:
+    """The branch for this run's fix. A re-run keeps its run ID, so later attempts get their own branch."""
+    name = f"keel/fix-{env.get('GITHUB_RUN_ID', 'local')}"
+    attempt = env.get("GITHUB_RUN_ATTEMPT", "1")
+    return name if attempt in ("", "1") else f"{name}-{attempt}"
 
 
 def add_action_command(sub) -> None:
