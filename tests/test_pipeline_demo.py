@@ -61,6 +61,22 @@ def test_platform_report_payload_matches_schema(demo_repo, responses):
     assert all("diff" not in c for c in p["candidates"])  # code never leaves the runner
 
 
+def test_platform_report_sends_a_keel_user_agent(demo_repo, responses, monkeypatch):
+    """Shared hosts' firewalls cut off httpx's default User-Agent, so reports must name Keel."""
+    from datetime import datetime, timezone
+
+    import httpx
+
+    from keel.github import platform
+    rep = _pipeline(responses).run(BugTask(task_id="demo", repo_path=str(demo_repo)))
+    sent = {}
+    monkeypatch.setenv("KEEL_PLATFORM_URL", "https://keel.example")
+    monkeypatch.setattr(platform, "_oidc_token", lambda aud: "tok")
+    monkeypatch.setattr(httpx, "post", lambda url, **kw: sent.update(kw) or httpx.Response(201))
+    platform.report_run(rep, "workflow_run", 12, datetime.now(timezone.utc), log=lambda m: None)
+    assert sent["headers"]["User-Agent"].startswith("keel-action/")
+
+
 def test_platform_report_fixture_is_current(demo_repo, responses):
     """The platform's tests post this exact payload, so the Action and the API cannot drift apart.
     Regenerate with KEEL_UPDATE_FIXTURES=1 pytest tests/test_pipeline_demo.py."""
