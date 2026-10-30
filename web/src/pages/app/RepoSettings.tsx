@@ -219,6 +219,7 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
           {done && <div className="done-card" style={{ marginTop: 28 }}>
             <h3 className="h-panel" style={{ marginTop: 12 }}>Merge pull request #{done.number} to {current ? "apply the new settings" : "activate Keel"}</h3>
             <p className="p-small" style={{ marginTop: 6 }}>{done.stored} secret(s) stored on GitHub.</p>
+            {<p className="p-small" style={{ marginTop: 6 }}>Keel opens fix pull requests with the repository's Actions token. In the repository's Settings → Actions → General, tick <b>Allow GitHub Actions to create and approve pull requests</b>, if it is not already ticked.</p>}
             <div className="ctas start"><a className="btn primary" href={done.url} target="_blank" rel="noopener">Review on GitHub</a>
               <Link className="btn" to={repoPath(full)}>Go to overview</Link></div>
           </div>}

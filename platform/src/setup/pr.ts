@@ -44,6 +44,9 @@ Files added:
 - \`.keel.toml\`: the policy above, editable any time
 ${calibration ? `- \`.keel/calibration.json\`: the shared calibration (${calibration.n} held-out bugs, ${calibration.source}) that sets the merge threshold\n` : ""}
 ${calibration ? "" : "**Calibration:** no shared calibration has been published yet, so Keel will label fixes but will not merge any automatically. A later settings pull request adds the calibration once it is available.\n"}
+**One repository setting is needed** so Keel can open its fix pull requests: Settings → Actions → General →
+Workflow permissions → tick **Allow GitHub Actions to create and approve pull requests**, then Save.
+
 Merge this PR to activate Keel. Manage it at ${appUrl}/app.
 
 ---
