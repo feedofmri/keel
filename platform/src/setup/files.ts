@@ -18,6 +18,7 @@ const MODEL_ENV: Record<string, string[]> = {
 };
 
 export const secretNamesFor = (models: string[]) => [...new Set(models.flatMap(m => MODEL_ENV[m] || []))];
+export const ALL_SECRET_NAMES = secretNamesFor(Object.keys(MODEL_ENV));
 
 const yamlStr = (s: string) => JSON.stringify(s);
 

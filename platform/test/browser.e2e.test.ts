@@ -69,10 +69,23 @@ const freePort = () => new Promise<number>(ok => { const s = createServer().list
   it("sets up a repository with the wizard", async () => {
     await go("/app/repos/acme/shop/settings", "text=Detected configuration");
     for (let i = 0; i < 3; i++) await page.click("button:has-text('Continue')");
-    await page.waitForSelector("text=No shared calibration has been published yet");
+    // the activation step says whether the pull request also delivers the shared calibration
+    await page.waitForSelector(".callout:has-text('calibration')");
     await page.click("text=Open setup pull request");
     await page.waitForSelector(".done-card");
     expect(state.pulls).toHaveLength(1);
+  });
+
+  it("saves a model key once in Settings and shows it as saved in the setup form", async () => {
+    await go("/app/settings/keys", "text=Update all repositories");
+    await page.fill("#k-KEEL_MUSE_SPARK_API_KEY", "sk-browser-5678");
+    await page.click("text=Save keys");
+    await page.waitForSelector("text=Saved. New setups will use these keys.");
+    expect(await page.getAttribute("#k-KEEL_MUSE_SPARK_API_KEY", "placeholder")).toContain("••••5678");
+    await go("/app/repos/acme/shop/settings", "text=Detected configuration");
+    await page.click("button:has-text('Continue')");
+    await page.waitForSelector("#KEEL_MUSE_SPARK_API_KEY");
+    expect(await page.getAttribute("#KEEL_MUSE_SPARK_API_KEY", "placeholder")).toBe("saved in your account (••••5678)");
   });
 
   it("shows a reported run on the runs, run detail and insight pages", { timeout: 90000 }, async () => {
@@ -96,7 +109,8 @@ const freePort = () => new Promise<number>(ok => { const s = createServer().list
     expect(state.dispatches).toHaveLength(1);
     for (const [path, ready] of [["/app", ".kpis"], ["/app/calibration", "table"], ["/app/usage", ".bars"], ["/app/activity", ".act-list"],
       ["/app/repos/acme/shop/runs", ".runs-list"], ["/app/repos/acme/shop/activity", ".act-list"], ["/app/settings", "text=Signed-in sessions"],
-      ["/app/settings/github", "text=Configure on GitHub"], ["/app/settings/defaults", "text=Save defaults"], ["/app/help", "h1:has-text('Help')"]] as const)
+      ["/app/settings/github", "text=Configure on GitHub"], ["/app/settings/defaults", "text=Save defaults"], ["/app/settings/keys", "text=Update all repositories"],
+      ["/app/help", "h1:has-text('Help')"]] as const)
       await go(path, ready);
     await go("/app/settings/defaults", "text=Save defaults");
     await page.click("text=Save defaults"); await page.waitForSelector(".ok-text");

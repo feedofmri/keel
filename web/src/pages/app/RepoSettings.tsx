@@ -7,15 +7,10 @@ import { useTitle } from "../../hooks/useTitle";
 import { api } from "../../lib/api";
 import { crcThreshold, stats } from "../../lib/conformal";
 import { MODEL_NAMES, repoPath } from "../../lib/format";
+import { KEYS } from "../../lib/modelKeys";
 import { useResults } from "../../lib/results";
 import type { RepoDetail, SetupSettings } from "../../lib/types";
 
-type Field = [id: string, label: string, type: "text" | "password", def: string];
-const KEYS: Record<string, Field[]> = {
-  "muse-spark": [["KEEL_MUSE_SPARK_BASE_URL", "Base URL", "text", ""], ["KEEL_MUSE_SPARK_API_KEY", "API key", "password", ""], ["KEEL_MUSE_SPARK_MODEL", "Model id", "text", ""]],
-  "muse-spark-open": [["KEEL_SPARK_OPEN_API_KEY", "Baseten API key", "password", ""], ["KEEL_SPARK_OPEN_MODEL", "Model id", "text", "meta-models/muse-spark-open-1026"]],
-  "muse-glimmer": [["KEEL_GLIMMER_BASE_URL", "Base URL", "text", ""], ["KEEL_GLIMMER_API_KEY", "API key", "password", ""], ["KEEL_GLIMMER_MODEL", "Model id", "text", ""]],
-};
 const MODELS: [string, string][] = [
   ["muse-spark", "Generates patches and the adversarial tests used to evaluate them. Meta Model API."],
   ["muse-spark-open", "Independent second generator with token-level confidence signals. Open weights on Baseten."],
@@ -74,6 +69,8 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
   const det = useAsync(() => api.detect(full), [full]);
   const defaults = useAsync(() => api.defaults(), []);
   const shared = useAsync(() => api.sharedCalibration(), []);
+  const savedList = useAsync(() => api.savedKeys(), []);
+  const saved = Object.fromEntries((savedList.data || []).map(k => [k.name, k]));
   const { data: results } = useResults();
   const [step, setStep] = useState(0);
   const [install, setInstall] = useState("");
@@ -85,7 +82,7 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
   const [autoMerge, setAutoMerge] = useState(current?.autoMerge ?? false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<{ number: number; url: string; stored: number } | null>(null);
+  const [done, setDone] = useState<{ number: number; url: string; stored: number; fromAccount: number } | null>(null);
 
   // A new repository starts from the account defaults (Settings → Defaults).
   useEffect(() => {
@@ -101,7 +98,8 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
   const go = (i: number) => { setStep(Math.max(0, Math.min(STEPS.length - 1, i))); scrollTo({ top: 0, behavior: "smooth" }); };
   const settings = (): SetupSettings => {
     const allowed = new Set(models.flatMap(m => KEYS[m].map(k => k[0])));
-    const vals = Object.fromEntries(models.flatMap(m => KEYS[m].map(([id, , , def]) => [id, keys[id] ?? def])));
+    // A blank field with a key saved in Settings → Model keys is filled in by the server from the account.
+    const vals = Object.fromEntries(models.flatMap(m => KEYS[m].map(([id, , , def]) => [id, keys[id] ?? (saved[id] ? "" : def)])));
     return { alpha, method, autoMerge, models, ciWorkflow: ci || null, installCommand: install.trim(),
       secrets: Object.fromEntries(Object.entries(vals).filter(([k, v]) => allowed.has(k) && v.trim())) };
   };
@@ -115,7 +113,7 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
     const s = settings(); setErr("");
     if (!s.models.length) { setErr("Choose at least one model."); return; }
     setBusy(true);
-    try { const r = await api.setup(full, s); setDone({ ...r.pr, stored: r.secretsStored.length }); }
+    try { const r = await api.setup(full, s); setDone({ ...r.pr, stored: r.secretsStored.length, fromAccount: r.fromAccount.length }); }
     catch (e) { setErr((e as Error).message); }
     setBusy(false);
   };
@@ -161,7 +159,7 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
 
         {step === 1 && <section className="panel-step on">
           <h2>Meta models</h2>
-          <p className="p-small">Using two independent models provides the strongest signal. API keys are stored as encrypted GitHub repository secrets and are not retained by Keel.</p>
+          <p className="p-small">Using two independent models provides the strongest signal. API keys are stored as encrypted GitHub repository secrets. Keys saved in <Link to="/app/settings/keys">Settings → Model keys</Link> are filled in automatically; type a value here only to use a different one for this repository.</p>
           <div className="checks">{MODELS.map(([id, text]) => (
             <label className="check" key={id}>
               <input type="checkbox" checked={models.includes(id)} onChange={e => setModels(m => e.target.checked ? [...m, id] : m.filter(x => x !== id))} />
@@ -173,8 +171,9 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
               <h3 className="h-panel" style={{ fontSize: 16, marginTop: 28 }}>{MODEL_NAMES[m]}</h3>
               {KEYS[m].map(([id, label, type, def]) => (
                 <div className="field" key={id}><label htmlFor={id}>{label}</label>
-                  <input id={id} type={type} autoComplete="off" spellCheck={false} placeholder={type === "password" ? "leave blank if already set" : def}
-                    value={keys[id] ?? def} onChange={e => setKeys(k => ({ ...k, [id]: e.target.value }))} /></div>
+                  <input id={id} type={type} autoComplete="off" spellCheck={false}
+                    placeholder={saved[id] ? `saved in your account (${saved[id].hint})` : type === "password" ? "leave blank if already set" : def}
+                    value={keys[id] ?? (saved[id] ? "" : def)} onChange={e => setKeys(k => ({ ...k, [id]: e.target.value }))} /></div>
               ))}
             </div>
           ))}
@@ -206,7 +205,8 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
           <div className="found">
             <div><div className="k">Models</div><div className="v">{models.map(m => MODEL_NAMES[m]).join(", ") || "none"}</div></div>
             <div><div className="k">Policy</div><div className="v">α {Math.round(alpha * 100)}% · {method.toUpperCase()} · {autoMerge ? "auto-merge" : "label only"}</div></div>
-            <div><div className="k">Secrets to store</div><div className="v">{Object.keys(settings().secrets).length}</div></div>
+            <div><div className="k">Secrets to store</div><div className="v">{new Set([...Object.keys(settings().secrets),
+              ...models.flatMap(m => KEYS[m].map(k => k[0])).filter(id => saved[id])]).size}</div></div>
           </div>
           {shared.data && <p className={`callout${shared.data.available ? "" : " warn"}`} style={{ marginTop: 24 }}>{shared.data.available
             ? <>The pull request also adds the shared calibration ({shared.data.n} held-out bugs, {shared.data.source}) as <code>.keel/calibration.json</code>, which sets the merge threshold.</>
@@ -218,7 +218,7 @@ function Wizard({ full, current }: { full: string; current: RepoDetail | null })
           {err && <p className="err">{err}</p>}
           {done && <div className="done-card" style={{ marginTop: 28 }}>
             <h3 className="h-panel" style={{ marginTop: 12 }}>Merge pull request #{done.number} to {current ? "apply the new settings" : "activate Keel"}</h3>
-            <p className="p-small" style={{ marginTop: 6 }}>{done.stored} secret(s) stored on GitHub.</p>
+            <p className="p-small" style={{ marginTop: 6 }}>{done.stored} secret(s) stored on GitHub{done.fromAccount ? `, ${done.fromAccount} of them from your saved keys` : ""}.</p>
             {<p className="p-small" style={{ marginTop: 6 }}>Keel opens fix pull requests with the repository's Actions token. In the repository's Settings → Actions → General, tick <b>Allow GitHub Actions to create and approve pull requests</b>, if it is not already ticked.</p>}
             <div className="ctas start"><a className="btn primary" href={done.url} target="_blank" rel="noopener">Review on GitHub</a>
               <Link className="btn" to={repoPath(full)}>Go to overview</Link></div>

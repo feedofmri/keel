@@ -74,7 +74,7 @@ export async function buildApp(db: Db, env: Env, opts: { jwks?: any; publicDir?:
   registerRunReports(app, db, env, opts.jwks);
   const { ensureSynced } = registerApi(app, db, env);
   registerInsights(app, db, ensureSynced);
-  registerAccount(app, db);
+  registerAccount(app, db, env);
 
   // The web app (web/, React) is a static build; the same build in demo mode is the GitHub Pages preview.
   const pub = opts.publicDir || [join(here, "public"), join(here, "..", "..", "web", "dist")].find(p => existsSync(join(p, "index.html")));

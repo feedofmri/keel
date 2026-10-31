@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { many, one, type Db } from "./db/index.js";
 import { COOKIE, requireUser } from "./auth/sessions.js";
+import type { Env } from "./env.js";
+import { hintFor, isKeyName, savedKeys, saveKeys } from "./setup/keys.js";
 
 const MODELS = ["muse-spark", "muse-spark-open", "muse-glimmer"] as const;
 const Defaults = z.object({
@@ -12,8 +14,10 @@ const Defaults = z.object({
   models: z.array(z.enum(MODELS)).min(1),
 });
 
-// Account pages: defaults for new repositories, signed-in sessions, and deleting your Keel data.
-export function registerAccount(app: FastifyInstance, db: Db) {
+const KeysBody = z.object({ keys: z.record(z.string().refine(isKeyName, "unknown key name"), z.string().max(4000)) });
+
+// Account pages: defaults for new repositories, saved model keys, signed-in sessions, and deleting your Keel data.
+export function registerAccount(app: FastifyInstance, db: Db, env: Env) {
   app.get("/api/settings", async (req, reply) => {
     const u = requireUser(req, reply); if (!u) return;
     const s = await one<any>(db, "select default_alpha::float as alpha, default_method as method, default_auto_merge as \"autoMerge\", default_models as models from user_settings where user_id = $1", [u.id]);
@@ -30,6 +34,24 @@ export function registerAccount(app: FastifyInstance, db: Db) {
                       default_auto_merge = excluded.default_auto_merge, default_models = excluded.default_models, updated_at = now()`,
                    [u.id, d.alpha, d.method, d.autoMerge, d.models]);
     return { defaults: d };
+  });
+
+  // Saved values never come back to the browser: API keys show only their last 4 characters.
+  app.get("/api/settings/keys", async (req, reply) => {
+    const u = requireUser(req, reply); if (!u) return;
+    const saved = await savedKeys(db, env.SESSION_SECRET, u.id);
+    const at = await many<{ name: string; updated_at: string }>(db, "select name, updated_at from user_model_keys where user_id = $1", [u.id]);
+    return { keys: at.filter(r => r.name in saved).map(r => ({ name: r.name, hint: hintFor(r.name, saved[r.name]), updatedAt: r.updated_at })) };
+  });
+
+  app.put("/api/settings/keys", async (req, reply) => {
+    const u = requireUser(req, reply); if (!u) return;
+    const b = KeysBody.safeParse(req.body);
+    if (!b.success) return reply.code(400).send({ error: "invalid keys" });
+    await saveKeys(db, env.SESSION_SECRET, u.id, b.data.keys);
+    await db.query("insert into audit_log (user_id, repo_id, action, detail) values ($1, null, 'keys_saved', $2)",
+                   [u.id, JSON.stringify({ names: Object.keys(b.data.keys) })]);
+    return { ok: true };
   });
 
   // Session ids are secrets, so the client only ever sees a short hash of each.

@@ -7,7 +7,7 @@ export default function Security() {
   return (
     <>
       <PageIntro title="Security"
-        lead="Repairs run on your own GitHub Actions runners. The Keel service stores settings and run summaries; it does not store source code or model keys." />
+        lead="Repairs run on your own GitHub Actions runners. The Keel service stores settings and run summaries; it does not store source code, and stores model keys only if you choose to save them in Settings, encrypted." />
 
       <Section title="Where processing takes place">
         <Points cols={3} items={[
@@ -36,7 +36,7 @@ export default function Security() {
           ["Session", "Your GitHub user token, encrypted (AES-256-GCM)", "Expires after 14 days; refreshed tokens are re-encrypted. Signing out deletes it, and expired sessions are removed daily."],
           ["Repository settings", "Risk level, method, models, CI workflow name", "The values written to .keel.toml by the setup pull request."],
           ["Run summaries", "Decision, scores, threshold, cost, failing test names, candidate summaries", "Diffs, source code and model output do not leave the runner. Candidate summaries are kept for 90 days and run summaries for one year."],
-          ["Model keys", "Not stored", "Sent over HTTPS once during setup, sealed with the repository's public key (libsodium) and saved as GitHub repository secrets. Never written to Keel's database or logs."],
+          ["Model keys", "Only if you save them", "Sent over HTTPS during setup, sealed with the repository's public key (a libsodium sealed box) and saved as GitHub repository secrets. If you save them in Settings → Model keys to reuse across repositories, they are kept encrypted (AES-256-GCM), only their last 4 characters are ever shown again, and they are deleted with your account. Never written to logs."],
           ["Activity", "Changes made by each user, with timestamps", "Setup pull requests, pause and resume, Fix now, and feedback on runs. Kept for 90 days."],
         ]} />
       </Section>

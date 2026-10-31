@@ -5,7 +5,7 @@ import {
 } from "./demo";
 import type {
   Account, ActivityEvent, CalibrationRow, SharedCalibrationInfo, Defaults, Detection, Installation, Me, Overview, RepoPayload, RepoSummary,
-  RunDetail, RunFilter, RunRow, SetupSettings, Usage,
+  KeysApplied, RunDetail, RunFilter, RunRow, SavedKey, SetupSettings, Usage,
 } from "./types";
 
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
@@ -23,6 +23,7 @@ async function http<T>(path: string, init: RequestInit = {}): Promise<T> {
 const repoPath = (full: string) => `/api/repos/${full.split("/").map(encodeURIComponent).join("/")}`;
 const qs = (o: object) => { const p = new URLSearchParams(); Object.entries(o).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); }); const s = p.toString(); return s ? `?${s}` : ""; };
 const post = (body: unknown = {}) => ({ method: "POST", body: JSON.stringify(body) });
+const KEY_PREFIX: Record<string, string> = { "muse-spark": "KEEL_MUSE_SPARK_", "muse-spark-open": "KEEL_SPARK_OPEN_", "muse-glimmer": "KEEL_GLIMMER_" };
 
 // One interface, two implementations: the real API, and sample data for the demo build.
 export const api = {
@@ -46,14 +47,15 @@ export const api = {
     if (DEMO) return demo(() => demoDetection, 500);
     return (await http<{ detection: Detection }>(`${repoPath(full)}/detect`)).detection;
   },
-  async setup(full: string, s: SetupSettings): Promise<{ pr: { number: number; url: string }; secretsStored: string[] }> {
+  async setup(full: string, s: SetupSettings): Promise<{ pr: { number: number; url: string }; secretsStored: string[]; fromAccount: string[] }> {
     if (DEMO) {
       await sleep(700);
       const st = demoState();
       if (st.statuses[full] === "new") st.statuses[full] = "setup_pr_open";
       st.settings[full] = { alpha: s.alpha, method: s.method, autoMerge: s.autoMerge, models: s.models, ciWorkflow: s.ciWorkflow };
       saveDemo(st); logDemo("setup_pr", full, { pr: 2, secrets: Object.keys(s.secrets) });
-      return { pr: { number: 2, url: "https://github.com/feedofmri/keel/pulls" }, secretsStored: Object.keys(s.secrets) };
+      const fromAccount = st.keys.map(k => k.name).filter(n => !(n in s.secrets) && s.models.some(m => n.startsWith(KEY_PREFIX[m])));
+      return { pr: { number: 2, url: "https://github.com/feedofmri/keel/pulls" }, secretsStored: [...Object.keys(s.secrets), ...fromAccount], fromAccount };
     }
     return http(`${repoPath(full)}/setup`, post(s));
   },
@@ -100,6 +102,30 @@ export const api = {
   async saveDefaults(d: Defaults): Promise<void> {
     if (DEMO) { await sleep(300); saveDemo({ ...demoState(), defaults: d }); return; }
     await http("/api/settings", { method: "PUT", body: JSON.stringify({ defaults: d }) });
+  },
+  async savedKeys(): Promise<SavedKey[]> {
+    if (DEMO) return demo(() => demoState().keys);
+    return (await http<{ keys: SavedKey[] }>("/api/settings/keys")).keys;
+  },
+  // An empty value removes that key.
+  async saveKeys(keys: Record<string, string>): Promise<void> {
+    if (DEMO) {
+      await sleep(300);
+      const st = demoState(), now = new Date().toISOString();
+      const kept = st.keys.filter(k => !(k.name in keys));
+      const added = Object.entries(keys).filter(([, v]) => v.trim())
+        .map(([name, v]) => ({ name, hint: name.endsWith("_API_KEY") ? `••••${v.trim().slice(-4)}` : v.trim(), updatedAt: now }));
+      saveDemo({ ...st, keys: [...kept, ...added] }); return;
+    }
+    await http("/api/settings/keys", { method: "PUT", body: JSON.stringify({ keys }) });
+  },
+  async applyKeys(): Promise<KeysApplied> {
+    if (DEMO) {
+      await sleep(600);
+      const st = demoState(), names = st.keys.map(k => k.name);
+      return { updated: demoRepos().filter(r => r.status !== "new" && r.canManage).map(r => ({ repo: r.full_name, secrets: names })), failed: [] };
+    }
+    return http("/api/settings/keys/apply", post());
   },
   account: (): Promise<Account> => (DEMO ? demo(demoAccount) : http("/api/account")),
   async revokeOtherSessions(): Promise<number> {

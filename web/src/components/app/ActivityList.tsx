@@ -13,6 +13,8 @@ function describe(e: ActivityEvent) {
     case "marked_wrong": return <>marked <Link to={`/app/runs/${d.run}`}>run {d.run}</Link> on {repo} as incorrect</>;
     case "unmarked_wrong": return <>cleared the incorrect mark on <Link to={`/app/runs/${d.run}`}>run {d.run}</Link></>;
     case "disconnect": return <>disconnected {repo} from Keel</>;
+    case "keys_applied": return <>updated {d.secrets?.length ?? 0} model secret(s) on {repo} from saved keys</>;
+    case "keys_saved": return <>changed the saved model keys</>;
     default: return <>{e.action.replace(/_/g, " ")} {repo}</>;
   }
 }
