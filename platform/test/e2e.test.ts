@@ -110,7 +110,9 @@ d("platform end to end (fake GitHub)", () => {
     const r = await req("POST", "/api/repos/acme/shop/setup", { alpha: 0.1, method: "crc", autoMerge: false, models: ["muse-spark", "muse-spark-open"],
       ciWorkflow: "CI", installCommand: "pip install -e . pytest", secrets: { KEEL_MUSE_SPARK_API_KEY: "sk-real-key", KEEL_GLIMMER_API_KEY: "not-selected" } });
     expect(r.statusCode, r.body).toBe(200);
-    expect(r.json()).toMatchObject({ pr: { number: 7 }, secretsStored: ["KEEL_MUSE_SPARK_API_KEY"], calibration: null });
+    // The pull request delivers the published shared calibration, when the benchmark has produced one.
+    const cal = sharedCalibration();
+    expect(r.json()).toMatchObject({ pr: { number: 7 }, secretsStored: ["KEEL_MUSE_SPARK_API_KEY"], calibration: cal ? { ref: cal.ref, n: cal.n } : null });
     // the secret reached GitHub sealed for the repository key, and decrypts to the value entered
     const sealed = sodium.from_base64(state.secrets.KEEL_MUSE_SPARK_API_KEY.encrypted_value, sodium.base64_variants.ORIGINAL);
     expect(sodium.to_string(sodium.crypto_box_seal_open(sealed, repoKeys.publicKey, repoKeys.privateKey))).toBe("sk-real-key");
@@ -121,9 +123,16 @@ d("platform end to end (fake GitHub)", () => {
     expect(wf).toContain("KEEL_PLATFORM_URL: https://keel.example");
     expect(wf).toContain("pip install -e . pytest");
     expect(state.written[".keel.toml"]).toContain("alpha = 0.10");
-    expect(state.written[".keel.toml"]).not.toContain("calibration =");
-    expect(state.pulls[0].body).toMatch(/no shared calibration has been published yet/);
-    expect((await one<any>(db, "select status, calibration_ref from repos where github_repo_id = 501"))).toEqual({ status: "setup_pr_open", calibration_ref: "none" });
+    if (cal) {
+      expect(state.written[".keel.toml"]).toContain('calibration = ".keel/calibration.json"');
+      expect(state.written[".keel/calibration.json"]).toBe(cal.json);
+      expect(state.pulls[0].body).toContain(`the shared calibration (${cal.n} held-out bugs, ${cal.source})`);
+    } else {
+      expect(state.written[".keel.toml"]).not.toContain("calibration =");
+      expect(state.pulls[0].body).toMatch(/no shared calibration has been published yet/);
+    }
+    expect((await one<any>(db, "select status, calibration_ref from repos where github_repo_id = 501")))
+      .toEqual({ status: "setup_pr_open", calibration_ref: cal ? cal.ref : "none" });
   });
 
   it("goes live when the setup pull request is merged", async () => {
@@ -191,6 +200,37 @@ d("platform end to end (fake GitHub)", () => {
     for (let i = 0; i < 32; i++) last = (await app.inject({ url: "/auth/github/login", remoteAddress: "10.9.9.9" })).statusCode;
     expect(last).toBe(429);
     expect((await app.inject({ url: "/auth/github/login", remoteAddress: "10.9.9.10" })).statusCode).toBe(302);
+  });
+
+  it("saves model keys once, fills setup from them, and updates set-up repositories", async () => {
+    const open = (name: string) => sodium.to_string(sodium.crypto_box_seal_open(
+      sodium.from_base64(state.secrets[name].encrypted_value, sodium.base64_variants.ORIGINAL), repoKeys.publicKey, repoKeys.privateKey));
+    expect((await req("PUT", "/api/settings/keys", { keys: { NOT_A_KEEL_KEY: "x" } })).statusCode).toBe(400);
+    expect((await req("PUT", "/api/settings/keys", { keys: { KEEL_MUSE_SPARK_API_KEY: "sk-saved-1234", KEEL_MUSE_SPARK_MODEL: "muse-spark-1.3" } })).statusCode).toBe(200);
+    // the browser only ever sees the last 4 characters of a key, and the database only ciphertext
+    const listed = await req("GET", "/api/settings/keys");
+    expect(listed.json().keys.map((k: any) => [k.name, k.hint]).sort()).toEqual([["KEEL_MUSE_SPARK_API_KEY", "••••1234"], ["KEEL_MUSE_SPARK_MODEL", "muse-spark-1.3"]]);
+    expect(listed.body).not.toContain("sk-saved");
+    const row = await one<{ enc_value: Buffer }>(db, "select enc_value from user_model_keys where name = 'KEEL_MUSE_SPARK_API_KEY'");
+    expect(row!.enc_value.toString("latin1")).not.toContain("sk-saved");
+
+    // setup with the key left blank uses the saved one; a value typed for this repository wins
+    const r = await req("POST", "/api/repos/acme/shop/setup", { alpha: 0.1, method: "crc", autoMerge: false, models: ["muse-spark"],
+      ciWorkflow: "CI", installCommand: "pip install -e .", secrets: { KEEL_MUSE_SPARK_MODEL: "muse-spark-1.1" } });
+    expect(r.statusCode, r.body).toBe(200);
+    expect(r.json().fromAccount).toEqual(["KEEL_MUSE_SPARK_API_KEY"]);
+    expect(open("KEEL_MUSE_SPARK_API_KEY")).toBe("sk-saved-1234");
+    expect(open("KEEL_MUSE_SPARK_MODEL")).toBe("muse-spark-1.1");
+
+    // a new key reaches every set-up repository the user manages in one call
+    await req("PUT", "/api/settings/keys", { keys: { KEEL_MUSE_SPARK_API_KEY: "sk-rotated-9999" } });
+    const applied = (await req("POST", "/api/settings/keys/apply", {})).json();
+    expect(applied).toEqual({ updated: [{ repo: "acme/shop", secrets: ["KEEL_MUSE_SPARK_API_KEY", "KEEL_MUSE_SPARK_MODEL"] }], failed: [] });
+    expect(open("KEEL_MUSE_SPARK_API_KEY")).toBe("sk-rotated-9999");
+
+    // an empty value removes a saved key
+    await req("PUT", "/api/settings/keys", { keys: { KEEL_MUSE_SPARK_MODEL: "" } });
+    expect((await req("GET", "/api/settings/keys")).json().keys.map((k: any) => k.name)).toEqual(["KEEL_MUSE_SPARK_API_KEY"]);
   });
 });
 

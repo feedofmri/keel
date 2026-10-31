@@ -7,6 +7,7 @@ import { canManage, installationOctokit, userApi, userPermission, type RepoPermi
 import { detect } from "./setup/detect.js";
 import { renderKeelToml, renderWorkflow, secretNamesFor, type RepoSettings } from "./setup/files.js";
 import { openSetupPR, setupPRBody } from "./setup/pr.js";
+import { savedKeys } from "./setup/keys.js";
 import { putRepoSecrets } from "./setup/secrets.js";
 import { CALIBRATION_PATH, sharedCalibration } from "./setup/calibration.js";
 
@@ -133,7 +134,11 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env): { ensureSyn
     if (!body.success) return reply.code(400).send({ error: "invalid settings", issues: body.error.issues.slice(0, 5) });
     const b = body.data;
     const allowed = new Set(secretNamesFor(b.models));
-    const secrets = Object.fromEntries(Object.entries(b.secrets).filter(([k]) => allowed.has(k)));
+    // Keys saved in the account fill whatever the form left blank; a value typed for this repository wins.
+    const saved = await savedKeys(db, env.SESSION_SECRET, ctx.user.id);
+    const typed = Object.fromEntries(Object.entries(b.secrets).filter(([k, v]) => allowed.has(k) && v.trim()));
+    const fromAccount = Object.keys(saved).filter(k => allowed.has(k) && !(k in typed));
+    const secrets = { ...Object.fromEntries(fromAccount.map(k => [k, saved[k]])), ...typed };
     const cal = sharedCalibration();
     const settings: RepoSettings = { alpha: b.alpha, method: b.method, autoMerge: b.autoMerge, models: b.models, ciWorkflow: b.ciWorkflow,
                                      installCommand: b.installCommand, testCommand: "{python} -m pytest -q -p no:cacheprovider {tests} --junitxml={junit}",
@@ -152,7 +157,31 @@ export function registerApi(app: FastifyInstance, db: Db, env: Env): { ensureSyn
                    [ctx.repo.id, b.alpha, b.method, b.autoMerge, b.models, b.ciWorkflow, pr.number, ctx.user.id, cal ? cal.ref : "none"]);
     await db.query("insert into audit_log (user_id, repo_id, action, detail) values ($1,$2,'setup_pr',$3)",
                    [ctx.user.id, ctx.repo.id, JSON.stringify({ pr: pr.number, secrets: stored })]);
-    return { pr, secretsStored: stored, calibration: cal ? { ref: cal.ref, n: cal.n } : null };
+    return { pr, secretsStored: stored, fromAccount, calibration: cal ? { ref: cal.ref, n: cal.n } : null };
+  });
+
+  // After a key changes in Settings: copy the saved keys into every set-up repository this user manages.
+  app.post("/api/settings/keys/apply", async (req, reply) => {
+    const user = requireUser(req, reply); if (!user) return;
+    await ensureSynced(user);
+    const saved = await savedKeys(db, env.SESSION_SECRET, user.id);
+    const repos = await many<RepoRow>(db, `select r.*, i.github_installation_id from repos r join installations i on i.id = r.installation_id
+                                            join user_repos ur on ur.repo_id = r.id
+                                           where ur.user_id = $1 and ur.can_manage and r.status in ('setup_pr_open', 'active', 'paused')
+                                           order by r.full_name`, [user.id]);
+    const updated: { repo: string; secrets: string[] }[] = [], failed: { repo: string; error: string }[] = [];
+    for (const r of repos) {
+      const allowed = new Set(secretNamesFor(r.models));
+      const secrets = Object.fromEntries(Object.entries(saved).filter(([k]) => allowed.has(k)));
+      if (!Object.keys(secrets).length) continue;
+      const [owner, name] = r.full_name.split("/");
+      try {
+        updated.push({ repo: r.full_name, secrets: await putRepoSecrets(await octoFor(r), owner, name, secrets) });
+        await db.query("insert into audit_log (user_id, repo_id, action, detail) values ($1,$2,'keys_applied',$3)",
+                       [user.id, r.id, JSON.stringify({ secrets: Object.keys(secrets) })]);
+      } catch (e: any) { failed.push({ repo: r.full_name, error: e?.message || "failed" }); }
+    }
+    return { updated, failed };
   });
 
   app.post<{ Params: { owner: string; name: string } }>("/api/repos/:owner/:name/fix", async (req, reply) => {

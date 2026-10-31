@@ -48,6 +48,8 @@ export interface CalibrationRow {
   auto_merged: number; wrong: number; n_calibration: string | null; guarantee: string | null;
 }
 export interface ActivityEvent { id: number; action: string; detail: Record<string, unknown> | null; at: string; actor: string | null; avatar_url: string | null; repo: string | null }
+export interface SavedKey { name: string; hint: string; updatedAt: string }
+export interface KeysApplied { updated: { repo: string; secrets: string[] }[]; failed: { repo: string; error: string }[] }
 export interface Defaults { alpha: number; method: "crc" | "ltt"; autoMerge: boolean; models: string[] }
 export interface Account { user: { login: string; avatar_url: string | null; created_at: string }; sessions: { id: string; created_at: string; expires_at: string; current: boolean }[] }
 export interface SharedCalibrationInfo { available: boolean; ref?: string; n?: number; source?: string }

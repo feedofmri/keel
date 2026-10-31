@@ -34,7 +34,7 @@ import RepoSettings from "./pages/app/RepoSettings";
 import Repositories from "./pages/app/Repositories";
 import RunDetail from "./pages/app/RunDetail";
 import Runs from "./pages/app/Runs";
-import { Danger, DefaultsPage, GitHubAccess, Profile } from "./pages/app/Settings";
+import { Danger, DefaultsPage, GitHubAccess, ModelKeysPage, Profile } from "./pages/app/Settings";
 import Usage from "./pages/app/Usage";
 
 /*
@@ -117,6 +117,7 @@ const router = createBrowserRouter([{
       { path: "settings", element: <Profile /> },
       { path: "settings/github", element: <GitHubAccess /> },
       { path: "settings/defaults", element: <DefaultsPage /> },
+      { path: "settings/keys", element: <ModelKeysPage /> },
       { path: "settings/danger", element: <Danger /> },
       { path: "help", element: <Help /> },
       { path: "index.html", element: <Legacy /> },

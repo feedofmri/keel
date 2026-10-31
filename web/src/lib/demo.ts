@@ -1,6 +1,6 @@
 import type {
   Account, ActivityEvent, CalibrationRow, CandidateSummary, Defaults, Detection, Installation, Me, Overview, RepoPayload,
-  RepoStatus, RepoSummary, Run, RunDetail, RunFilter, RunRow, Usage,
+  RepoStatus, RepoSummary, Run, RunDetail, RunFilter, RunRow, SavedKey, Usage,
 } from "./types";
 
 // Sample data for the demo build (GitHub Pages). Everything here is fictional and the UI labels it as a demo.
@@ -14,11 +14,12 @@ interface DemoState {
   events: ActivityEvent[];
   defaults: Defaults;
   disconnected: string[];
+  keys: SavedKey[];
 }
 const initial: DemoState = {
   signedIn: false,
   statuses: { "feedofmri/keel-demo": "active", "feedofmri/billing": "active", "feedofmri/shop-api": "setup_pr_open", "feedofmri/data-tools": "new" },
-  settings: {}, wrong: {}, events: [], disconnected: [],
+  settings: {}, wrong: {}, events: [], disconnected: [], keys: [],
   defaults: { alpha: 0.1, method: "crc", autoMerge: false, models: ["muse-spark", "muse-spark-open"] },
 };
 export function demoState(): DemoState {
